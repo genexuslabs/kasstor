@@ -1,14 +1,11 @@
 import type { LitElement } from "lit";
+
 import { DEV_MODE } from "../../development-flags";
+import type { WatchOptions } from "./types";
+
+export type { WatchOptions } from "./types";
 
 type WatchDecoratorUpdateHandler<T> = (newValue?: T, oldValue?: T) => void;
-
-interface WatchOptions {
-  /**
-   * If `true`, will only start watching after the initial update/render
-   */
-  waitUntilFirstUpdate?: boolean;
-}
 
 /**
  * Symbol to mark classes that have already had their update method overridden
@@ -101,11 +98,13 @@ export function Watch(
 
     // Override the update method only once per class, even if multiple Watch
     // decorators are used for the same class
-    if (prototype[WATCH_UPDATE_OVERRIDDEN]) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((prototype as any)[WATCH_UPDATE_OVERRIDDEN]) {
       return descriptor;
     }
     // Mark as overridden using Symbol
-    prototype[WATCH_UPDATE_OVERRIDDEN] = true;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (prototype as any)[WATCH_UPDATE_OVERRIDDEN] = true;
 
     // @ts-expect-error - update is a protected property
     const originalUpdate = prototype.update;
@@ -147,3 +146,4 @@ export function Watch(
     return descriptor;
   };
 }
+

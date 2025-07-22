@@ -49,7 +49,7 @@ export class EventEmitter<T> {
  * The Event decorator also makes it easier to automatically build types and
  * documentation for the event data.
  *
- * @param generalOptions Options used by default when emitting the event.
+ * @param defaultOptions Options used by default when emitting the event.
  * In some scenarios the event options must be different and for that you can
  * pass a different set of options in the emit function:
  *
@@ -63,8 +63,7 @@ export class EventEmitter<T> {
  * }
  * ```
  */
-
-export function Event<T = any>(generalOptions?: EventInit) {
+export function Event<T>(defaultOptions?: EventInit) {
   return function <ElementClass extends LitElement>(
     target: ElementClass,
     eventName: string | symbol,
@@ -79,9 +78,11 @@ export function Event<T = any>(generalOptions?: EventInit) {
     Object.defineProperty(target, eventName, {
       get: function (this: ElementClass) {
         // Lazy initialization of EventEmitter for the class
-        this[EVENT_EMITTERS] ??= new Map();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (this as any)[EVENT_EMITTERS] ??= new Map();
 
-        const emitters = this[EVENT_EMITTERS] as Map<
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const emitters = (this as any)[EVENT_EMITTERS] as Map<
           string | symbol,
           EventEmitter<T>
         >;
@@ -90,7 +91,7 @@ export function Event<T = any>(generalOptions?: EventInit) {
           const emitter = new EventEmitter<T>(
             this,
             String(eventName),
-            generalOptions
+            defaultOptions
           );
           emitters.set(eventName, emitter);
         }
@@ -105,3 +106,4 @@ export function Event<T = any>(generalOptions?: EventInit) {
     });
   };
 }
+
