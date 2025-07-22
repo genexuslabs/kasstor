@@ -121,7 +121,8 @@ export const defineDistributionConfiguration = (
       // Transpile after minifying the template literals
       typescript({
         tsconfig: "./tsconfig.json",
-        outDir
+        outDir,
+        exclude: ["node_modules", "dist", "**/**.e2e.ts"]
       }),
 
       dts({
@@ -132,7 +133,8 @@ export const defineDistributionConfiguration = (
         copyDtsFiles: true,
         insertTypesEntry: false,
         rollupTypes: false,
-        tsconfigPath: resolve(__dirname, "./tsconfig.json")
+        tsconfigPath: resolve(__dirname, "./tsconfig.json"),
+        exclude: ["node_modules", "dist", "**/**.e2e.ts"]
       }),
 
       // Print bundle summary
@@ -154,3 +156,4 @@ export const defineDistributionConfiguration = (
     ]
   };
 };
+
