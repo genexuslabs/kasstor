@@ -24,11 +24,11 @@
     "clear.dist": "bun run ./src/scripts/remove-dist.ts",
     "docs": "bun run ./src/scripts/docs/index.ts",
     "prepare": "husky",
-    "test": "bunx playwright install && vitest",
+    "test": "bunx playwright install && vitest --browser.headless",
     "test.watch": "bunx playwright install && vitest watch",
     "test.watch.ui": "bun test.watch --ui"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@eslint/js": "~9.26.0",
     "@jackolope/ts-lit-plugin": "^3.1.4",
@@ -37,9 +37,9 @@
     "@types/node": "~22.15.17",
     "@typescript-eslint/eslint-plugin": "~8.32.0",
     "@typescript-eslint/parser": "~8.32.0",
-    "@vitest/browser": "~3.1.3",
-    "@vitest/coverage-v8": "~3.1.3",
-    "@vitest/ui": "~3.1.3",
+    "@vitest/browser": "~3.2.4",
+    "@vitest/coverage-v8": "~3.2.4",
+    "@vitest/ui": "~3.2.4",
     "ajv": "~8.17.1",
     "concurrently": "~9.2.0",
     "eslint": "~9.26.0",
@@ -78,18 +78,45 @@
       "development": "./dist/browser/development/index.js",
       "default": "./dist/browser/production/index.js"
     },
-    "./components/checkbox.js": {
+    "./decorators/component.js": {
       "browser": {
-        "development": "./dist/browser/development/components/checkbox/checkbox.lit.js",
-        "default": "./dist/browser/production/components/checkbox/checkbox.lit.js"
+        "development": "./dist/browser/development/decorators/Component/index.js",
+        "default": "./dist/browser/production/decorators/Component/index.js"
       },
       "node": {
-        "development": "./dist/node/development/components/checkbox/checkbox.lit.js",
-        "default": "./dist/node/production/components/checkbox/checkbox.lit.js"
+        "development": "./dist/node/development/decorators/Component/index.js",
+        "default": "./dist/node/production/decorators/Component/index.js"
       },
-      "types": "./dist/browser/development/components/checkbox/checkbox.lit.d.ts",
-      "development": "./dist/browser/development/components/checkbox/checkbox.lit.js",
-      "default": "./dist/browser/production/components/checkbox/checkbox.lit.js"
+      "types": "./dist/browser/development/decorators/Component/index.d.ts",
+      "development": "./dist/browser/development/decorators/Component/index.js",
+      "default": "./dist/browser/production/decorators/Component/index.js"
+    },
+    "./decorators/event.js": {
+      "browser": {
+        "development": "./dist/browser/development/decorators/Event/index.js",
+        "default": "./dist/browser/production/decorators/Event/index.js"
+      },
+      "node": {
+        "development": "./dist/node/development/decorators/Event/index.js",
+        "default": "./dist/node/production/decorators/Event/index.js"
+      },
+      "types": "./dist/browser/development/decorators/Event/index.d.ts",
+      "development": "./dist/browser/development/decorators/Event/index.js",
+      "default": "./dist/browser/production/decorators/Event/index.js"
     }
+  },
+  "./decorators/watch.js": {
+    "browser": {
+      "development": "./dist/browser/development/decorators/Watch/index.js",
+      "default": "./dist/browser/production/decorators/Watch/index.js"
+    },
+    "node": {
+      "development": "./dist/node/development/decorators/Watch/index.js",
+      "default": "./dist/node/production/decorators/Watch/index.js"
+    },
+    "types": "./dist/browser/development/decorators/Watch/index.d.ts",
+    "development": "./dist/browser/development/decorators/Watch/index.js",
+    "default": "./dist/browser/production/decorators/Watch/index.js"
   }
 }
+
