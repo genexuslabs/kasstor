@@ -1,13 +1,22 @@
 {
   "name": "@genexus/lit-devkit",
   "version": "0.0.1",
+  "homepage": "https://github.com/genexuslabs/lit-devkit/",
   "description": "A set of utilities to build and test Lit applications and libraries.",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "jsnext:main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/genexuslabs/lit-devkit.git"
+  },
+  "keywords": [
+    "lit",
+    "lit decorators",
+    "web components"
+  ],
+  "main": "./dist/browser/production/index.js",
+  "module": "./dist/browser/production/index.js",
+  "jsnext:main": "./dist/browser/production/index.js",
   "types": "./dist/browser/development/index.d.ts",
   "type": "module",
-  "unpkg": "dist/chameleon/chameleon.esm.js",
   "files": [
     "dist/"
   ],
