@@ -10,13 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: 20.x
-          registry-url: https://registry.npmjs.org/
+          bun-version: latest
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Install dependencies
-        run: npm install
-      - run: npm run build:dev:browser
-      - run: npm publish --access=public
+        run: bun install
+      - run: bun run build:dev:browser
+      - run: bun publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
