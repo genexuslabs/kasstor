@@ -27,6 +27,6 @@ jobs:
       - name: Install dependencies
         run: bun install
       - run: bun run build:dev:browser
-      - run: bun publish --access=public
+      - run: npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
