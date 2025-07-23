@@ -1,0 +1,13 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  run-ci:
+    uses: ./.github/workflows/ci-common.yml
+    with:
+      should-publish: false
