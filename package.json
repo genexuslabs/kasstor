@@ -1,6 +1,6 @@
 {
   "name": "@genexus/lit-devkit",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "homepage": "https://github.com/genexuslabs/lit-devkit/",
   "description": "A set of utilities to build and test Lit applications and libraries.",
   "repository": {
