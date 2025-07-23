@@ -32,7 +32,6 @@
     "generate.types": "bun run ./src/scripts/exported-types/index.ts",
     "clear.dist": "bun run ./src/scripts/remove-dist.ts",
     "docs": "bun run ./src/scripts/docs/index.ts",
-    "prepare": "husky",
     "test": "bunx playwright install && vitest",
     "test.ci": "bun run test --watch=false --browser.headless",
     "test.ui": "bun run test --ui"
