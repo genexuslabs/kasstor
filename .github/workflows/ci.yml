@@ -8,9 +8,6 @@ on:
 
 jobs:
   run-ci:
-    # Don't run this workflow when the push a main contains a tag, since
-    # another workflow is executed for this use case
-    if: ${{ !(startsWith(github.ref, 'refs/tags/')) }}
     uses: ./.github/workflows/ci-common.yml
     with:
       should-publish: false
