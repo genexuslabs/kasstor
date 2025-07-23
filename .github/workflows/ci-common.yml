@@ -12,7 +12,7 @@ on:
         required: false
 
 jobs:
-  build-and-test:
+  build-test-and-maybe-publish:
     runs-on: ubuntu-latest
 
     steps:
@@ -40,14 +40,8 @@ jobs:
       - name: Create distribution
         run: bun run build
 
-  maybe-publish:
-    needs: build-and-test
-    if: ${{ inputs.should-publish }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
       - name: Publish package
-        run: npm publish --access=public
+        if: ${{ inputs.should-publish }}
+        run: bun publish --access=public
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          BUN_AUTH_TOKEN: ${{ secrets.npm_token }}
