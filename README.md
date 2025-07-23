@@ -19,7 +19,6 @@ A set of utilities to build and test Lit applications and libraries.
 ## Install
 
 ```bash
-# with npm
 npm i @genexus/lit-devkit
 ```
 
