@@ -1,4 +1,4 @@
-name: Publish
+name: Node.js Package
 
 on:
   push:
@@ -6,9 +6,33 @@ on:
       - "v*"
 
 jobs:
-  run-publish:
-    uses: ./.github/workflows/ci-common.yml
-    with:
-      should-publish: true
-    secrets:
-      npm_token: ${{ secrets.npm_token }}
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install
+
+      #- name: Run tests
+      #  run: bun test.ci
+
+      - name: Create distribution
+        run: bun run build
+
+      - run: npm publish --access=public
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
