@@ -10,5 +10,4 @@ jobs:
     uses: ./.github/workflows/ci-common.yml
     with:
       should-publish: true
-    secrets:
-      npm_token: ${{ secrets.npm_token }}
+    secrets: inherit
