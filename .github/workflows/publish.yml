@@ -1,0 +1,14 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  run-publish:
+    uses: ./.github/workflows/ci-common.yml
+    with:
+      should-publish: true
+    secrets:
+      npm_token: ${{ secrets.npm_token }}

@@ -25,6 +25,7 @@
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noImplicitOverride": true,
+    "noUncheckedSideEffectImports": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strict": true,
@@ -77,3 +78,4 @@
   // TODO: Exclude test files expect when running tests
   "exclude": ["node_modules", "vite.config.ts"]
 }
+

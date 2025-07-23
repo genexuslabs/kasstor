@@ -1,0 +1,53 @@
+name: Reusable CI Workflow
+
+on:
+  workflow_call:
+    inputs:
+      should-publish:
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      npm_token:
+        required: false
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun i
+
+      - name: Run tests
+        run: bun test.ci
+
+      - name: Create distribution
+        run: bun run build
+
+  maybe-publish:
+    needs: build-and-test
+    if: ${{ inputs.should-publish }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish package
+        run: bun publish --access=public
+        env:
+          BUN_AUTH_TOKEN: ${{ secrets.npm_token }}

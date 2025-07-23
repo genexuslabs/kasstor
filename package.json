@@ -112,20 +112,19 @@
       "types": "./dist/browser/development/decorators/Event/index.d.ts",
       "development": "./dist/browser/development/decorators/Event/index.js",
       "default": "./dist/browser/production/decorators/Event/index.js"
-    }
-  },
-  "./decorators/watch.js": {
-    "browser": {
+    },
+    "./decorators/watch.js": {
+      "browser": {
+        "development": "./dist/browser/development/decorators/Watch/index.js",
+        "default": "./dist/browser/production/decorators/Watch/index.js"
+      },
+      "node": {
+        "development": "./dist/node/development/decorators/Watch/index.js",
+        "default": "./dist/node/production/decorators/Watch/index.js"
+      },
+      "types": "./dist/browser/development/decorators/Watch/index.d.ts",
       "development": "./dist/browser/development/decorators/Watch/index.js",
       "default": "./dist/browser/production/decorators/Watch/index.js"
-    },
-    "node": {
-      "development": "./dist/node/development/decorators/Watch/index.js",
-      "default": "./dist/node/production/decorators/Watch/index.js"
-    },
-    "types": "./dist/browser/development/decorators/Watch/index.d.ts",
-    "development": "./dist/browser/development/decorators/Watch/index.js",
-    "default": "./dist/browser/production/decorators/Watch/index.js"
+    }
   }
 }
-
