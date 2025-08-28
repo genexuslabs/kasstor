@@ -133,9 +133,6 @@ const removeGlobalStyleSheet = (
  *     `;
  *   }
  * }
- *
- * // Usage
- * MyElement.define();
  * ```
  */
 export const Component = <
@@ -153,8 +150,19 @@ export const Component = <
       styles,
       shadow
     } = options;
-
     const { prototype } = target;
+
+    // Check if the element is already defined
+    const existing = customElements.get(tag);
+
+    if (existing && (existing as any) !== target) {
+      console.warn(
+        `The tag name "${tag}" is already defined by the class "${existing.name}". The current tag won't be redefined by the class "${target.name}" and the "Component" decorator implementation will be ignored.
+In some cases, this error can happen due to of HMR (Hot Module Replacement) issues.`
+      );
+
+      return existing as any;
+    }
 
     // Store in the SSRLitElement class these values
     (prototype as any).deferInitialRender = deferInitialRender;
@@ -210,25 +218,12 @@ export const Component = <
       (prototype as any).globalStyles = stylesheet;
     }
 
-    // Add the static define method to the class
-    (target as any).define = function () {
-      // Check if the tag name was already defined by another class
-      const existing = customElements.get(tag);
-
-      if (existing) {
-        if ((existing as any) === target) {
-          return; // Already defined as the correct class, no-op
-        }
-        throw new Error(
-          `Tag name \`${tag}\` already defined as \`${existing.name}\`.`
-        );
-      }
-
-      customElements.define(tag, target as any);
-    };
-
-    // TODO: This is a WA for SSR in Astro. This must no be here as it is a
-    // side-effect
+    // We won't implement the define method of the custom elements protocol,
+    // since at the time of creating the Component decorator, there are not
+    // good integrations with the protocol (for example, SSR in Astro fails to
+    // work with the "define" method) and we won't need this protocol if we
+    // don't re-export the customElements in a index.ts (which is the main
+    // issue as this provokes a side-effect that defines the components)
     customElements.define(tag, target as any);
 
     // Return the modified class with the define method
@@ -275,15 +270,13 @@ export abstract class SSRLitElement extends LitElement {
 
   protected globalStyles: CSSStyleSheet | undefined;
 
-  /**
-   * Static method to define the custom element. This method is added by the
-   * `@Component` decorator and provides a safe way to register the element
-   * without side effects during import.
-   */
-  static define: () => void;
-
   constructor() {
     super();
+    // TODO: There is a bug with this computation. In Astro when the polyfill
+    // for SSRed is applied, in the connectedCallback the shadowRoot is empty, so
+    // this computation fails, but in the first willUpdate (before the first
+    // render), this computation is correct. We need to find a way to
+    // communicate this information correctly.
     this.#serverSideRendered = componentWasServerSideRendered(this);
   }
 
@@ -321,3 +314,4 @@ export abstract class SSRLitElement extends LitElement {
     super.disconnectedCallback();
   }
 }
+
