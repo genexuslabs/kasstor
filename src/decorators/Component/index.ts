@@ -158,7 +158,7 @@ export const Component = <
     if (existing && (existing as any) !== target) {
       console.warn(
         `The tag name "${tag}" is already defined by the class "${existing.name}". The current tag won't be redefined by the class "${target.name}" and the "Component" decorator implementation will be ignored.
-In some cases, this error can happen due to of HMR (Hot Module Replacement) issues.`
+In some cases, this error can happen due to HMR (Hot Module Replacement) issues.`
       );
 
       return existing as any;
