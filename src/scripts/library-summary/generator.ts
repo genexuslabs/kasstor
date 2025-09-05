@@ -138,7 +138,8 @@ export function extractComponentDefinition(
           ts.isDecorator(mod) &&
           ts.isCallExpression(mod.expression) &&
           ts.isIdentifier(mod.expression.expression) &&
-          mod.expression.expression.text === "Component"
+          // This allow us to support custom "Component" decorators
+          mod.expression.expression.text.endsWith("Component")
       );
 
       if (decorator) {
