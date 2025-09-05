@@ -55,6 +55,27 @@ export type ComponentDefinition = {
   parts?: ComponentDefinitionParts;
   slots?: ComponentDefinitionSlots;
   cssVariables?: ComponentDefinitionCssVariables;
+
+  /**
+   * The location of type declarations that the component imports in order to
+   * correctly type its properties. This imports are relative to the folder
+   * of where the library is analyzed.
+   */
+  propertyImportTypes?: ComponentImportTypes;
+
+  /**
+   * The location of type declarations that the component imports in order to
+   * correctly type its events. This imports are relative to the folder
+   * of where the library is analyzed.
+   */
+  eventImportTypes?: ComponentImportTypes;
+
+  /**
+   * The location of type declarations that the component imports in order to
+   * correctly type its methods. This imports are relative to the folder
+   * of where the library is analyzed.
+   */
+  methodImportTypes?: ComponentImportTypes;
 };
 
 export type ComponentDefinitionProperties = ComponentDefinitionProperty[];
@@ -63,6 +84,7 @@ export type ComponentDefinitionMethods = ComponentDefinitionMethod[];
 export type ComponentDefinitionParts = ComponentDefinitionPart[];
 export type ComponentDefinitionSlots = ComponentDefinitionSlot[];
 export type ComponentDefinitionCssVariables = ComponentDefinitionCssVariable[];
+export type ComponentImportTypes = Record<string, string[]>;
 
 export type ComponentDefinitionProperty = {
   /**
