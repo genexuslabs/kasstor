@@ -1,5 +1,6 @@
 import { writeFile } from "fs/promises";
 import { join } from "path";
+import * as prettier from "prettier";
 import { extractLibraryComponents } from "./generator";
 
 export const getLibrarySummary = (relativeComponentsSrcPath: string) =>
@@ -7,13 +8,13 @@ export const getLibrarySummary = (relativeComponentsSrcPath: string) =>
 
 export const generateLibrarySummary = async (
   relativeComponentsSrcPath: string,
-  resultFilePath = "library-schema.ts"
+  resultFilePath = "library-summary.ts"
 ) => {
   const result = await getLibrarySummary(relativeComponentsSrcPath);
 
   return writeFile(
     resultFilePath,
-    `export const result = ${JSON.stringify(result, undefined, 2)}`
+    `export const result = ${await prettier.format(JSON.stringify(result, undefined, 2), { parser: "typescript" })}`
   );
 };
 
