@@ -1,9 +1,8 @@
+import { capitalize } from "../capitilize";
 import type {
   ComponentDefinition,
   ComponentDefinitionEvents
 } from "../library-summary/types";
-
-const capitalize = (word: string) => word[0].toUpperCase() + word.slice(1);
 
 const JSDOC_CLOSE_TAG_REGEX = /\*+\//g;
 const EMPTY_JSDOC_REGEX = /\/\*+\//g;

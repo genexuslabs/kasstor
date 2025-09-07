@@ -43,7 +43,7 @@ export const mergeTypeImports = (
     }
   });
 
-export const getAllPropertiesEventAndMethodsImports = (
+export const getAllPropertiesEventAndMethodsExports = (
   components: LibraryComponents
 ) => {
   const typesImportsOnEachModule = new Map<string, Set<string>>();
@@ -61,10 +61,11 @@ export const getAllPropertiesEventAndMethodsImports = (
   });
 
   return `${[...typesImportsOnEachModule.entries()]
+    // TODO: Should we filter external types?
     .sort((moduleA, moduleB) => sortImports(moduleA[0], moduleB[0]))
     .map(
       ([modulePath, typeImports]) =>
-        `import type { ${[...typeImports.values()].join(", ")} } from "${modulePath}";`
+        `export type { ${[...typeImports.values()].join(", ")} } from "${modulePath}";`
     )
     .join("\n")}`;
 };
@@ -72,7 +73,7 @@ export const getAllPropertiesEventAndMethodsImports = (
 export const getImportPaths = (
   components: LibraryComponents
 ) => `// Types used by properties, events and methods
-${getAllPropertiesEventAndMethodsImports(components)}
+${getAllPropertiesEventAndMethodsExports(components)}
 
 // Component class types
 ${getComponentImports(components)}`;
