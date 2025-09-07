@@ -76,7 +76,7 @@ const importAnalysisCache = new Map<string, ImportAnalysisCache>();
  */
 function normalizeRelativePath(filePath: string, basePath: string): string {
   const relativePath = path.relative(basePath, filePath);
-  return relativePath.replace(/\\/g, "/");
+  return "./" + relativePath.replace(/\\/g, "/");
 }
 
 /**
@@ -95,17 +95,7 @@ function resolveModulePath(
     // Add .ts extension if not present and file exists, otherwise try other extensions
     let finalPath = resolvedPath;
     if (!path.extname(resolvedPath)) {
-      const possibleExtensions = [".ts", ".js", ".d.ts"];
-      for (const ext of possibleExtensions) {
-        const pathWithExt = resolvedPath + ext;
-        try {
-          // We can't use async here, so we'll assume .ts for relative imports
-          finalPath = resolvedPath + ".ts";
-          break;
-        } catch {
-          // Continue to next extension
-        }
-      }
+      finalPath = resolvedPath + ".ts";
     }
 
     // Make it relative to searchPath and normalize
@@ -231,9 +221,10 @@ export function extractComponentDefinition(
 
   // Extract component metadata
   const decoratorConfig = extractDecoratorConfig(componentDecorator);
-  const jsDocInfo = extractJSDocInfo(componentClass);
+  const jsDocInfo = extractJSDocInfo(componentClass, sourceFile);
 
   const tagName = decoratorConfig.tag || "";
+
   // Shadow is true by default in the decorator
   const shadow = decoratorConfig.shadow !== false;
   const mode: "open" | "closed" = decoratorConfig.shadow?.mode || "open";
@@ -261,6 +252,7 @@ export function extractComponentDefinition(
     tagName,
     className,
     description: jsDocInfo.description || "",
+    fullClassJSDoc: jsDocInfo.fullClassJSDoc,
     srcPath: normalizeRelativePath(srcPath, ""),
     accessibleRole: jsDocInfo.accessibleRole,
     developmentStatus: jsDocInfo.status || "to-be-defined",
@@ -618,7 +610,10 @@ function extractDecoratorConfig(decorator: ts.Decorator) {
 /**
  * Extract JSDoc information from class declaration
  */
-function extractJSDocInfo(classDeclaration: ts.ClassDeclaration) {
+function extractJSDocInfo(
+  classDeclaration: ts.ClassDeclaration,
+  sourceFile: ts.SourceFile
+) {
   const jsDocTags = ts.getJSDocTags(classDeclaration);
   const jsDocComments = ts.getJSDocCommentsAndTags(classDeclaration);
 
@@ -640,6 +635,13 @@ function extractJSDocInfo(classDeclaration: ts.ClassDeclaration) {
         ? mainComment.comment
         : mainComment.comment.map(part => part.text || "").join("");
   }
+
+  // Extract full JSDoc text
+  const fullClassJSDoc = jsDocComments[0]
+    ? sourceFile.text
+        .substring(jsDocComments[0].pos, jsDocComments[0].end)
+        .trim()
+    : "";
 
   // Extract tags
   jsDocTags.forEach(tag => {
@@ -709,6 +711,7 @@ function extractJSDocInfo(classDeclaration: ts.ClassDeclaration) {
   });
 
   return {
+    fullClassJSDoc,
     description: description.trim(),
     status,
     accessibleRole,

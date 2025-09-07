@@ -1,4 +1,7 @@
-import { ComponentDefinition, LibraryComponents } from "./types";
+import {
+  ComponentDefinition,
+  LibraryComponents
+} from "../library-summary/types";
 
 export const getComponentEventsUnionType = (component: ComponentDefinition) =>
   `{

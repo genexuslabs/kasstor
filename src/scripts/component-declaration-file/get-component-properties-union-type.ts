@@ -1,5 +1,8 @@
+import {
+  ComponentDefinition,
+  LibraryComponents
+} from "../library-summary/types";
 import { getImportClassName } from "./get-import-class-name";
-import { ComponentDefinition, LibraryComponents } from "./types";
 
 export const getComponentPropertiesUnionType = (
   component: ComponentDefinition
@@ -10,9 +13,9 @@ export const getComponentPropertiesUnionType = (
 
 export const getComponentProperties = (components: LibraryComponents) =>
   `/**
-     * Each interface contains the properties of the custom elements of the library.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-namespace
-    export namespace Components {
-      ${components.map(component => `export type ${component.className} = ${getComponentPropertiesUnionType(component)}`).join("\n  ")}
-    }`;
+ * Each interface contains the properties of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentProperties {
+  ${components.map(component => `export type ${component.className} = ${getComponentPropertiesUnionType(component)}`).join("\n  ")}
+}`;

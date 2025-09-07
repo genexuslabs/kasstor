@@ -7,6 +7,11 @@ export type ComponentDefinition = {
   description: string;
 
   /**
+   * The full JSDoc comment of the custom element Class.
+   */
+  fullClassJSDoc: string;
+
+  /**
    * Relative path where the component's class is located.
    */
   srcPath: string;
