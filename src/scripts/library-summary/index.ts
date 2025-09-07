@@ -37,6 +37,9 @@ export const generateLibrarySummary = async (
   ]);
 };
 
-generateLibrarySummary("src/");
+await generateLibrarySummary("src/");
 
-console.log("Elapsed time:", performance.now() - startTime);
+console.log(
+  "Elapsed time:",
+  ((performance.now() - startTime) / 1000).toFixed(3) + "s"
+);

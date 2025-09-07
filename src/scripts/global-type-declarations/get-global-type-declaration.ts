@@ -173,5 +173,4 @@ export const getComponentGlobalTypeDeclaration = (
 declare global {
   ${getComponentEventDefinitions(component)}${getComponentCustomEventExtend(component)}${getComponentEventMapAndTypes(component)}${getComponentClassExtend(component)}
   ${getExtendTagNameMap(component)}
-}
-`;
+}\r\n\r\n`;
