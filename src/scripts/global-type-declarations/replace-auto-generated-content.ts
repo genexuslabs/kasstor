@@ -204,15 +204,8 @@ function processFileContent(
     const contentBeforeMarker = lines.slice(0, markerIndex + 1);
     preservedLines = contentBeforeMarker.length - 1; // Exclude marker line
 
-    // Ensure newContent doesn't start with unnecessary line breaks
-    const cleanNewContent = newContent.replace(/^[\r\n]+/, "");
-
     finalContent =
-      contentBeforeMarker.join(lineEnding) +
-      lineEnding +
-      lineEnding +
-      cleanNewContent +
-      lineEnding;
+      contentBeforeMarker.join(lineEnding) + lineEnding + newContent;
   } else {
     // Marker not found: append marker and content
     preservedLines = lines.length;
@@ -222,17 +215,13 @@ function processFileContent(
       normalizedOriginal && !normalizedOriginal.endsWith(lineEnding);
     const prefix = needsLineBreak ? lineEnding : "";
 
-    // Clean new content
-    const cleanNewContent = newContent.replace(/^[\r\n]+/, "");
-
     finalContent =
       normalizedOriginal +
       prefix +
       lineEnding +
       AUTO_GENERATED_MARKER +
       lineEnding +
-      lineEnding +
-      cleanNewContent;
+      newContent;
   }
 
   return {

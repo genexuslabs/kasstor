@@ -1,4 +1,4 @@
-import {
+import type {
   ComponentDefinition,
   LibraryComponents
 } from "../library-summary/types";
