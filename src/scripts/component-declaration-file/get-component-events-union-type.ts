@@ -1,4 +1,5 @@
-import { capitalize } from "../capitilize";
+import { capitalize } from "../capitalize";
+import { getFormattedPropertyOrEventDescription } from "../get-formatted-property-or-event-description";
 import { getComponentEventTypeInterfaceName } from "../global-type-declarations/get-global-type-declaration";
 import type {
   ComponentDefinition,
@@ -8,21 +9,22 @@ import type {
 export const eventTemplateName = {
   jsx: name => `on${capitalize(name)}` as const,
   nothing: name => name,
-  solidjs: name => `"on:${name}"` as const
+  solidJs: name => `"on:${name}"` as const
 } as const satisfies {
-  [key in "solidjs" | "jsx" | "nothing"]: <T extends string>(name: T) => string;
+  [key in "solidJs" | "jsx" | "nothing"]: <T extends string>(name: T) => string;
 };
 
 export const getComponentEventsUnionType = (
   component: ComponentDefinition,
-  frameworkType: "solidjs" | "jsx" | "nothing"
+  frameworkType: "solidJs" | "jsx" | "nothing"
 ) =>
   `{
   ${component
     .events!.map(
-      ({ name, description }) => `  /**
-     * ${description?.split("\n").join("\n     * ") ?? ""}
-     */
+      ({
+        name,
+        description
+      }) => `  ${getFormattedPropertyOrEventDescription(description)}
     ${eventTemplateName[frameworkType](name)}?: ${getComponentEventTypeInterfaceName(component.className, name)};`
     )
     .join("\n\n  ")}
@@ -30,7 +32,7 @@ export const getComponentEventsUnionType = (
 
 export const getComponentEvents = (
   components: LibraryComponents,
-  frameworkType: "solidjs" | "jsx" | "nothing"
+  frameworkType: "solidJs" | "jsx" | "nothing"
 ) =>
   `/**
  * Each interface contains the events of the custom elements of the library.

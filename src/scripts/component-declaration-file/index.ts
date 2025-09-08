@@ -1,6 +1,9 @@
 import type { LibraryComponents } from "../library-summary/types";
 import { getComponentEvents } from "./get-component-events-union-type";
-import { getComponentProperties } from "./get-component-properties-union-type";
+import {
+  getComponentProperties,
+  getComponentPropertiesSolidJS
+} from "./get-component-properties-union-type";
 import { getImportPaths } from "./get-import-paths";
 import {
   getLocalJSXTypes,
@@ -30,6 +33,8 @@ export const getComponentDeclaration = (components: LibraryComponents) =>
     : `${getImportPaths(components)}
 
 ${getComponentProperties(components)}
+
+${getComponentPropertiesSolidJS(components)}
 
 ${getComponentEvents(components, "nothing")}
 ${getLocalJSXTypes(components)}

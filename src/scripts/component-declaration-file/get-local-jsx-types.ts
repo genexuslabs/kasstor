@@ -3,6 +3,7 @@ import type {
   ComponentDefinition,
   LibraryComponents
 } from "../library-summary/types";
+import { COMPONENT_PROPERTIES_NAMESPACE_NAMES } from "./constants";
 import { getComponentEventsUnionType } from "./get-component-events-union-type";
 
 const LOCAL_JSX_NAMESPACE = "LocalJSX";
@@ -10,11 +11,11 @@ const SOLID_JS_NAMESPACE = "SolidJsJSX";
 
 export const getComponentLocalJSXType = (
   component: ComponentDefinition,
-  frameworkType: "solidjs" | "jsx" | "nothing"
+  frameworkType: "solidJs" | "jsx" | "nothing"
 ) =>
   component.events && component.events.length !== 0
-    ? `export type ${component.className} = ComponentProperties.${component.className} & ${getComponentEventsUnionType(component, frameworkType)}`
-    : `export type ${component.className} = ComponentProperties.${component.className};`;
+    ? `export type ${component.className} = ${COMPONENT_PROPERTIES_NAMESPACE_NAMES[frameworkType]}.${component.className} & ${getComponentEventsUnionType(component, frameworkType)}`
+    : `export type ${component.className} = ${COMPONENT_PROPERTIES_NAMESPACE_NAMES[frameworkType]}.${component.className};`;
 
 export const getIntrinsicElementsInterface = (
   components: LibraryComponents
@@ -48,7 +49,7 @@ export const getSolidJsTypes = (components: LibraryComponents) => `
 //                Types for SolidJS templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 declare namespace ${SOLID_JS_NAMESPACE} {
-  ${components.map(component => getComponentLocalJSXType(component, "solidjs")).join("\n\n  ")}
+  ${components.map(component => getComponentLocalJSXType(component, "solidJs")).join("\n\n  ")}
   ${getIntrinsicElementsInterface(components)}
 }
 

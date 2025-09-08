@@ -1,4 +1,4 @@
-import { capitalize } from "../capitilize";
+import { capitalize } from "../capitalize";
 import type {
   ComponentDefinition,
   ComponentDefinitionEvents
