@@ -97,7 +97,8 @@ const alignJSDoc = (jsDoc: string) => "\n  " + jsDoc.split("\n").join("\n  ");
 
 export const getFullJSDocWithFiresTags = (
   fullClassJSDoc: string,
-  events: ComponentDefinitionEvents | undefined
+  events: ComponentDefinitionEvents | undefined,
+  includeBackticksForEventName = false
 ) => {
   if (!events || events.length === 0) {
     return alignJSDoc(fullClassJSDoc);
@@ -132,7 +133,7 @@ export const getFullJSDocWithFiresTags = (
   // Concat events
   events.forEach(event =>
     splittedJSDoc.push(
-      ` * @fires ${event.name} ${event.description?.replaceAll("\n", "\n *   ")}`
+      ` * @fires ${includeBackticksForEventName ? `\`${event.name}\`` : event.name} ${event.description?.replaceAll("\n", "\n *   ")}`
     )
   );
 

@@ -20,14 +20,14 @@ export const getComponentLocalJSXType = (
 export const getIntrinsicElementsInterface = (
   components: LibraryComponents
 ) => `
-  interface IntrinsicElements {    ${components
+  interface IntrinsicElements {${components
     .map(
       ({
         className,
         events,
         fullClassJSDoc,
         tagName
-      }) => `${getFullJSDocWithFiresTags(fullClassJSDoc, events).split("\n").join("\n  ")}
+      }) => `${getFullJSDocWithFiresTags(fullClassJSDoc, events, true).split("\n").join("\n  ")}
     "${tagName}": ${className};`
     )
     .join("\n    ")}
