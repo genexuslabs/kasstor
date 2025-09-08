@@ -34,7 +34,7 @@ export type ComponentDefinition = {
   packageJsonExportsPath?: string;
 
   /**
-   * Semantic role that the component implement. A component might implement
+   * Semantic role that the component implements. A component might implement
    * multiple accessible roles, in which case they are defined with an array.
    */
   accessibleRole?: string | string[];
@@ -49,8 +49,8 @@ export type ComponentDefinition = {
     | "to-be-defined";
 
   /**
-   * `true` if the component can be used in form by setting the name attribute.
-   * on the tag.
+   * `true` if the component can be used in web forms by setting the name
+   * attribute on the tag.
    */
   formAssociated?: boolean;
 
@@ -73,21 +73,21 @@ export type ComponentDefinition = {
 
   /**
    * The location of type declarations that the component imports in order to
-   * correctly type its properties. This imports are relative to the folder
+   * correctly type its properties. These imports are relative to the folder
    * of where the library is analyzed.
    */
   propertyImportTypes?: ComponentImportTypes;
 
   /**
    * The location of type declarations that the component imports in order to
-   * correctly type its events. This imports are relative to the folder
+   * correctly type its events. These imports are relative to the folder
    * of where the library is analyzed.
    */
   eventImportTypes?: ComponentImportTypes;
 
   /**
    * The location of type declarations that the component imports in order to
-   * correctly type its methods. This imports are relative to the folder
+   * correctly type its methods. These imports are relative to the folder
    * of where the library is analyzed.
    */
   methodImportTypes?: ComponentImportTypes;
