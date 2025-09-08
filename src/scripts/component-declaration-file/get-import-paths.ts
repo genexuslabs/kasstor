@@ -60,14 +60,23 @@ export const getAllPropertiesEventAndMethodsExports = (
     }
   });
 
-  return `${[...typesImportsOnEachModule.entries()]
+  const sortedImports = [...typesImportsOnEachModule.entries()]
     // TODO: Should we filter external types?
-    .sort((moduleA, moduleB) => sortImports(moduleA[0], moduleB[0]))
+    .sort((moduleA, moduleB) => sortImports(moduleA[0], moduleB[0]));
+
+  return `${sortedImports
     .map(
       ([modulePath, typeImports]) =>
-        `export type { ${[...typeImports.values()].join(", ")} } from "${modulePath}";`
+        `import type { ${[...typeImports.values()].join(", ")} } from "${modulePath}";`
     )
-    .join("\n")}`;
+    .join("\n")}
+
+${sortedImports
+  .map(
+    moduleImport =>
+      `export type { ${[...moduleImport[1].values()].join(", ")} };`
+  )
+  .join("\n")}`;
 };
 
 export const getImportPaths = (
@@ -77,3 +86,4 @@ ${getAllPropertiesEventAndMethodsExports(components)}
 
 // Component class types
 ${getComponentImports(components)}`;
+
