@@ -35,7 +35,6 @@ export const getComponentEvents = (
   `/**
  * Each interface contains the events of the custom elements of the library.
  */
-// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ComponentEvents {
   ${components
     .filter(({ events }) => events && events.length !== 0)
@@ -45,3 +44,4 @@ export namespace ComponentEvents {
     )
     .join("\n\n  ")}
 }`;
+

@@ -16,7 +16,6 @@ export const getLocalJSXTypes = (components: LibraryComponents) => `
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //                  Types for JSX templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace LocalJSX {
   ${components.map(component => getComponentLocalJSXType(component, "jsx")).join("\n\n  ")}
 
@@ -31,7 +30,6 @@ export const getSolidJsTypes = (components: LibraryComponents) => `
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //                Types for SolidJS templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace SolidJsJSX {
   ${components.map(component => getComponentLocalJSXType(component, "solidjs")).join("\n\n  ")}
 
@@ -47,7 +45,6 @@ export const getReactModuleTypes = () => `
 //          Apply module types for React templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 declare module "react" {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     type IntrinsicElements = LocalJSX.IntrinsicElements;
   }
@@ -58,7 +55,6 @@ export const getSolidJsModuleTypes = () => `
 //         Apply module types for SolidJS templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 declare module "solid-js" {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     type IntrinsicElements = SolidJsJSX.IntrinsicElements;
   }
@@ -69,8 +65,8 @@ export const getStencilJsModuleTypes = () => `
 //        Apply module types for StencilJS templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 declare module "@stencil/core" {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace JSX {
     type IntrinsicElements = LocalJSX.IntrinsicElements;
   }
 }`;
+

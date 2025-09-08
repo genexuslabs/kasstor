@@ -15,7 +15,7 @@ export const getComponentProperties = (components: LibraryComponents) =>
   `/**
  * Each interface contains the properties of the custom elements of the library.
  */
-// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ComponentProperties {
   ${components.map(component => `export type ${component.className} = ${getComponentPropertiesUnionType(component)}`).join("\n  ")}
 }`;
+
