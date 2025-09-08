@@ -1,8 +1,12 @@
+import { getFullJSDocWithFiresTags } from "../global-type-declarations/get-global-type-declaration";
 import type {
   ComponentDefinition,
   LibraryComponents
 } from "../library-summary/types";
 import { getComponentEventsUnionType } from "./get-component-events-union-type";
+
+const LOCAL_JSX_NAMESPACE = "LocalJSX";
+const SOLID_JS_NAMESPACE = "SolidJsJSX";
 
 export const getComponentLocalJSXType = (
   component: ComponentDefinition,
@@ -12,33 +16,43 @@ export const getComponentLocalJSXType = (
     ? `export type ${component.className} = ComponentProperties.${component.className} & ${getComponentEventsUnionType(component, frameworkType)}`
     : `export type ${component.className} = ComponentProperties.${component.className};`;
 
+export const getIntrinsicElementsInterface = (
+  components: LibraryComponents
+) => `
+  interface IntrinsicElements {    ${components
+    .map(
+      ({
+        className,
+        events,
+        fullClassJSDoc,
+        tagName
+      }) => `${getFullJSDocWithFiresTags(fullClassJSDoc, events).split("\n").join("\n  ")}
+    "${tagName}": ${className};`
+    )
+    .join("\n    ")}
+  }`;
+
 export const getLocalJSXTypes = (components: LibraryComponents) => `
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //                  Types for JSX templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-declare namespace LocalJSX {
+declare namespace ${LOCAL_JSX_NAMESPACE} {
   ${components.map(component => getComponentLocalJSXType(component, "jsx")).join("\n\n  ")}
-
-  interface IntrinsicElements {
-    ${components.map(({ className, tagName }) => `"${tagName}": ${className};`).join("\n    ")}
-  }
+  ${getIntrinsicElementsInterface(components)}
 }
   
-export type { LocalJSX as JSX };`;
+export type { ${LOCAL_JSX_NAMESPACE} as JSX };`;
 
 export const getSolidJsTypes = (components: LibraryComponents) => `
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //                Types for SolidJS templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-declare namespace SolidJsJSX {
+declare namespace ${SOLID_JS_NAMESPACE} {
   ${components.map(component => getComponentLocalJSXType(component, "solidjs")).join("\n\n  ")}
-
-  interface IntrinsicElements {
-    ${components.map(({ className, tagName }) => `"${tagName}": ${className};`).join("\n    ")}
-  }
+  ${getIntrinsicElementsInterface(components)}
 }
 
-export type { SolidJsJSX };`;
+export type { ${SOLID_JS_NAMESPACE} };`;
 
 export const getReactModuleTypes = () => `
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -46,7 +60,8 @@ export const getReactModuleTypes = () => `
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 declare module "react" {
   namespace JSX {
-    type IntrinsicElements = LocalJSX.IntrinsicElements;
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends ${LOCAL_JSX_NAMESPACE}.IntrinsicElements {}
   }
 }`;
 
@@ -56,7 +71,8 @@ export const getSolidJsModuleTypes = () => `
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 declare module "solid-js" {
   namespace JSX {
-    type IntrinsicElements = SolidJsJSX.IntrinsicElements;
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends ${SOLID_JS_NAMESPACE}.IntrinsicElements {}
   }
 }`;
 
@@ -65,8 +81,9 @@ export const getStencilJsModuleTypes = () => `
 //        Apply module types for StencilJS templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 declare module "@stencil/core" {
-  export namespace JSX {
-    type IntrinsicElements = LocalJSX.IntrinsicElements;
+  namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends ${LOCAL_JSX_NAMESPACE}.IntrinsicElements {}
   }
 }`;
 

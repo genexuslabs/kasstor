@@ -93,7 +93,7 @@ const getComponentRemoveEventListener = <Class extends string>(
     : (`
     /* prettier-ignore */ removeEventListener<K extends keyof ${getComponentEventTypesInterfaceName(className)}>(type: K, listener: (this: ${getComponentHTMLInterfaceName(className)}, ev: ${getComponentEventTypesInterfaceName(className)}[K]) => unknown, options?: boolean | EventListenerOptions): void;` as const);
 
-const alignJSDoc = (jsDoc: string) => "\n\n  " + jsDoc.split("\n").join("\n  ");
+const alignJSDoc = (jsDoc: string) => "\n  " + jsDoc.split("\n").join("\n  ");
 
 export const getFullJSDocWithFiresTags = (
   fullClassJSDoc: string,
@@ -148,7 +148,8 @@ export const getComponentClassExtend = ({
   className,
   fullClassJSDoc,
   events
-}: ComponentDefinition) => `${getFullJSDocWithFiresTags(fullClassJSDoc, events)}
+}: ComponentDefinition) => `
+${getFullJSDocWithFiresTags(fullClassJSDoc, events)}
   // prettier-ignore
   interface ${getComponentHTMLInterfaceName(className)} extends ${className} {
     // Extend the ${className} class redefining the event listener methods to improve type safety when using them${getComponentAddEventListener(className, events)}
