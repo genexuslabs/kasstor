@@ -1,6 +1,16 @@
 export type LibraryComponents = ComponentDefinition[];
 
 export type ComponentDefinition = {
+  /**
+   * The visibility of the component in the library. "public" component can be
+   * used outside of the library, but "private" components are scoped to the
+   * library, meaning that they should not be used outside of the library.
+   *
+   * For example, if a component is part of a render and should only be controlled
+   * by the render, it should be marked with "private" | "protected" | "package".
+   */
+  access: "public" | "private" | "protected" | "package";
+
   tagName: string;
   className: string;
 
@@ -153,3 +163,4 @@ export type ComponentDefinitionCssVariable = {
   default?: string;
   name: string;
 };
+

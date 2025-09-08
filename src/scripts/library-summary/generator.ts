@@ -2,6 +2,7 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import * as ts from "typescript";
 
+import { styleText } from "util";
 import type {
   ComponentDefinition,
   ComponentDefinitionCssVariable,
@@ -67,9 +68,56 @@ const LIT_LIFECYCLE_METHODS = new Set([
   "renderRoot"
 ]);
 
+const ALL_KIND_OF_ACCESS = [
+  "package",
+  "private",
+  "protected",
+  "public"
+] satisfies ComponentDefinition["access"][];
+
+const ALL_KIND_OF_DEVELOPMENT_STATUS = [
+  "developer-preview",
+  "experimental",
+  "stable",
+  "to-be-defined"
+] satisfies ComponentDefinition["developmentStatus"][];
+
+const jsDocFieldToValidValuesArray = {
+  access: ALL_KIND_OF_ACCESS,
+  developmentStatus: ALL_KIND_OF_DEVELOPMENT_STATUS
+} as const;
+
 // Cache for parsed TypeScript files to improve performance
 const sourceFileCache = new Map<string, ts.SourceFile>();
 const importAnalysisCache = new Map<string, ImportAnalysisCache>();
+
+const printWarningForJSDocTag = (
+  sourceFile: ts.SourceFile,
+  tag: ts.JSDocTag,
+  jsDocTag: "access" | "developmentStatus",
+  componentPath: string,
+  comment: string | undefined
+) =>
+  console.warn(
+    styleText("yellow", "  [warn] In the component ") +
+      styleText(
+        "cyanBright",
+        componentPath + ":" + getLineNumberFromPosition(sourceFile, tag.pos)
+      ) +
+      styleText(
+        "yellow",
+        ` an invalid comment for the "${jsDocTag}" JSDoc tag was detected.\n         Ensure the component description is the first field. Also, the only valid values for the "${jsDocTag}" field are ` +
+          styleText(
+            "greenBright",
+            jsDocFieldToValidValuesArray[jsDocTag]
+              .map(value => `"${value}"`)
+              .join(" | ")
+          ) +
+          styleText("yellow", `.\n         Comment found:\n         `)
+      ) +
+      (comment as string | undefined)?.split("\n").join("\n         ") +
+      "\n"
+  );
 
 /**
  * Normalize path to use forward slashes and make it relative to basePath
@@ -109,7 +157,8 @@ function resolveModulePath(
  * Main function to extract library components metadata from a directory
  */
 export async function extractLibraryComponents(
-  searchPath: string
+  searchPath: string,
+  defaultComponentAccess: ComponentDefinition["access"]
 ): Promise<LibraryComponents> {
   const [litFiles, exportsMap] = await Promise.all([
     findLitComponents(searchPath),
@@ -127,7 +176,8 @@ export async function extractLibraryComponents(
       const componentDef = extractComponentDefinition(
         fileContent,
         relativePath,
-        searchPath
+        searchPath,
+        defaultComponentAccess
       );
       if (componentDef) {
         // Add package.json exports path if available
@@ -163,7 +213,8 @@ export async function extractLibraryComponents(
 export function extractComponentDefinition(
   fileContent: string,
   srcPath: string,
-  searchPath: string
+  searchPath: string,
+  defaultComponentAccess: ComponentDefinition["access"]
 ): ComponentDefinition | null {
   // Check cache first
   const cacheKey = `${srcPath}:${fileContent.length}`;
@@ -181,7 +232,7 @@ export function extractComponentDefinition(
   }
 
   // Extract import information
-  const importAnalysis = extractImportAnalysis(sourceFile, srcPath, searchPath);
+  const importAnalysis = extractImportAnalysis(sourceFile, searchPath, srcPath);
 
   let componentClass: ts.ClassDeclaration | null = null;
   let componentDecorator: ts.Decorator | null = null;
@@ -221,7 +272,7 @@ export function extractComponentDefinition(
 
   // Extract component metadata
   const decoratorConfig = extractDecoratorConfig(componentDecorator);
-  const jsDocInfo = extractJSDocInfo(componentClass, sourceFile);
+  const jsDocInfo = extractJSDocInfo(componentClass, sourceFile, srcPath);
 
   const tagName = decoratorConfig.tag || "";
 
@@ -249,6 +300,7 @@ export function extractComponentDefinition(
   );
 
   return {
+    access: jsDocInfo.access ?? defaultComponentAccess,
     tagName,
     className,
     description: jsDocInfo.description || "",
@@ -282,8 +334,8 @@ export function extractComponentDefinition(
  */
 function extractImportAnalysis(
   sourceFile: ts.SourceFile,
-  srcPath: string,
-  searchPath: string
+  searchPath: string,
+  srcPath: string
 ): ImportAnalysisCache {
   // Check cache first
   const cacheKey = `${searchPath}:${srcPath}`;
@@ -608,16 +660,30 @@ function extractDecoratorConfig(decorator: ts.Decorator) {
 }
 
 /**
+ * Calculate the line number for a given position in the source file
+ * @param position - Character position in the source file
+ * @returns 1-based line number
+ */
+const getLineNumberFromPosition = (
+  sourceFile: ts.SourceFile,
+  position: number
+): number => {
+  return sourceFile.getLineAndCharacterOfPosition(position).line + 1;
+};
+
+/**
  * Extract JSDoc information from class declaration
  */
 function extractJSDocInfo(
   classDeclaration: ts.ClassDeclaration,
-  sourceFile: ts.SourceFile
+  sourceFile: ts.SourceFile,
+  componentPath: string
 ) {
   const jsDocTags = ts.getJSDocTags(classDeclaration);
   const jsDocComments = ts.getJSDocCommentsAndTags(classDeclaration);
 
   let description = "";
+  let access: ComponentDefinition["access"] | undefined = undefined;
   let status: ComponentDefinition["developmentStatus"] = "to-be-defined";
   let accessibleRole: string | string[] | undefined;
   const parts: ComponentDefinitionPart[] = [];
@@ -653,16 +719,44 @@ function extractJSDocInfo(
         : comment?.map(part => part.text || "").join("") || "";
 
     switch (tagName) {
+      case "access":
+        if (
+          ALL_KIND_OF_ACCESS.includes(
+            commentText as ComponentDefinition["access"]
+          )
+        ) {
+          access = commentText as ComponentDefinition["access"];
+        } else {
+          printWarningForJSDocTag(
+            sourceFile,
+            tag,
+            "access",
+            componentPath,
+            comment as string | undefined
+          );
+        }
+        break;
+      case "package":
+      case "private":
+      case "protected":
+      case "public":
+        access = tagName;
+        break;
       case "status":
         if (
-          [
-            "experimental",
-            "developer-preview",
-            "stable",
-            "to-be-defined"
-          ].includes(commentText)
+          ALL_KIND_OF_DEVELOPMENT_STATUS.includes(
+            commentText as ComponentDefinition["developmentStatus"]
+          )
         ) {
           status = commentText as ComponentDefinition["developmentStatus"];
+        } else {
+          printWarningForJSDocTag(
+            sourceFile,
+            tag,
+            "developmentStatus",
+            componentPath,
+            comment as string | undefined
+          );
         }
         break;
       case "accessibleRole":
@@ -711,6 +805,7 @@ function extractJSDocInfo(
   });
 
   return {
+    access,
     fullClassJSDoc,
     description: description.trim(),
     status,
@@ -1154,3 +1249,4 @@ function getDefaultExportPath(
     exportCondition.browser?.development
   );
 }
+
