@@ -40,7 +40,9 @@ export const generateLibrarySummary = async (options: {
     relativeComponentsSrcPath,
     defaultComponentAccess ?? DEFAULT_COMPONENT_ACCESS
   );
-  const componentsDeclarationFile = getComponentDeclaration(libraryComponents);
+  const componentsDeclarationFile = getComponentDeclaration(
+    libraryComponents.filter(component => component.access === "public")
+  );
 
   return Promise.allSettled([
     ...libraryComponents.map(component =>
