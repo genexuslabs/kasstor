@@ -34,7 +34,8 @@ export const getComponentEventTypesInterfaceName = <T extends string>(
 
 export const getComponentEventDefinitions = ({
   className
-}: ComponentDefinition) => `interface ${getComponentCustomEventInterfaceName(className)}<T> extends CustomEvent<T> {
+}: ComponentDefinition) => `// prettier-ignore
+  interface ${getComponentCustomEventInterfaceName(className)}<T> extends CustomEvent<T> {
     detail: T;
     target: ${getComponentHTMLInterfaceName(className)};
   }`;
@@ -51,6 +52,7 @@ export const getComponentCustomEventExtend = ({
           event => `
 
   /** Type of the \`${tagName}\`'s \`${event.name}\` event. */
+  // prettier-ignore
   type ${getComponentEventTypeInterfaceName(className, event.name)} = ${getComponentCustomEventInterfaceName(className)}<
     ${getComponentEventMapInterfaceName(className)}["${event.name}"]
   >;`
@@ -147,6 +149,7 @@ export const getComponentClassExtend = ({
   fullClassJSDoc,
   events
 }: ComponentDefinition) => `${getFullJSDocWithFiresTags(fullClassJSDoc, events)}
+  // prettier-ignore
   interface ${getComponentHTMLInterfaceName(className)} extends ${className} {
     // Extend the ${className} class redefining the event listener methods to improve type safety when using them${getComponentAddEventListener(className, events)}
     /* prettier-ignore */ addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
@@ -173,3 +176,4 @@ declare global {
   ${getComponentEventDefinitions(component)}${getComponentCustomEventExtend(component)}${getComponentEventMapAndTypes(component)}${getComponentClassExtend(component)}
   ${getExtendTagNameMap(component)}
 }\r\n\r\n`;
+
