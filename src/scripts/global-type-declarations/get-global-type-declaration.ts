@@ -171,11 +171,20 @@ export const getExtendTagNameMap = ({
     "${tagName}": ${getComponentHTMLInterfaceName(className)};
   }`;
 
+export const getExtendIntrinsicElements = ({
+  className,
+  tagName
+}: ComponentDefinition) => `
+  interface IntrinsicElements {
+    "${tagName}": ${getComponentHTMLInterfaceName(className)};
+  }`;
+
 export const getComponentGlobalTypeDeclaration = (
   component: ComponentDefinition
 ) => `
 declare global {
   ${getComponentEventDefinitions(component)}${getComponentCustomEventExtend(component)}${getComponentEventMapAndTypes(component)}${getComponentClassExtend(component)}
+  ${getExtendIntrinsicElements(component)}
   ${getExtendTagNameMap(component)}
 }\r\n\r\n`;
 
