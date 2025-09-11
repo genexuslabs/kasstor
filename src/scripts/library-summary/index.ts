@@ -9,7 +9,7 @@ import type { ComponentDefinition } from "./types";
 
 const startTime = performance.now();
 
-const DEFAULT_DECLARATION_FILE_NAME = "components.d.ts";
+const DEFAULT_DECLARATION_FILE_NAME = "components.ts";
 const DEFAULT_LIBRARY_SUMMARY_FILE_NAME = "library-summary.ts";
 const DEFAULT_COMPONENT_ACCESS =
   "public" satisfies ComponentDefinition["access"];

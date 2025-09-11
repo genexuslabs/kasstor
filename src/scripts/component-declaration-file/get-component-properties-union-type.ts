@@ -31,6 +31,7 @@ export const getComponentProperties = (components: LibraryComponents) =>
   `/**
  * Each interface contains the properties of the custom elements of the library.
  */
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ${COMPONENT_PROPERTIES_NAMESPACE_NAMES.jsx} {
   ${components.map(component => `export type ${component.className} = ${getComponentPropertiesUnionType(component)};`).join("\n  ")}
 }`;
@@ -40,6 +41,7 @@ export const getComponentPropertiesSolidJS = (components: LibraryComponents) =>
  * Each interface contains the properties of the custom elements of the library.
  * This format is used for SolidJS applications.
  */
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ${COMPONENT_PROPERTIES_NAMESPACE_NAMES.solidJs} {
   ${components.map(component => `export type ${component.className} = ${getComponentPropertiesUnionTypeSolidJS(component)};`).join("\n\n  ")}
 }`;

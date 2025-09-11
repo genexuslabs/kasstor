@@ -37,6 +37,7 @@ export const getLocalJSXTypes = (components: LibraryComponents) => `
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //                  Types for JSX templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace ${LOCAL_JSX_NAMESPACE} {
   ${components.map(component => getComponentLocalJSXType(component, "jsx")).join("\n\n  ")}
   ${getIntrinsicElementsInterface(components)}
@@ -48,6 +49,7 @@ export const getSolidJsTypes = (components: LibraryComponents) => `
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //                Types for SolidJS templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace ${SOLID_JS_NAMESPACE} {
   ${components.map(component => getComponentLocalJSXType(component, "solidJs")).join("\n\n  ")}
   ${getIntrinsicElementsInterface(components)}
@@ -60,6 +62,7 @@ export const getReactModuleTypes = () => `
 //          Apply module types for React templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 declare module "react" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     interface IntrinsicElements extends ${LOCAL_JSX_NAMESPACE}.IntrinsicElements {}
@@ -71,6 +74,7 @@ export const getSolidJsModuleTypes = () => `
 //         Apply module types for SolidJS templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 declare module "solid-js" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     interface IntrinsicElements extends ${SOLID_JS_NAMESPACE}.IntrinsicElements {}
@@ -82,7 +86,8 @@ export const getStencilJsModuleTypes = () => `
 //        Apply module types for StencilJS templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 declare module "@stencil/core" {
-  namespace JSX {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  export namespace JSX {
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     interface IntrinsicElements extends ${LOCAL_JSX_NAMESPACE}.IntrinsicElements {}
   }
