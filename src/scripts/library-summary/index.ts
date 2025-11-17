@@ -3,6 +3,7 @@ import { dirname, join } from "path";
 import * as prettier from "prettier";
 import { fileURLToPath } from "url";
 import { getComponentDeclaration } from "../component-declaration-file";
+import { copyAllTypesUsedByInterfaces } from "./copy-all-types-used-by-interfaces";
 import { extractLibraryComponents } from "./generator";
 import type { ComponentDefinition } from "./types";
 
@@ -12,6 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const DEFAULT_DECLARATION_FILE_NAME = "components.ts";
+const DEFAULT_DECLARATION_FOR_ALL_COPIED_TYPES = "component-copied-types.ts";
 const DEFAULT_LIBRARY_SUMMARY_FILE_NAME = "library-summary.ts";
 const DEFAULT_COMPONENT_ACCESS =
   "public" satisfies ComponentDefinition["access"];
@@ -36,6 +38,7 @@ export const getLibrarySummary = (options: {
 
 export const generateLibrarySummary = async (options: {
   declarationFileName?: string;
+  declarationForAllCopiedTypesFileName?: string;
   defaultComponentAccess?: ComponentDefinition["access"];
   excludedPaths?: string[];
   fileNameExtension: string;
@@ -44,6 +47,7 @@ export const generateLibrarySummary = async (options: {
 }) => {
   const {
     declarationFileName,
+    declarationForAllCopiedTypesFileName,
     defaultComponentAccess,
     excludedPaths,
     fileNameExtension,
@@ -68,6 +72,16 @@ export const generateLibrarySummary = async (options: {
     //     getComponentGlobalTypeDeclaration(component)
     //   )
     // ),
+
+    writeFile(
+      join(
+        process.cwd(),
+        relativeComponentsSrcPath,
+        declarationForAllCopiedTypesFileName ??
+          DEFAULT_DECLARATION_FOR_ALL_COPIED_TYPES
+      ),
+      await copyAllTypesUsedByInterfaces(libraryComponents, "src/")
+    ),
 
     writeFile(
       join(
