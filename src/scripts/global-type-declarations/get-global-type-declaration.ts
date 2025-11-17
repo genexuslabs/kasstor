@@ -166,16 +166,14 @@ ${getFullJSDocWithFiresTags(fullClassJSDoc, events)}
 export const getExtendTagNameMap = ({
   className,
   tagName
-}: ComponentDefinition) => `
-  interface HTMLElementTagNameMap {
+}: ComponentDefinition) => `interface HTMLElementTagNameMap {
     "${tagName}": ${getComponentHTMLInterfaceName(className)};
   }`;
 
 export const getExtendIntrinsicElements = ({
   className,
   tagName
-}: ComponentDefinition) => `
-  interface IntrinsicElements {
+}: ComponentDefinition) => `interface IntrinsicElements {
     "${tagName}": ${getComponentHTMLInterfaceName(className)};
   }`;
 
@@ -184,7 +182,9 @@ export const getComponentGlobalTypeDeclaration = (
 ) => `
 declare global {
   ${getComponentEventDefinitions(component)}${getComponentCustomEventExtend(component)}${getComponentEventMapAndTypes(component)}${getComponentClassExtend(component)}
+
   ${getExtendIntrinsicElements(component)}
+
   ${getExtendTagNameMap(component)}
 }\r\n\r\n`;
 

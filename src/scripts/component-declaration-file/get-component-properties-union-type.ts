@@ -11,7 +11,7 @@ export const getComponentPropertiesUnionType = (
 ) =>
   !component.properties || component.properties.length === 0
     ? "{}"
-    : `Pick<${getImportClassName(component.className)}, ${component.properties.map(({ name }) => `"${name}"`).join(" | ")}>;`;
+    : `Pick<${getImportClassName(component.className)}, ${component.properties.map(({ name }) => `"${name}"`).join(" | ")}>`;
 
 export const getComponentPropertiesUnionTypeSolidJS = ({
   properties
@@ -26,6 +26,15 @@ export const getComponentPropertiesUnionTypeSolidJS = ({
       )
       .join("\n\n    ")}
   }`;
+
+export const getComponentBaseClass = (components: LibraryComponents) =>
+  `/**
+ * Each interface contains the base class of the custom elements of the
+ * library.
+ */
+export interface ComponentBaseClasses {
+  ${components.map(component => `"${component.tagName}": ${getImportClassName(component.className)};`).join("\n  ")}
+}`;
 
 export const getComponentProperties = (components: LibraryComponents) =>
   `/**

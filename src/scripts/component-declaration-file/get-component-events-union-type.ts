@@ -25,7 +25,7 @@ export const getComponentEventsUnionType = (
         name,
         description
       }) => `  ${getFormattedPropertyOrEventDescription(description)}
-    ${eventTemplateName[frameworkType](name)}?: ${getComponentEventTypeInterfaceName(component.className, name)};`
+    ${eventTemplateName[frameworkType](name)}?: (event: ${getComponentEventTypeInterfaceName(component.className, name)}) => void;`
     )
     .join("\n\n  ")}
   };`;

@@ -438,50 +438,6 @@ function extractImportAnalysis(
 }
 
 /**
- * Extract types used in a TypeScript type annotation
- */
-function extractTypesFromTypeNode(
-  typeNode: ts.TypeNode,
-  sourceFile: ts.SourceFile
-): Set<string> {
-  const types = new Set<string>();
-
-  function visitTypeNode(node: ts.Node): void {
-    if (ts.isTypeReferenceNode(node)) {
-      if (ts.isIdentifier(node.typeName)) {
-        types.add(node.typeName.text);
-      } else if (ts.isQualifiedName(node.typeName)) {
-        // Handle qualified names like Namespace.Type
-        const fullName = sourceFile.text
-          .substring(node.typeName.pos, node.typeName.end)
-          .trim();
-        types.add(fullName);
-      }
-    } else if (ts.isUnionTypeNode(node) || ts.isIntersectionTypeNode(node)) {
-      node.types.forEach(visitTypeNode);
-    } else if (ts.isArrayTypeNode(node)) {
-      visitTypeNode(node.elementType);
-    } else if (ts.isTupleTypeNode(node)) {
-      node.elements.forEach(visitTypeNode);
-    } else if (ts.isMappedTypeNode(node)) {
-      if (node.type) {
-        visitTypeNode(node.type);
-      }
-    } else if (ts.isConditionalTypeNode(node)) {
-      visitTypeNode(node.checkType);
-      visitTypeNode(node.extendsType);
-      visitTypeNode(node.trueType);
-      visitTypeNode(node.falseType);
-    }
-
-    ts.forEachChild(node, visitTypeNode);
-  }
-
-  visitTypeNode(typeNode);
-  return types;
-}
-
-/**
  * Extract types from a type string
  */
 function extractTypesFromTypeString(typeString: string): Set<string> {
@@ -985,7 +941,7 @@ function extractProperty(
 
   // Extract type information
   const typeText = member.type
-    ? sourceFile.text.substring(member.type.pos, member.type.end).trim()
+    ? sourceFile.text.substring(member.type.pos, member.type.end)
     : "any";
 
   // Extract default value
@@ -1286,3 +1242,4 @@ function getDefaultExportPath(
     exportCondition.browser?.development
   );
 }
+

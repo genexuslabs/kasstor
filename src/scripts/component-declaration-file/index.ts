@@ -1,6 +1,7 @@
 import type { LibraryComponents } from "../library-summary/types";
 import { getComponentEvents } from "./get-component-events-union-type";
 import {
+  getComponentBaseClass,
   getComponentProperties,
   getComponentPropertiesSolidJS
 } from "./get-component-properties-union-type";
@@ -31,6 +32,8 @@ export const getComponentDeclaration = (components: LibraryComponents) =>
 //   export class MyElement extends SSRLitElement {}
 //`
     : `${getImportPaths(components)}
+
+${getComponentBaseClass(components)}
 
 ${getComponentProperties(components)}
 

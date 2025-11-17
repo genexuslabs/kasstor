@@ -61,6 +61,7 @@ export const getReactModuleTypes = () => `
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //          Apply module types for React templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// @ts-expect-error This module exists in React applications
 declare module "react" {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
@@ -73,6 +74,7 @@ export const getSolidJsModuleTypes = () => `
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //         Apply module types for SolidJS templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// @ts-expect-error This module exists in SolidJS applications
 declare module "solid-js" {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
@@ -85,6 +87,7 @@ export const getStencilJsModuleTypes = () => `
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //        Apply module types for StencilJS templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// @ts-expect-error This module exists in StencilJS applications
 declare module "@stencil/core" {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace JSX {

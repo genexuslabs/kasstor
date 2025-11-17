@@ -907,3 +907,4 @@ export async function generateComponentsDefinition(
   const outputPath = path.join(projectPath, "components.d.ts");
   await fs.writeFile(outputPath, definitionContent, "utf-8");
 }
+
