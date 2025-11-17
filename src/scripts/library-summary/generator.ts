@@ -47,6 +47,8 @@ type ImportAnalysisCache = {
   typeUsageMap: Map<string, string>; // typeName -> modulePath
 };
 
+const normalizePath = (path: string) => path.replaceAll("\\", "/");
+
 // Lit lifecycle methods that should be excluded from public API
 const LIT_LIFECYCLE_METHODS = new Set([
   "connectedCallback",
@@ -156,12 +158,25 @@ function resolveModulePath(
 /**
  * Main function to extract library components metadata from a directory
  */
-export async function extractLibraryComponents(
-  searchPath: string,
-  defaultComponentAccess: ComponentDefinition["access"]
-): Promise<LibraryComponents> {
+export async function extractLibraryComponents(options: {
+  searchPath: string;
+  defaultComponentAccess: ComponentDefinition["access"];
+  excludedPaths?: string[];
+  fileNameExtension: string;
+}): Promise<LibraryComponents> {
+  const {
+    defaultComponentAccess,
+    fileNameExtension,
+    searchPath,
+    excludedPaths
+  } = options;
+
   const [litFiles, exportsMap] = await Promise.all([
-    findLitComponents(searchPath),
+    findLitComponents({
+      excludedPaths: excludedPaths ?? [],
+      fileNameExtension,
+      pattern: searchPath
+    }),
     extractPackageJsonExports(path.join(searchPath, "package.json"))
   ]);
 
@@ -181,11 +196,12 @@ export async function extractLibraryComponents(
       );
       if (componentDef) {
         // Add package.json exports path if available
-        componentDef.packageJsonExportsPath = findMatchingExportPath(
+        componentDef.packageJsonExportsPath = findMatchingExportPath({
           componentDef,
           exportsMap,
+          fileNameExtension,
           relativePath
-        );
+        });
 
         return componentDef;
       }
@@ -621,14 +637,31 @@ function extractImportTypesForMethods(
 /**
  * Find Lit component files in the specified directory
  */
-async function findLitComponents(pattern: string): Promise<string[]> {
+async function findLitComponents(options: {
+  excludedPaths: string[];
+  fileNameExtension: string;
+  pattern: string;
+}): Promise<string[]> {
+  const { excludedPaths, fileNameExtension, pattern } = options;
+  const excludedNormalizedPaths = excludedPaths.map(normalizePath);
+
   const files = (
     await fs.readdir(pattern, {
       recursive: true,
       withFileTypes: true
     })
   )
-    .filter(file => file.isFile() && file.name.endsWith(".lit.ts"))
+    .filter(file => {
+      const fullFilePath = normalizePath(path.join(file.parentPath, file.name));
+
+      return (
+        file.isFile() &&
+        file.name.endsWith(fileNameExtension) &&
+        excludedNormalizedPaths.every(
+          substring => !fullFilePath.includes(substring)
+        )
+      );
+    })
     .map(file => path.join(file.parentPath ?? file.path, file.name))
     .sort((a, b) => (a <= b ? -1 : 0));
 
@@ -839,7 +872,8 @@ function extractClassMembers(
         ts.isDecorator(mod) &&
         ts.isCallExpression(mod.expression) &&
         ts.isIdentifier(mod.expression.expression) &&
-        mod.expression.expression.text === "property"
+        (mod.expression.expression.text === "property" ||
+          mod.expression.expression.text === "Prop")
     );
 
     // Check for @Event decorator
@@ -1172,13 +1206,16 @@ async function extractPackageJsonExports(
 /**
  * Find matching export path for a component with optimized algorithm
  */
-function findMatchingExportPath(
-  componentDef: ComponentDefinition,
-  exportsMap: PackageExports,
-  relativePath: string
-): string | undefined {
+function findMatchingExportPath(options: {
+  componentDef: ComponentDefinition;
+  exportsMap: PackageExports;
+  fileNameExtension: string;
+  relativePath: string;
+}): string | undefined {
+  const { componentDef, exportsMap, fileNameExtension, relativePath } = options;
+
   // Extract component name from file path
-  const fileName = path.basename(relativePath, ".lit.ts");
+  const fileName = path.basename(relativePath, fileNameExtension);
 
   // Create possible export key patterns based on the component
   const possibleKeys = [
@@ -1218,7 +1255,7 @@ function findMatchingExportPath(
 
     if (pathMatch) {
       const [, folderName, baseName] = pathMatch;
-      const expectedSrcPath = `src/components/${folderName}/${baseName}.lit.ts`;
+      const expectedSrcPath = `src/components/${folderName}/${baseName}${fileNameExtension}`;
 
       if (relativePath === expectedSrcPath) {
         return exportKey;
@@ -1249,4 +1286,3 @@ function getDefaultExportPath(
     exportCondition.browser?.development
   );
 }
-
