@@ -42,6 +42,7 @@ export const generateLibrarySummary = async (options: {
   defaultComponentAccess?: ComponentDefinition["access"];
   excludedPaths?: string[];
   fileNameExtension: string;
+  generateDeclarationFile?: boolean;
   librarySummaryFileName?: string;
   relativeComponentsSrcPath: string;
 }) => {
@@ -51,6 +52,7 @@ export const generateLibrarySummary = async (options: {
     defaultComponentAccess,
     excludedPaths,
     fileNameExtension,
+    generateDeclarationFile,
     librarySummaryFileName,
     relativeComponentsSrcPath
   } = options;
@@ -94,14 +96,16 @@ export const generateLibrarySummary = async (options: {
         { parser: "typescript", trailingComma: "none" }
       )
     ),
-    writeFile(
-      join(
-        process.cwd(),
-        relativeComponentsSrcPath,
-        declarationFileName ?? DEFAULT_DECLARATION_FILE_NAME
-      ),
-      componentsDeclarationFile
-    )
+    generateDeclarationFile
+      ? writeFile(
+          join(
+            process.cwd(),
+            relativeComponentsSrcPath,
+            declarationFileName ?? DEFAULT_DECLARATION_FILE_NAME
+          ),
+          componentsDeclarationFile
+        )
+      : Promise.resolve()
   ]);
 };
 
@@ -111,7 +115,7 @@ if (LIT_OR_STENCIL_JS === "stencil-js") {
   // Chameleon 6
   await generateLibrarySummary({
     defaultComponentAccess: "public",
-    relativeComponentsSrcPath: "src/",
+    generateDeclarationFile: false,
     excludedPaths: [
       "deprecated",
       "internal",
@@ -124,13 +128,14 @@ if (LIT_OR_STENCIL_JS === "stencil-js") {
       "timer.tsx",
       "showcase.tsx"
     ],
-    fileNameExtension: ".tsx"
+    fileNameExtension: ".tsx",
+    relativeComponentsSrcPath: "src/"
   });
 } else {
   await generateLibrarySummary({
     defaultComponentAccess: "private",
-    relativeComponentsSrcPath: "src/",
-    fileNameExtension: ".lit.ts"
+    fileNameExtension: ".lit.ts",
+    relativeComponentsSrcPath: "src/"
   });
 }
 
