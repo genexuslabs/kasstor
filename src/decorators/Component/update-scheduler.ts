@@ -14,12 +14,31 @@ const updateDelayTimeout = () =>
  * Adjust this value based on the specific needs and performance characteristics,
  * as well as the target devices and browsers.
  *
- * At the time of writing, **512** updates at the same time seems to be a good
+ * At the time of writing, **1024** updates at the same time seems to be a good
  * balance for most applications.
  *
  * **Always use powers of 2 because of underlying optimizations in JS engines.**
  */
-export const MAX_UPDATES_AT_THE_SAME_TIME = 2 ** 9; // 512
+export const MAX_UPDATES_AT_THE_SAME_TIME = 2 ** 10; // 1024
+
+/**
+ * Weight of initial renders compared to subsequent renders when counting
+ * updates in a frame.
+ *
+ * Initial renders are more expensive than subsequent renders, because they
+ * involve creating and inserting new DOM elements, applying styles, and
+ * setting up event listeners. Subsequent renders typically only involve
+ * updating existing DOM elements.
+ */
+const INITIAL_RENDER_WEIGHT = 4;
+
+/**
+ * Weight of subsequent renders when counting updates in a frame.
+ *
+ * Subsequent renders are less expensive than initial renders, so they
+ * have a lower weight.
+ */
+const SUBSEQUENT_RENDER_WEIGHT = 1;
 
 /**
  * List of batches of updates being processed in each frame.
@@ -71,7 +90,11 @@ const addNewFrameBatch = () => {
 const getLastFrameBatchUpdateFinalization = (): Promise<void> | undefined =>
   updatesInEachBatch.at(-1)?.batchComplete;
 
-const addUpdateInLastFrameBatch = () => {
+/**
+ * Adds an update to the last frame batch, creating a new batch if needed.
+ * @param hasUpdated `true` if the component has already been updated at least once.
+ */
+const addUpdateInLastFrameBatch = (hasUpdated: boolean) => {
   if (mustAddANewFrameBatch()) {
     addNewFrameBatch();
 
@@ -84,7 +107,9 @@ const addUpdateInLastFrameBatch = () => {
   }
 
   // Increase the counter of updates in the last frame batch
-  updatesInEachBatch.at(-1)!.updatesCount += 1; // It seems to be a bit faster than doing ++
+  updatesInEachBatch.at(-1)!.updatesCount += hasUpdated
+    ? SUBSEQUENT_RENDER_WEIGHT
+    : INITIAL_RENDER_WEIGHT;
 };
 
 /**
@@ -94,9 +119,13 @@ const addUpdateInLastFrameBatch = () => {
  *
  * This function helps to throttle updates to avoid blocking the main thread
  * and thus improve the page's responsiveness.
+ *
+ * @param hasUpdated `true` if the component has already been updated at least once.
  */
-export const getDelayForUpdate = (): Promise<void> | undefined => {
-  addUpdateInLastFrameBatch();
+export const getDelayForUpdate = (
+  hasUpdated: boolean
+): Promise<void> | undefined => {
+  addUpdateInLastFrameBatch(hasUpdated);
 
   return updatesInEachBatch.length === 1
     ? // No delay needed when there is only one batch, as it is processed in

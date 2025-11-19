@@ -272,7 +272,7 @@ export abstract class SSRLitElement extends LitElement {
   protected override async update(
     changedProperties: PropertyValues
   ): Promise<void> {
-    const delayForUpdate = getDelayForUpdate();
+    const delayForUpdate = getDelayForUpdate(this.hasUpdated);
 
     if (delayForUpdate !== undefined) {
       await delayForUpdate;
