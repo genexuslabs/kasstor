@@ -1,11 +1,7 @@
-import { DEV_MODE } from "../../development-flags";
+// import { DEV_MODE } from "../../development-flags";
 
-/**
- * Promise that resolves when all updates for the current frame are done.
- */
-let updatesForTheCurrentFrame: Promise<void> | undefined;
-
-let updatesAtTheSameTime = 0;
+const updateDelayTimeout = () =>
+  new Promise<void>(resolve => setTimeout(resolve));
 
 /**
  * Threshold for maximum number of updates that can be processed at the same
@@ -18,12 +14,78 @@ let updatesAtTheSameTime = 0;
  * Adjust this value based on the specific needs and performance characteristics,
  * as well as the target devices and browsers.
  *
- * At the time of writing, 1024 updates at the same time seems to be a good
+ * At the time of writing, **512** updates at the same time seems to be a good
  * balance for most applications.
  *
  * **Always use powers of 2 because of underlying optimizations in JS engines.**
  */
-export const MAX_UPDATES_AT_THE_SAME_TIME = 2 ** 10;
+export const MAX_UPDATES_AT_THE_SAME_TIME = 2 ** 9; // 512
+
+/**
+ * List of batches of updates being processed in each frame.
+ */
+const updatesInEachBatch: {
+  /**
+   * Returns a promise that is resolved when all updates in this batch are done.
+   */
+  batchComplete: Promise<void>;
+
+  /**
+   * Number of updates in this batch. At maximum `MAX_UPDATES_AT_THE_SAME_TIME`.
+   */
+  updatesCount: number;
+}[] = [];
+
+/**
+ * Returns `true` if a new frame batch must be created to partition the updates.
+ */
+const mustAddANewFrameBatch = (): boolean => {
+  const lastFrameBatch = updatesInEachBatch.at(-1);
+
+  return (
+    lastFrameBatch === undefined ||
+    lastFrameBatch.updatesCount >= MAX_UPDATES_AT_THE_SAME_TIME
+  );
+};
+
+/**
+ * Adds a new frame batch to partition the updates and removes the batch when
+ * done.
+ */
+const addNewFrameBatch = () => {
+  const lastFrameBatchUpdateComplete = getLastFrameBatchUpdateFinalization();
+
+  // The finalization of the updates for this frame must wait for the previous
+  // frames to be finalized first, to ensure the correct order of updates.
+  const batchComplete = lastFrameBatchUpdateComplete
+    ? lastFrameBatchUpdateComplete.finally(updateDelayTimeout)
+    : updateDelayTimeout();
+
+  updatesInEachBatch.push({ batchComplete, updatesCount: 0 });
+
+  // Remove the batch from the list to free memory, once the updates for the
+  // frame are done
+  batchComplete.finally(() => updatesInEachBatch.shift());
+};
+
+const getLastFrameBatchUpdateFinalization = (): Promise<void> | undefined =>
+  updatesInEachBatch.at(-1)?.batchComplete;
+
+const addUpdateInLastFrameBatch = () => {
+  if (mustAddANewFrameBatch()) {
+    addNewFrameBatch();
+
+    // Print a warning only once when the threshold is exceeded
+    // if (DEV_MODE && updatesInEachBatch.length === 2) {
+    //   console.warn(
+    //     `[Kasstor] Detected more than ${MAX_UPDATES_AT_THE_SAME_TIME} simultaneous updates, so the following updates will be throttled to avoid blocking the main thread and thus improve the page's responsiveness. Once the updates are finished, the normal update flow will be restored.`
+    //   );
+    // }
+  }
+
+  // Increase the counter of updates in the last frame batch
+  updatesInEachBatch.at(-1)!.updatesCount += 1; // It seems to be a bit faster than doing ++
+};
 
 /**
  * Returns a Promise that resolves in the next frame if there are too many
@@ -34,38 +96,12 @@ export const MAX_UPDATES_AT_THE_SAME_TIME = 2 ** 10;
  * and thus improve the page's responsiveness.
  */
 export const getDelayForUpdate = (): Promise<void> | undefined => {
-  updatesAtTheSameTime++;
+  addUpdateInLastFrameBatch();
 
-  if (updatesForTheCurrentFrame === undefined) {
-    updatesForTheCurrentFrame = new Promise(resolve => setTimeout(resolve));
-  }
-
-  // Decrease the counter when the batch of updates for the current frame is
-  // done. In other words, when all components that needed to update in this
-  // frame have finished updating.
-  updatesForTheCurrentFrame.then(() => {
-    updatesAtTheSameTime--;
-
-    if (updatesAtTheSameTime === 0) {
-      // console.log("BATCH FINISHED.....................");
-
-      // Free the memory
-      updatesForTheCurrentFrame = undefined;
-    }
-  });
-
-  // Print a warning only once when the threshold is exceeded
-  if (DEV_MODE && updatesAtTheSameTime === MAX_UPDATES_AT_THE_SAME_TIME + 1) {
-    console.warn(
-      `[Kasstor] Detected more than ${MAX_UPDATES_AT_THE_SAME_TIME} simultaneous updates, so the following updates will be throttled to avoid blocking the main thread and thus improve the page's responsiveness. Once the updates are finished, the normal update flow will be restored.`
-    );
-  }
-
-  // No delay needed
-  if (updatesAtTheSameTime <= MAX_UPDATES_AT_THE_SAME_TIME) {
-    return undefined;
-  }
-
-  return updatesForTheCurrentFrame;
+  return updatesInEachBatch.length === 1
+    ? // No delay needed when there is only one batch, as it is processed in
+      // the current frame
+      undefined
+    : getLastFrameBatchUpdateFinalization();
 };
 
