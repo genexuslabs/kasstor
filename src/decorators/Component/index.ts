@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { LitElement, unsafeCSS } from "lit";
+import { LitElement, unsafeCSS, type PropertyValues } from "lit";
 
 import { DEV_MODE, IS_SERVER } from "../../development-flags";
 import { removeIndex } from "../../other/array";
 import type { ComponentOptions } from "./types";
+import { getDelayForUpdate } from "./update-scheduler";
 
 // Re-export the types for simplify the imports for the end users
 export type { ComponentOptions, ComponentShadowRootOptions } from "./types";
@@ -142,14 +143,7 @@ export const Component = <
   options: ComponentOptions<LibraryPrefix>
 ) =>
   function (target: T): T | void {
-    const {
-      deferInitialRender,
-      deferUpdate,
-      globalStyles,
-      tag,
-      styles,
-      shadow
-    } = options;
+    const { globalStyles, tag, styles, shadow } = options;
     const { prototype } = target;
 
     // Check if the element is already defined
@@ -163,10 +157,6 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
 
       return existing as any;
     }
-
-    // Store in the SSRLitElement class these values
-    (prototype as any).deferInitialRender = deferInitialRender;
-    (prototype as any).deferUpdate = deferUpdate;
 
     // Modify the class without creating a new one
     if (shadow === false) {
@@ -246,28 +236,6 @@ const componentWasServerSideRendered = (element: LitElement) =>
 export abstract class SSRLitElement extends LitElement {
   #serverSideRendered: boolean;
 
-  /**
-   * Defer the initial rendering of the component until the end of the next
-   * frame.
-   *
-   * This technique can be used to unblock the main rendering/event thread,
-   * which can improve page rendering performance.
-   *
-   * For example, if you render this component 2000 times simultaneously, you
-   * might want to use this property to reduce the Total Blocking Time (TBT),
-   * which would improve your Lighthouse performance score.
-   *
-   * This option is based on [overriding the `scheduleUpdate()` to customize the
-   * timing of the update](https://lit.dev/docs/components/lifecycle/#reactive-update-cycle-customizing).
-   */
-  protected deferInitialRender: boolean | undefined;
-
-  /**
-   * Same as the `deferInitialRender` option, but works on all updates, not
-   * just the initial render.
-   */
-  protected deferUpdate: boolean | undefined;
-
   protected globalStyles: CSSStyleSheet | undefined;
 
   constructor() {
@@ -299,12 +267,19 @@ export abstract class SSRLitElement extends LitElement {
     }
   }
 
-  protected override async scheduleUpdate(): Promise<void> {
-    if ((this.deferInitialRender && !this.hasUpdated) || this.deferUpdate) {
-      await new Promise(resolve => setTimeout(resolve));
+  // Throttle updates when there are too many at the same time. This mechanism
+  // is based on the event loop and the ideas of https://lit.dev/docs/components/lifecycle/#reactive-update-cycle-customizing
+  protected override async update(
+    changedProperties: PropertyValues
+  ): Promise<void> {
+    const delayForUpdate = getDelayForUpdate();
+
+    if (delayForUpdate !== undefined) {
+      await delayForUpdate;
     }
 
-    super.scheduleUpdate();
+    // Render the element, as super.update ends up calling render()
+    super.update(changedProperties);
   }
 
   override disconnectedCallback(): void {
