@@ -21,14 +21,15 @@
     "dist/"
   ],
   "scripts": {
-    "build": "bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun build:prod:browser' 'bun build:prod:node'",
+    "build": "bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun build:prod:browser' 'bun build:prod:node' 'bun build.types'",
     "build:dev": "bun run clear.dist && concurrently 'bun build:dev:node' 'bun build:dev:browser'",
     "build:dev:browser": "vite build --mode browser-development",
     "build:dev:node": "vite build --mode node-development",
     "build:prod": "bun run clear.dist && concurrently 'bun build:prod:node' 'bun build:prod:browser'",
     "build:prod:browser": "vite build --mode browser-production",
     "build:prod:node": "vite build --mode node-production",
-    "build.watch": "bun run build --watch",
+    "build.types": "tsgo --project tsconfig-types.json",
+    "watch": "bun run clear.dist && concurrently 'bun build:dev:browser --watch' 'bun build:dev:node --watch' 'bun build:prod:browser --watch' 'bun build:prod:node --watch' 'bun build.types --watch'",
     "generate.types": "bun run ./src/scripts/exported-types/index.ts",
     "clear.dist": "bun run ./src/scripts/remove-dist.ts",
     "docs": "bun run ./src/scripts/docs/index.ts",
@@ -45,6 +46,7 @@
     "@types/node": "~22.15.17",
     "@typescript-eslint/eslint-plugin": "~8.32.0",
     "@typescript-eslint/parser": "~8.32.0",
+    "@typescript/native-preview": "~7.0.0-dev.20251116.1",
     "@vitest/browser": "~3.2.4",
     "@vitest/coverage-v8": "~3.2.4",
     "@vitest/ui": "~3.2.4",
@@ -61,8 +63,7 @@
     "rollup-plugin-summary": "~3.0.1",
     "typescript": "~5.8.3",
     "typescript-eslint": "~8.32.0",
-    "vite": "~7.0.5",
-    "vite-plugin-dts": "~4.5.4",
+    "vite": "~7.2.2",
     "vitest": "~3.2.4",
     "vitest-browser-lit": "~0.1.0"
   },
@@ -74,10 +75,6 @@
   },
   "exports": {
     ".": {
-      "browser": {
-        "development": "./dist/browser/development/index.js",
-        "default": "./dist/browser/production/index.js"
-      },
       "node": {
         "development": "./dist/node/development/index.js",
         "default": "./dist/node/production/index.js"
@@ -87,10 +84,6 @@
       "default": "./dist/browser/production/index.js"
     },
     "./decorators/component.js": {
-      "browser": {
-        "development": "./dist/browser/development/decorators/Component/index.js",
-        "default": "./dist/browser/production/decorators/Component/index.js"
-      },
       "node": {
         "development": "./dist/node/development/decorators/Component/index.js",
         "default": "./dist/node/production/decorators/Component/index.js"
@@ -100,10 +93,6 @@
       "default": "./dist/browser/production/decorators/Component/index.js"
     },
     "./decorators/event.js": {
-      "browser": {
-        "development": "./dist/browser/development/decorators/Event/index.js",
-        "default": "./dist/browser/production/decorators/Event/index.js"
-      },
       "node": {
         "development": "./dist/node/development/decorators/Event/index.js",
         "default": "./dist/node/production/decorators/Event/index.js"
@@ -113,10 +102,6 @@
       "default": "./dist/browser/production/decorators/Event/index.js"
     },
     "./decorators/watch.js": {
-      "browser": {
-        "development": "./dist/browser/development/decorators/Watch/index.js",
-        "default": "./dist/browser/production/decorators/Watch/index.js"
-      },
       "node": {
         "development": "./dist/node/development/decorators/Watch/index.js",
         "default": "./dist/node/production/decorators/Watch/index.js"
@@ -127,3 +112,4 @@
     }
   }
 }
+
