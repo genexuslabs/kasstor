@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { LitElement, unsafeCSS, type PropertyValues } from "lit";
 
-import { DEV_MODE, IS_SERVER } from "../../development-flags";
-import { removeIndex } from "../../other/array";
+import { DEV_MODE, IS_SERVER } from "../../development-flags.js";
+import { removeIndex } from "../../other/array.js";
 import type { ComponentOptions } from "./types";
-import { getDelayForUpdate } from "./update-scheduler";
+import { getDelayForUpdate } from "./update-scheduler.js";
 
 // Re-export the types for simplify the imports for the end users
 export type { ComponentOptions, ComponentShadowRootOptions } from "./types";
@@ -246,6 +246,19 @@ export abstract class SSRLitElement extends LitElement {
     // render), this computation is correct. We need to find a way to
     // communicate this information correctly.
     this.#serverSideRendered = componentWasServerSideRendered(this);
+
+    const willUpdateOriginalImplementation = this.willUpdate;
+
+    // Implement the beforeFirstUpdate hook by monkey-patching the willUpdate
+    // method of the LitElement
+    this.willUpdate = function (changedProperties: PropertyValues) {
+      if (!this.hasUpdated) {
+        this.beforeFirstUpdate(changedProperties);
+      }
+
+      // Call the original implementation
+      willUpdateOriginalImplementation.call(this, changedProperties);
+    };
   }
 
   /**
@@ -281,6 +294,32 @@ export abstract class SSRLitElement extends LitElement {
     // Render the element, as super.update ends up calling render()
     super.update(changedProperties);
   }
+
+  /**
+   * Invoked before the first `willUpdate` of the component. Subsequent renders
+   * will not call this method, as it under the hood is implemented by
+   * monkey-patching the `willUpdate` method and checking for the
+   * `this.hasUpdated` property.
+   *
+   * Implement `beforeFirstUpdate` to compute property values that depend on
+   * other properties and are used as initial values in the first render.
+   *
+   * This method is especially useful when the component was server side
+   * rendered, because Lit doesn't properly initialize the properties in the
+   * `connectedCallback` phase when SSR is detected, but it does it just before
+   * the first update (for example, in the `willUpdate` phase).
+   *
+   * Some notes about this method:
+   *  - Works on the server and the client.
+   *  - Any changes to properties in this method will not trigger an additional
+   *    update/render cycle. It's safe to set properties here as it will only
+   *    update the `changedProperties` Map.
+   *  - Even if the element is moved in the DOM, this method won't be called
+   *    again if it was already called once (but the `connectedCallback` will
+   *    be called again).
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  beforeFirstUpdate(_changedProperties: PropertyValues): void {}
 
   override disconnectedCallback(): void {
     if (this.globalStyles) {
