@@ -253,7 +253,7 @@ export abstract class SSRLitElement extends LitElement {
     // method of the LitElement
     this.willUpdate = function (changedProperties: PropertyValues) {
       if (!this.hasUpdated) {
-        this.beforeFirstUpdate(changedProperties);
+        this.firstWillUpdate(changedProperties);
       }
 
       // Call the original implementation
@@ -297,11 +297,10 @@ export abstract class SSRLitElement extends LitElement {
 
   /**
    * Invoked before the first `willUpdate` of the component. Subsequent renders
-   * will not call this method, as it under the hood is implemented by
-   * monkey-patching the `willUpdate` method and checking for the
-   * `this.hasUpdated` property.
+   * will not call this method, as it under the hood uses the `this.hasUpdated`
+   * property.
    *
-   * Implement `beforeFirstUpdate` to compute property values that depend on
+   * Implement `firstWillUpdate` to compute property values that depend on
    * other properties and are used as initial values in the first render.
    *
    * This method is especially useful when the component was server side
@@ -311,15 +310,18 @@ export abstract class SSRLitElement extends LitElement {
    *
    * Some notes about this method:
    *  - Works on the server and the client.
-   *  - Any changes to properties in this method will not trigger an additional
-   *    update/render cycle. It's safe to set properties here as it will only
-   *    update the `changedProperties` Map.
+   *
+   *  - Setting properties inside this method will not trigger another update.
+   *
    *  - Even if the element is moved in the DOM, this method won't be called
    *    again if it was already called once (but the `connectedCallback` will
    *    be called again).
+   *
+   * @param changedProperties Map of changed properties with old values
+   * @category updates
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  beforeFirstUpdate(_changedProperties: PropertyValues): void {}
+  protected firstWillUpdate(changedProperties: PropertyValues): void {}
 
   override disconnectedCallback(): void {
     if (this.globalStyles) {
