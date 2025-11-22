@@ -317,6 +317,12 @@ export abstract class SSRLitElement extends LitElement {
    *    again if it was already called once (but the `connectedCallback` will
    *    be called again).
    *
+   * ```ts
+   * protected override firstWillUpdate() {
+   *   // Initialization work...
+   * }
+   * ```
+   *
    * @param changedProperties Map of changed properties with old values
    * @category updates
    */
