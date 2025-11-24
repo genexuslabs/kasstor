@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { removeIndex } from "@genexus/kasstor-webkit/array.js";
 import { LitElement, unsafeCSS } from "lit";
 
 import { DEV_MODE, IS_SERVER } from "../../development-flags";
-import { removeIndex } from "../../other/array";
 import type { ComponentOptions } from "./types";
 
 // Re-export the types for simplify the imports for the end users
@@ -314,4 +314,3 @@ export abstract class SSRLitElement extends LitElement {
     super.disconnectedCallback();
   }
 }
-

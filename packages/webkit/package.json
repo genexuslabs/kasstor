@@ -1,0 +1,73 @@
+{
+  "name": "@genexus/kasstor-webkit",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/genexuslabs/kasstor",
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/genexuslabs/kasstor.git"
+  },
+  "keywords": [
+    "lit",
+    "lit decorators",
+    "web components"
+  ],
+  "main": "./dist/browser/production/index.js",
+  "module": "./dist/browser/production/index.js",
+  "jsnext:main": "./dist/browser/production/index.js",
+  "types": "./dist/browser/development/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "dev": "tsc --noEmit && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun dev.types'",
+    "dev.types": "tsgo --project tsconfig-types.json",
+    "build": "tsc --noEmit && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun build:prod:browser' 'bun build:prod:node'  'bun build.types'",
+    "build:dev:browser": "vite build --mode browser-development",
+    "build:dev:node": "vite build --mode node-development",
+    "build:prod:browser": "vite build --mode browser-production",
+    "build:prod:node": "vite build --mode node-production",
+    "build.types": "tsc --project tsconfig-types.json",
+    "watch": "bun run clear.dist && concurrently 'bun build:dev:browser --watch' 'bun build:dev:node --watch' 'bun build:prod:browser --watch' 'bun build:prod:node --watch' 'bun dev.types --watch'",
+    "clear.dist": "bun run ./scripts/remove-dist.ts",
+    "test": "playwright install && vitest",
+    "test.ci": "bun run test --watch=false --browser.headless"
+  },
+  "peerDependencies": {
+    "lit": "^3.3.0"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
+  },
+  "exports": {
+    ".": {
+      "node": {
+        "development": "./dist/node/development/index.js",
+        "default": "./dist/node/production/index.js"
+      },
+      "types": "./dist/browser/development/index.d.ts",
+      "development": "./dist/browser/development/index.js",
+      "default": "./dist/browser/production/index.js"
+    },
+    "./array.js": {
+      "node": {
+        "development": "./dist/node/development/array.js",
+        "default": "./dist/node/production/array.js"
+      },
+      "types": "./dist/browser/development/array.d.ts",
+      "development": "./dist/browser/development/array.js",
+      "default": "./dist/browser/production/array.js"
+    },
+    "./sync-with-frames.js": {
+      "node": {
+        "development": "./dist/node/development/sync-with-frames.js",
+        "default": "./dist/node/production/sync-with-frames.js"
+      },
+      "types": "./dist/browser/development/sync-with-frames.d.ts",
+      "development": "./dist/browser/development/sync-with-frames.js",
+      "default": "./dist/browser/production/sync-with-frames.js"
+    }
+  }
+}
