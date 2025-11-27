@@ -184,9 +184,7 @@ export abstract class SSRLitElement extends LitElement {
 
   // Throttle updates when there are too many at the same time. This mechanism
   // is based on the event loop and the ideas of https://lit.dev/docs/components/lifecycle/#reactive-update-cycle-customizing
-  protected override async update(
-    changedProperties: PropertyValues
-  ): Promise<void> {
+  protected override async scheduleUpdate(): Promise<void> {
     const delayForUpdate = getDelayForUpdate(this.hasUpdated);
 
     if (delayForUpdate !== undefined) {
@@ -194,7 +192,7 @@ export abstract class SSRLitElement extends LitElement {
     }
 
     // Render the element, as super.update ends up calling render()
-    super.update(changedProperties);
+    super.scheduleUpdate();
   }
 
   /**
@@ -238,4 +236,3 @@ export abstract class SSRLitElement extends LitElement {
     super.disconnectedCallback();
   }
 }
-

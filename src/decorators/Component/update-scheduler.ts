@@ -43,7 +43,7 @@ const SUBSEQUENT_RENDER_WEIGHT = 1;
 /**
  * List of batches of updates being processed in each frame.
  */
-const updatesInEachBatch: {
+export const updatesInEachBatch: {
   /**
    * Returns a promise that is resolved when all updates in this batch are done.
    */
@@ -78,7 +78,9 @@ const addNewFrameBatch = () => {
   // frames to be finalized first, to ensure the correct order of updates.
   const batchComplete = lastFrameBatchUpdateComplete
     ? lastFrameBatchUpdateComplete.finally(updateDelayTimeout)
-    : updateDelayTimeout();
+    : // First batch, no need to wait, otherwise the second element of the array
+      // would have to wait two frames
+      Promise.resolve(); // TODO: Should we use undefined here?
 
   updatesInEachBatch.push({ batchComplete, updatesCount: 0 });
 
@@ -87,8 +89,9 @@ const addNewFrameBatch = () => {
   batchComplete.finally(() => updatesInEachBatch.shift());
 };
 
-const getLastFrameBatchUpdateFinalization = (): Promise<void> | undefined =>
-  updatesInEachBatch.at(-1)?.batchComplete;
+export const getLastFrameBatchUpdateFinalization = ():
+  | Promise<void>
+  | undefined => updatesInEachBatch.at(-1)?.batchComplete;
 
 /**
  * Adds an update to the last frame batch, creating a new batch if needed.
@@ -133,4 +136,3 @@ export const getDelayForUpdate = (
       undefined
     : getLastFrameBatchUpdateFinalization();
 };
-
