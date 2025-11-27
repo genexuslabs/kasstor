@@ -67,6 +67,11 @@ describe("[Decorator: Component]", () => {
       expect(updatesInEachBatch.length).toBe(0);
     });
 
+    test.todo(
+      "should clear the updatesInEachBatch array after the last microtask, even when the render is partitioned",
+      async () => {}
+    );
+
     test("should render the component after one microtask", async () => {
       render(html`<scheduler-component-test></scheduler-component-test>`);
 
@@ -127,14 +132,10 @@ describe("[Decorator: Component]", () => {
     });
 
     test("should partition updates in 256 component blocks when more than 256 components are rendered on the initial load", async () => {
-      renderCount = 0;
       const elements = Array.from({ length: 600 }, () =>
         document.createElement("scheduler-component-test")
       );
-      elements.forEach((element, index) => {
-        element.id = `${index + 1}`;
-        document.body.appendChild(element);
-      });
+      elements.forEach(element => document.body.appendChild(element));
 
       expect(renderCount).toBe(0);
 
@@ -147,5 +148,112 @@ describe("[Decorator: Component]", () => {
       await updateDelayTimeout();
       expect(renderCount).toBe(600);
     });
+
+    test.only("when the render is partitioned, elements that are rendered in following batches should have the corresponding updateComplete promise", async () => {
+      const getPendingUpdates = (elements: SchedulerComponentTest[]) =>
+        elements.map(e => e.isUpdatePending);
+
+      const elements = Array.from({ length: 600 }, () =>
+        document.createElement("scheduler-component-test")
+      );
+      elements.forEach(element => document.body.appendChild(element));
+      const first256 = elements.slice(0, 256);
+      const second256 = elements.slice(256, 512);
+      const lastElements = elements.slice(512, 600);
+
+      expect(renderCount).toBe(0);
+      expect(getPendingUpdates(elements).every(p => p === true)).toBe(true);
+
+      await updateFinalization();
+      expect(getPendingUpdates(first256).every(p => p === false)).toBe(true);
+      expect(getPendingUpdates(second256).every(p => p === true)).toBe(true);
+      expect(getPendingUpdates(lastElements).every(p => p === true)).toBe(true);
+
+      await updateDelayTimeout();
+      expect(getPendingUpdates(first256).every(p => p === false)).toBe(true);
+      expect(getPendingUpdates(second256).every(p => p === false)).toBe(true);
+      expect(getPendingUpdates(lastElements).every(p => p === true)).toBe(true);
+
+      await updateDelayTimeout();
+      expect(getPendingUpdates(first256).every(p => p === false)).toBe(true);
+      expect(getPendingUpdates(second256).every(p => p === false)).toBe(true);
+      expect(getPendingUpdates(lastElements).every(p => p === false)).toBe(
+        true
+      );
+    });
+
+    test.only("when the render is partitioned, elements that are rendered for the first time should have the corresponding hasUpdated value", async () => {
+      const getHasUpdated = (elements: SchedulerComponentTest[]) =>
+        elements.map(e => e.hasUpdated);
+
+      const elements = Array.from({ length: 600 }, () =>
+        document.createElement("scheduler-component-test")
+      );
+      elements.forEach(element => document.body.appendChild(element));
+      const first256 = elements.slice(0, 256);
+      const second256 = elements.slice(256, 512);
+      const lastElements = elements.slice(512, 600);
+
+      expect(renderCount).toBe(0);
+      expect(getHasUpdated(elements).every(p => p === false)).toBe(true);
+
+      await updateFinalization();
+      expect(getHasUpdated(first256).every(p => p === true)).toBe(true);
+      expect(getHasUpdated(second256).every(p => p === false)).toBe(true);
+      expect(getHasUpdated(lastElements).every(p => p === false)).toBe(true);
+
+      await updateDelayTimeout();
+      expect(getHasUpdated(first256).every(p => p === true)).toBe(true);
+      expect(getHasUpdated(second256).every(p => p === true)).toBe(true);
+      expect(getHasUpdated(lastElements).every(p => p === false)).toBe(true);
+
+      await updateDelayTimeout();
+      expect(getHasUpdated(first256).every(p => p === true)).toBe(true);
+      expect(getHasUpdated(second256).every(p => p === true)).toBe(true);
+      expect(getHasUpdated(lastElements).every(p => p === true)).toBe(true);
+    });
+
+    test.only("when the render is partitioned, the updateComplete promises should resolve correctly", async () => {
+      const completedUpdates: Set<number> = new Set();
+
+      const elements = Array.from({ length: 600 }, () =>
+        document.createElement("scheduler-component-test")
+      );
+      elements.forEach((element, index) => {
+        element.updateComplete.then(() => completedUpdates.add(index + 1));
+        document.body.appendChild(element);
+      });
+
+      expect(completedUpdates.size).toBe(0);
+
+      await updateFinalization();
+      expect(completedUpdates.size).toBe(256);
+
+      // Check the ids of the elements that have completed their updates
+      expect([...completedUpdates.keys()]).toEqual(
+        Array.from({ length: 256 }, (_, index) => index + 1)
+      );
+
+      await updateDelayTimeout();
+      expect(completedUpdates.size).toBe(512);
+
+      // Check the ids of the elements that have completed their updates
+      expect([...completedUpdates.keys()]).toEqual(
+        Array.from({ length: 512 }, (_, index) => index + 1)
+      );
+
+      await updateDelayTimeout();
+      expect(completedUpdates.size).toBe(600);
+
+      // Check the ids of the elements that have completed their updates
+      expect([...completedUpdates.keys()]).toEqual(
+        Array.from({ length: 600 }, (_, index) => index + 1)
+      );
+    });
+
+    test.todo(
+      "should not change the order of updates when partitioned",
+      async () => {}
+    );
   });
 });
