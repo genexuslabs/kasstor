@@ -12,7 +12,7 @@ let renderCount = 0;
 const updateDelayTimeout = () =>
   new Promise<void>(resolve => setTimeout(resolve));
 
-const updateFinalization = () =>
+const renderFinalization = () =>
   new Promise<void>(resolve => queueMicrotask(resolve));
 
 @Component({ tag: "scheduler-component-test" })
@@ -28,7 +28,7 @@ declare global {
   }
 }
 
-describe("[Decorator: Component]", () => {
+describe("[Decorator | Component]", () => {
   describe("[update-scheduler.ts]", () => {
     beforeEach(async () => {
       renderCount = 0;
@@ -67,10 +67,25 @@ describe("[Decorator: Component]", () => {
       expect(updatesInEachBatch.length).toBe(0);
     });
 
-    test.todo(
-      "should clear the updatesInEachBatch array after the last microtask, even when the render is partitioned",
-      async () => {}
-    );
+    test("should clear the updatesInEachBatch array after the last microtask, even when the render is partitioned", async () => {
+      const elements = Array.from({ length: 600 }, () =>
+        document.createElement("scheduler-component-test")
+      );
+      elements.forEach(element => document.body.appendChild(element));
+
+      expect(renderCount).toBe(0);
+
+      await renderFinalization();
+      expect(renderCount).toBe(256);
+
+      await updateDelayTimeout();
+      expect(renderCount).toBe(512);
+
+      await updateDelayTimeout();
+      expect(renderCount).toBe(600);
+
+      expect(updatesInEachBatch.length).toBe(0);
+    });
 
     test("should render the component after one microtask", async () => {
       render(html`<scheduler-component-test></scheduler-component-test>`);
@@ -79,7 +94,7 @@ describe("[Decorator: Component]", () => {
       // In other words, the update is scheduled but the microtask is not yet executed
       expect(renderCount).toBe(0);
 
-      await updateFinalization();
+      await renderFinalization();
       expect(renderCount).toBe(1);
     });
 
@@ -91,11 +106,11 @@ describe("[Decorator: Component]", () => {
       // In other words, the update is scheduled but the microtask is not yet executed
       expect(renderCount).toBe(0);
 
-      await updateFinalization();
+      await renderFinalization();
       expect(renderCount).toBe(1);
 
       element.requestUpdate();
-      await updateFinalization();
+      await renderFinalization();
       expect(renderCount).toBe(2);
     });
 
@@ -105,13 +120,13 @@ describe("[Decorator: Component]", () => {
 
       expect(renderCount).toBe(0);
 
-      await updateFinalization();
+      await renderFinalization();
       expect(renderCount).toBe(1);
 
       element.requestUpdate();
       element.requestUpdate();
       element.requestUpdate();
-      await updateFinalization();
+      await renderFinalization();
       expect(renderCount).toBe(2);
     });
 
@@ -121,13 +136,13 @@ describe("[Decorator: Component]", () => {
 
       expect(renderCount).toBe(0);
 
-      await updateFinalization();
+      await renderFinalization();
       expect(renderCount).toBe(1);
 
       element.requestUpdate();
       element.requestUpdate();
       element.requestUpdate();
-      await updateFinalization();
+      await renderFinalization();
       expect(renderCount).toBe(2);
     });
 
@@ -139,7 +154,7 @@ describe("[Decorator: Component]", () => {
 
       expect(renderCount).toBe(0);
 
-      await updateFinalization();
+      await renderFinalization();
       expect(renderCount).toBe(256);
 
       await updateDelayTimeout();
@@ -149,7 +164,7 @@ describe("[Decorator: Component]", () => {
       expect(renderCount).toBe(600);
     });
 
-    test.only("when the render is partitioned, elements that are rendered in following batches should have the corresponding updateComplete promise", async () => {
+    test("when the render is partitioned, elements that are rendered in following batches should have the corresponding updateComplete promise", async () => {
       const getPendingUpdates = (elements: SchedulerComponentTest[]) =>
         elements.map(e => e.isUpdatePending);
 
@@ -164,7 +179,7 @@ describe("[Decorator: Component]", () => {
       expect(renderCount).toBe(0);
       expect(getPendingUpdates(elements).every(p => p === true)).toBe(true);
 
-      await updateFinalization();
+      await renderFinalization();
       expect(getPendingUpdates(first256).every(p => p === false)).toBe(true);
       expect(getPendingUpdates(second256).every(p => p === true)).toBe(true);
       expect(getPendingUpdates(lastElements).every(p => p === true)).toBe(true);
@@ -182,7 +197,7 @@ describe("[Decorator: Component]", () => {
       );
     });
 
-    test.only("when the render is partitioned, elements that are rendered for the first time should have the corresponding hasUpdated value", async () => {
+    test("when the render is partitioned, elements that are rendered for the first time should have the corresponding hasUpdated value", async () => {
       const getHasUpdated = (elements: SchedulerComponentTest[]) =>
         elements.map(e => e.hasUpdated);
 
@@ -197,7 +212,7 @@ describe("[Decorator: Component]", () => {
       expect(renderCount).toBe(0);
       expect(getHasUpdated(elements).every(p => p === false)).toBe(true);
 
-      await updateFinalization();
+      await renderFinalization();
       expect(getHasUpdated(first256).every(p => p === true)).toBe(true);
       expect(getHasUpdated(second256).every(p => p === false)).toBe(true);
       expect(getHasUpdated(lastElements).every(p => p === false)).toBe(true);
@@ -213,7 +228,7 @@ describe("[Decorator: Component]", () => {
       expect(getHasUpdated(lastElements).every(p => p === true)).toBe(true);
     });
 
-    test.only("when the render is partitioned, the updateComplete promises should resolve correctly", async () => {
+    test("when the render is partitioned, the updateComplete promises should resolve correctly", async () => {
       const completedUpdates: Set<number> = new Set();
 
       const elements = Array.from({ length: 600 }, () =>
@@ -226,7 +241,8 @@ describe("[Decorator: Component]", () => {
 
       expect(completedUpdates.size).toBe(0);
 
-      await updateFinalization();
+      await renderFinalization();
+      await renderFinalization(); // Wait one extra microtask to ensure the updateCompletes are resolved
       expect(completedUpdates.size).toBe(256);
 
       // Check the ids of the elements that have completed their updates
@@ -257,3 +273,4 @@ describe("[Decorator: Component]", () => {
     );
   });
 });
+
