@@ -3,7 +3,6 @@ import typescript from "@rollup/plugin-typescript";
 import { resolve } from "path";
 import summary from "rollup-plugin-summary";
 import { createLogger, UserConfig } from "vite";
-import dts from "vite-plugin-dts";
 
 import { updateDevelopmentFlags } from "./update-development-flags";
 
@@ -122,18 +121,6 @@ export const defineDistributionConfiguration = (
       typescript({
         tsconfig: "./tsconfig.json",
         outDir,
-        exclude: ["node_modules", "dist", "**/**.e2e.ts"]
-      }),
-
-      dts({
-        root: resolve(__dirname, "./"),
-        entryRoot: resolve(__dirname, "src"),
-        outDir: outDir,
-        include: ["src"],
-        copyDtsFiles: true,
-        insertTypesEntry: false,
-        rollupTypes: false,
-        tsconfigPath: resolve(__dirname, "./tsconfig.json"),
         exclude: ["node_modules", "dist", "**/**.e2e.ts"]
       }),
 
