@@ -33,7 +33,7 @@ class DummyComponent extends LitElement {
 
 customElements.define("geai-event-dummy-component", DummyComponent);
 
-describe(`[Decorator][Event]`, () => {
+describe(`[Decorator | Event]`, () => {
   let dummyComponentRef: DummyComponent;
 
   let event1Handler = (event: CustomEvent) => {

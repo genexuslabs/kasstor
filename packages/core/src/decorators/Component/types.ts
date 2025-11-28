@@ -2,28 +2,6 @@
  * Options for the Component decorator
  */
 export type ComponentOptions<LibraryPrefix extends `${string}-`> = {
-  /**
-   * Defer the initial rendering of the component until the end of the next
-   * frame.
-   *
-   * This technique can be used to unblock the main rendering/event thread,
-   * which can improve page rendering performance.
-   *
-   * For example, if you render this component 2000 times simultaneously, you
-   * might want to use this property to reduce the Total Blocking Time (TBT),
-   * which would improve your Lighthouse performance score.
-   *
-   * This option is based on [overriding the `scheduleUpdate()` to customize the
-   * timing of the update](https://lit.dev/docs/components/lifecycle/#reactive-update-cycle-customizing).
-   */
-  deferInitialRender?: boolean;
-
-  /**
-   * Same as the `deferInitialRender` option, but works on all updates, not
-   * just the initial render.
-   */
-  deferUpdate?: boolean;
-
   globalStyles?: string;
 
   tag: `${LibraryPrefix}${string}`;
@@ -79,3 +57,4 @@ export type ComponentShadowRootOptions = {
    */
   mode?: ShadowRootMode;
 };
+
