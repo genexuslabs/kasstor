@@ -30,7 +30,7 @@ export const MAX_UPDATES_AT_THE_SAME_TIME = 2 ** 10; // 1024
  * setting up event listeners. Subsequent renders typically only involve
  * updating existing DOM elements.
  */
-const INITIAL_RENDER_WEIGHT = 4;
+const INITIAL_RENDER_WEIGHT = 2;
 
 /**
  * Weight of subsequent renders when counting updates in a frame.
@@ -136,3 +136,4 @@ export const getDelayForUpdate = (
       undefined
     : getLastFrameBatchUpdateFinalization();
 };
+
