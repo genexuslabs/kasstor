@@ -37,7 +37,7 @@
   },
   "peerDependencies": {
     "@genexus/kasstor-webkit": "^0.1.0",
-    "lit": "^3.3.0"
+    "lit": "^3.3.1"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
