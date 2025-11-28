@@ -79,6 +79,7 @@ export const defineDistributionConfiguration = (
       rollupOptions: {
         external: [
           ...Object.keys(packageJson.peerDependencies),
+          /^@genexus/,
           /^tslib/,
           /^lit/
         ],

@@ -20,7 +20,7 @@
     "dev": "concurrently 'bun dev:core' 'bun dev:webkit'",
     "dev:core": "cd packages/core && bun dev",
     "dev:webkit": "cd packages/webkit && bun dev",
-    "build": "concurrently 'bun build:core' 'bun build:webkit'",
+    "build": "bun build:webkit && bun build:core",
     "build:core": "cd packages/core && bun run build",
     "build:webkit": "cd packages/webkit && bun run build",
     "watch": "concurrently 'bun build:core --watch' 'bun build:webkit --watch'",
@@ -56,4 +56,3 @@
     "@genexus/kasstor-webkit": "workspace:*"
   }
 }
-
