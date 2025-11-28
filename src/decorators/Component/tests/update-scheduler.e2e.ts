@@ -68,7 +68,7 @@ describe("[Decorator | Component]", () => {
     });
 
     test("should clear the updatesInEachBatch array after the last microtask, even when the render is partitioned", async () => {
-      const elements = Array.from({ length: 600 }, () =>
+      const elements = Array.from({ length: 1200 }, () =>
         document.createElement("scheduler-component-test")
       );
       elements.forEach(element => document.body.appendChild(element));
@@ -76,13 +76,13 @@ describe("[Decorator | Component]", () => {
       expect(renderCount).toBe(0);
 
       await renderFinalization();
-      expect(renderCount).toBe(256);
-
-      await updateDelayTimeout();
       expect(renderCount).toBe(512);
 
       await updateDelayTimeout();
-      expect(renderCount).toBe(600);
+      expect(renderCount).toBe(1024);
+
+      await updateDelayTimeout();
+      expect(renderCount).toBe(1200);
 
       expect(updatesInEachBatch.length).toBe(0);
     });
@@ -147,7 +147,7 @@ describe("[Decorator | Component]", () => {
     });
 
     test("should partition updates in 256 component blocks when more than 256 components are rendered on the initial load", async () => {
-      const elements = Array.from({ length: 600 }, () =>
+      const elements = Array.from({ length: 1200 }, () =>
         document.createElement("scheduler-component-test")
       );
       elements.forEach(element => document.body.appendChild(element));
@@ -155,26 +155,26 @@ describe("[Decorator | Component]", () => {
       expect(renderCount).toBe(0);
 
       await renderFinalization();
-      expect(renderCount).toBe(256);
-
-      await updateDelayTimeout();
       expect(renderCount).toBe(512);
 
       await updateDelayTimeout();
-      expect(renderCount).toBe(600);
+      expect(renderCount).toBe(1024);
+
+      await updateDelayTimeout();
+      expect(renderCount).toBe(1200);
     });
 
     test("when the render is partitioned, elements that are rendered in following batches should have the corresponding updateComplete promise", async () => {
       const getPendingUpdates = (elements: SchedulerComponentTest[]) =>
         elements.map(e => e.isUpdatePending);
 
-      const elements = Array.from({ length: 600 }, () =>
+      const elements = Array.from({ length: 1200 }, () =>
         document.createElement("scheduler-component-test")
       );
       elements.forEach(element => document.body.appendChild(element));
-      const first256 = elements.slice(0, 256);
-      const second256 = elements.slice(256, 512);
-      const lastElements = elements.slice(512, 600);
+      const first256 = elements.slice(0, 512);
+      const second256 = elements.slice(512, 1024);
+      const lastElements = elements.slice(1024, 1200);
 
       expect(renderCount).toBe(0);
       expect(getPendingUpdates(elements).every(p => p === true)).toBe(true);
@@ -201,13 +201,13 @@ describe("[Decorator | Component]", () => {
       const getHasUpdated = (elements: SchedulerComponentTest[]) =>
         elements.map(e => e.hasUpdated);
 
-      const elements = Array.from({ length: 600 }, () =>
+      const elements = Array.from({ length: 1200 }, () =>
         document.createElement("scheduler-component-test")
       );
       elements.forEach(element => document.body.appendChild(element));
-      const first256 = elements.slice(0, 256);
-      const second256 = elements.slice(256, 512);
-      const lastElements = elements.slice(512, 600);
+      const first256 = elements.slice(0, 512);
+      const second256 = elements.slice(512, 1024);
+      const lastElements = elements.slice(1024, 1200);
 
       expect(renderCount).toBe(0);
       expect(getHasUpdated(elements).every(p => p === false)).toBe(true);
@@ -231,7 +231,7 @@ describe("[Decorator | Component]", () => {
     test("when the render is partitioned, the updateComplete promises should resolve correctly", async () => {
       const completedUpdates: Set<number> = new Set();
 
-      const elements = Array.from({ length: 600 }, () =>
+      const elements = Array.from({ length: 1200 }, () =>
         document.createElement("scheduler-component-test")
       );
       elements.forEach((element, index) => {
@@ -243,14 +243,6 @@ describe("[Decorator | Component]", () => {
 
       await renderFinalization();
       await renderFinalization(); // Wait one extra microtask to ensure the updateCompletes are resolved
-      expect(completedUpdates.size).toBe(256);
-
-      // Check the ids of the elements that have completed their updates
-      expect([...completedUpdates.keys()]).toEqual(
-        Array.from({ length: 256 }, (_, index) => index + 1)
-      );
-
-      await updateDelayTimeout();
       expect(completedUpdates.size).toBe(512);
 
       // Check the ids of the elements that have completed their updates
@@ -259,11 +251,19 @@ describe("[Decorator | Component]", () => {
       );
 
       await updateDelayTimeout();
-      expect(completedUpdates.size).toBe(600);
+      expect(completedUpdates.size).toBe(1024);
 
       // Check the ids of the elements that have completed their updates
       expect([...completedUpdates.keys()]).toEqual(
-        Array.from({ length: 600 }, (_, index) => index + 1)
+        Array.from({ length: 1024 }, (_, index) => index + 1)
+      );
+
+      await updateDelayTimeout();
+      expect(completedUpdates.size).toBe(1200);
+
+      // Check the ids of the elements that have completed their updates
+      expect([...completedUpdates.keys()]).toEqual(
+        Array.from({ length: 1200 }, (_, index) => index + 1)
       );
     });
 
