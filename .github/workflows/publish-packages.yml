@@ -1,0 +1,83 @@
+name: Publish Packages
+
+on:
+  push:
+    tags:
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      core-changed: ${{ steps.check-core.outputs.version-changed }}
+      webkit-changed: ${{ steps.check-webkit.outputs.version-changed }}
+    steps:
+      # Pinning to a specific commit hash for security reasons.
+      # This hash corresponds to version 4.3.0 of the actions/checkout action.
+      # To update, find the desired commit hash from the releases page:
+      # https://github.com/actions/checkout/releases
+      - name: Checkout
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
+
+      - name: Get the latest Kasstor Core version
+        id: get-latest-core-version
+        run: |
+          PACKAGE_NAME=@genexus/kasstor-core
+          LATEST_CORE_VERSION=$(curl -s https://registry.npmjs.org/$PACKAGE_NAME | jq -r '.["dist-tags"].latest')
+          echo "latest_core_version=$LATEST_CORE_VERSION" >> $GITHUB_ENV
+
+      - name: Get the latest Kasstor Webkit version
+        id: get-latest-webkit-version
+        run: |
+          PACKAGE_NAME=@genexus/kasstor-webkit
+          LATEST_WEBKIT_VERSION=$(curl -s https://registry.npmjs.org/$PACKAGE_NAME | jq -r '.["dist-tags"].latest')
+          echo "latest_webkit_version=$LATEST_WEBKIT_VERSION" >> $GITHUB_ENV
+
+      - name: Print last published versions
+        run: |
+          echo "The latest Kasstor Core version is ${{ env.latest_core_version }}"
+          echo "The latest Kasstor Webkit version is ${{ env.latest_webkit_version }}"
+
+      - name: Check if `core` version changed
+        id: check-core
+        run: |
+          CURRENT_VERSION=$(jq -r .version packages/core/package.json)
+          PREVIOUS_VERSION=${{ env.latest_core_version }}
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "Version changed!"
+            echo "version-changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "version-changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if `webkit` version changed
+        id: check-webkit
+        run: |
+          CURRENT_VERSION=$(jq -r .version packages/webkit/package.json)
+          PREVIOUS_VERSION=${{ env.latest_webkit_version }}
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "Version changed!"
+            echo "version-changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "version-changed=false" >> $GITHUB_OUTPUT
+          fi
+
+  publish-core:
+    needs: check-version
+    if: needs.check-version.outputs.core-changed == 'true'
+    uses: ./.github/workflows/common-ci-checks.yml
+    with:
+      cache: false
+      publish: true
+      package: "packages/core"
+    secrets: inherit
+
+  publish-webkit:
+    needs: check-version
+    if: needs.check-version.outputs.webkit-changed == 'true'
+    uses: ./.github/workflows/common-ci-checks.yml
+    with:
+      cache: false
+      publish: true
+      package: "packages/webkit"
+    secrets: inherit

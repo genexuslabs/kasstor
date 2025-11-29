@@ -1,4 +1,6 @@
 name: CI
+permissions:
+  contents: read
 
 on:
   push:
@@ -7,7 +9,16 @@ on:
     branches: [main]
 
 jobs:
-  run-ci:
-    uses: ./.github/workflows/ci-common.yml
+  core:
+    uses: ./.github/workflows/common-ci-checks.yml
     with:
-      should-publish: false
+      cache: true
+      publish: false
+      package: "packages/core"
+
+  webkit:
+    uses: ./.github/workflows/common-ci-checks.yml
+    with:
+      cache: true
+      publish: false
+      package: "packages/webkit"
