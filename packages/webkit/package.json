@@ -24,7 +24,7 @@
   "scripts": {
     "dev": "tsc --noEmit && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun dev.types'",
     "dev.types": "tsgo --project tsconfig-types.json",
-    "build": "tsc --noEmit && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun build:prod:browser' 'bun build:prod:node'  'bun build.types'",
+    "build": "tsc --noEmit && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun build:prod:browser' 'bun build:prod:node' 'bun build.types'",
     "build:dev:browser": "vite build --mode browser-development",
     "build:dev:node": "vite build --mode node-development",
     "build:prod:browser": "vite build --mode browser-production",
@@ -53,21 +53,21 @@
     },
     "./array.js": {
       "node": {
-        "development": "./dist/node/development/array.js",
-        "default": "./dist/node/production/array.js"
+        "development": "./dist/node/development/array/index.js",
+        "default": "./dist/node/production/array/index.js"
       },
-      "types": "./dist/browser/development/array.d.ts",
-      "development": "./dist/browser/development/array.js",
-      "default": "./dist/browser/production/array.js"
+      "types": "./dist/browser/development/array/index.d.ts",
+      "development": "./dist/browser/development/array/index.js",
+      "default": "./dist/browser/production/array/index.js"
     },
     "./sync-with-frames.js": {
       "node": {
-        "development": "./dist/node/development/sync-with-frames.js",
-        "default": "./dist/node/production/sync-with-frames.js"
+        "development": "./dist/node/development/sync-with-frames/index.js",
+        "default": "./dist/node/production/sync-with-frames/index.js"
       },
-      "types": "./dist/browser/development/sync-with-frames.d.ts",
-      "development": "./dist/browser/development/sync-with-frames.js",
-      "default": "./dist/browser/production/sync-with-frames.js"
+      "types": "./dist/browser/development/sync-with-frames/index.d.ts",
+      "development": "./dist/browser/development/sync-with-frames/index.js",
+      "default": "./dist/browser/production/sync-with-frames/index.js"
     }
   }
 }
