@@ -1,4 +1,4 @@
-import { removeIndex } from "../../other/array.js";
+import { removeIndex } from "@genexus/kasstor-webkit/array.js";
 
 const rootNodes = new WeakMap<HTMLElement, Document | ShadowRoot>();
 
@@ -100,3 +100,4 @@ export const removeGlobalStyleSheet = (
     rootNodeGlobalStyles.set(stylesheet, rootNodeStyleSheetReferences - 1);
   }
 };
+

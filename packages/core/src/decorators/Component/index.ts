@@ -227,7 +227,7 @@ export abstract class SSRLitElement extends LitElement {
    * @category updates
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected firstWillUpdate(changedProperties: PropertyValues): void {}
+  protected firstWillUpdate(_changedProperties: PropertyValues): void {}
 
   override disconnectedCallback(): void {
     if (this.globalStyles) {

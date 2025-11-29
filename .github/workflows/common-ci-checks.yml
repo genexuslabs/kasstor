@@ -1,0 +1,89 @@
+name: Common CI Checks
+
+on:
+  workflow_call:
+    inputs:
+      cache:
+        description: "Use cache node modules"
+        required: false
+        type: boolean
+      package:
+        description: "Package"
+        required: true
+        type: string
+      publish:
+        description: "Publish"
+        required: true
+        type: boolean
+
+jobs:
+  install-build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Pinning to a specific commit hash for security reasons.
+      # This hash corresponds to version 4.3.0 of the actions/checkout action.
+      # To update, find the desired commit hash from the releases page:
+      # https://github.com/actions/checkout/releases
+      - name: Checkout
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
+
+      # Pinning to a specific commit hash for security reasons.
+      # This hash corresponds to version 4.0.0 of the actions/setup-node action.
+      # To update, find the desired commit hash from the releases page:
+      # https://github.com/actions/setup-node/releases
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.x
+          registry-url: https://registry.npmjs.org/
+
+      # Using a pinned commit hash for security reasons, as recommended by GitHub Advanced Security.
+      # This hash corresponds to version 2.0.2 of the oven-sh/setup-bun action.
+      # To update, find the desired commit hash from the releases page:
+      # https://github.com/oven-sh/setup-bun/releases
+      - name: Install Bun
+        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76
+
+      # Pinning to a specific commit hash for security reasons.
+      # This hash corresponds to version 3.4.3 of the actions/cache action.
+      # To update, find the desired commit hash from the releases page:
+      # https://github.com/actions/cache/releases
+      - name: Cache node_modules
+        if: ${{ inputs.cache == true }}
+        uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun i --linker hoisted
+        working-directory: ${{ inputs.package }}
+
+      # We need to pre-build webkit, because the mercury-core package needs it.
+      # TODO: We should only build it when the package is Mercury
+      - name: Pre-build webkit
+        run: bun dev
+        working-directory: "packages/webkit"
+
+      # This is a faster check than trying to build the whole package
+      - name: Build types
+        run: bun dev.types
+        working-directory: ${{ inputs.package }}
+
+      - name: Build package
+        run: bun run build
+        working-directory: ${{ inputs.package }}
+
+      - name: Run tests
+        run: bun test.ci
+        working-directory: ${{ inputs.package }}
+
+      - name: Publish
+        if: ${{ inputs.publish == true }}
+        run: npm publish --access=public
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+        working-directory: ${{ inputs.package }}

@@ -1,4 +1,4 @@
-import { html } from "lit-html";
+import { html } from "lit/html.js";
 import { beforeEach, describe, expect, test } from "vitest";
 import { render } from "vitest-browser-lit";
 import { Component, SSRLitElement } from "../index.js";
@@ -273,4 +273,3 @@ describe("[Decorator | Component]", () => {
     );
   });
 });
-
