@@ -350,5 +350,37 @@ describe("[core]", () => {
 
       expect(effectFnMock).toHaveBeenCalledTimes(2);
     });
+
+    test("effect should not be dispatched if stopped in the middle of a batch, even if the batch updates signals tracked by the effect", async () => {
+      const letter = signal("a");
+      const doubleLetter = computed(() => letter() + letter());
+      const effectFnMock = vi.fn();
+
+      const stopEffect = effect(() => {
+        effectFnMock(doubleLetter());
+      });
+
+      // First time
+      expect(effectFnMock).toHaveBeenCalledTimes(1);
+      expect(effectFnMock).toHaveBeenCalledWith("aa");
+
+      batch(() => {
+        letter("b");
+        letter("c");
+        stopEffect();
+        letter("d");
+      });
+
+      expect(effectFnMock).toHaveBeenCalledTimes(1);
+      expect(effectFnMock).toHaveBeenCalledWith("aa");
+
+      // Trigger a change
+      letter("a");
+
+      // The mock should not be called again
+      expect(effectFnMock).toHaveBeenCalledTimes(1);
+    });
+
+    test.todo("effectScope and batch should work");
   });
 });
