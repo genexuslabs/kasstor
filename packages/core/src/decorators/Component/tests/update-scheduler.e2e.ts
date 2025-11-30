@@ -1,6 +1,6 @@
 import { html } from "lit/html.js";
-import { beforeEach, describe, expect, test } from "vitest";
-import { render } from "vitest-browser-lit";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { cleanup, render } from "vitest-browser-lit";
 import { Component, SSRLitElement } from "../index.js";
 import {
   getLastFrameBatchUpdateFinalization,
@@ -39,6 +39,8 @@ describe("[Decorator | Component]", () => {
         await getLastFrameBatchUpdateFinalization();
       }
     });
+
+    afterEach(() => cleanup());
 
     test("should render the component", async () => {
       render(html`<scheduler-component-test></scheduler-component-test>`);
