@@ -2,7 +2,7 @@ import { computed } from "alien-signals";
 import type { LitElement, Part } from "lit";
 import { AsyncDirective, directive } from "lit/async-directive.js";
 
-import { untracked } from "../../core/untrack/index.js";
+import { untracked } from "../../core/untracked/index.js";
 import { Watcher } from "../../core/watcher/index.js";
 import type {
   KasstorSignal,
