@@ -1,0 +1,66 @@
+{
+  "name": "@genexus/kasstor-signals",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/genexuslabs/kasstor",
+  "description": "A set of utilities to build and test Lit applications and libraries.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/genexuslabs/kasstor.git"
+  },
+  "keywords": [
+    "lit",
+    "lit decorators",
+    "web components"
+  ],
+  "main": "./dist/browser/production/index.js",
+  "module": "./dist/browser/production/index.js",
+  "jsnext:main": "./dist/browser/production/index.js",
+  "types": "./dist/browser/development/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "dev": "tsc --noEmit && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun dev.types'",
+    "dev.types": "tsgo --project tsconfig-types.json",
+    "build": "tsc --noEmit && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun build:prod:browser' 'bun build:prod:node' 'bun build.types'",
+    "build:dev:browser": "vite build --mode browser-development",
+    "build:dev:node": "vite build --mode node-development",
+    "build:prod:browser": "vite build --mode browser-production",
+    "build:prod:node": "vite build --mode node-production",
+    "build.types": "tsc --project tsconfig-types.json",
+    "watch": "bun run clear.dist && concurrently 'bun build:dev:browser --watch' 'bun build:dev:node --watch' 'bun build:prod:browser --watch' 'bun build:prod:node --watch' 'bun dev.types --watch'",
+    "clear.dist": "bun run ./scripts/remove-dist.ts",
+    "test": "playwright install && vitest",
+    "test.ci": "bun run test --watch=false --browser.headless"
+  },
+  "peerDependencies": {
+    "@genexus/kasstor-core": "^0.1.0",
+    "alien-signals": "^3.1.1",
+    "lit": "^3.3.1"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
+  },
+  "exports": {
+    ".": {
+      "node": {
+        "development": "./dist/node/development/index.js",
+        "default": "./dist/node/production/index.js"
+      },
+      "types": "./dist/browser/development/index.d.ts",
+      "development": "./dist/browser/development/index.js",
+      "default": "./dist/browser/production/index.js"
+    },
+    "./directives/watch.js": {
+      "node": {
+        "development": "./dist/node/development/directives/watch/index.js",
+        "default": "./dist/node/production/directives/watch/index.js"
+      },
+      "types": "./dist/browser/development/directives/watch/index.d.ts",
+      "development": "./dist/browser/development/directives/watch/index.js",
+      "default": "./dist/browser/production/directives/watch/index.js"
+    }
+  }
+}

@@ -53,6 +53,7 @@
     "vitest-browser-lit": "~0.1.0"
   },
   "overrides": {
+    "@genexus/kasstor-core": "workspace:*",
     "@genexus/kasstor-webkit": "workspace:*"
   }
 }
