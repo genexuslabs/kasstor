@@ -22,7 +22,7 @@
     "dist/"
   ],
   "scripts": {
-    "dev": "tsc --noEmit && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun dev.types'",
+    "dev": "bun dev.types && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun dev.types'",
     "dev.types": "tsgo --project tsconfig-types.json",
     "build": "tsc --noEmit && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun build:prod:browser' 'bun build:prod:node' 'bun build.types'",
     "build:dev:browser": "vite build --mode browser-development",
@@ -81,3 +81,4 @@
     }
   }
 }
+
