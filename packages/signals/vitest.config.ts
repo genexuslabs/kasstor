@@ -7,12 +7,10 @@ export default defineConfig({
         // Tests that don't run on the Browser
         test: {
           name: "unit",
-          include: [
-            "**/*.{test,spec}.ts",
 
-            // Batch should also work on the server
-            "**/batch.e2e.ts"
-          ],
+          // Shared tests are included here to run them in Node environment
+          include: ["**/*.{test,spec}.ts", "**/*.shared-test.ts"],
+
           environment: "node"
         }
       },
@@ -21,7 +19,9 @@ export default defineConfig({
         test: {
           name: "browser",
 
-          include: ["**/*.e2e.ts"],
+          // Shared tests are included here to run them in Browser environment
+          include: ["**/*.e2e.ts", "**/*.shared-test.ts"],
+
           exclude: ["node_modules", "dist"],
 
           browser: {
@@ -43,3 +43,4 @@ export default defineConfig({
     ]
   }
 });
+
