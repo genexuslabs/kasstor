@@ -2,8 +2,6 @@ import { computed, signal } from "alien-signals";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { Watcher } from "../index.js";
 
-let renderCount = 0;
-
 const count = signal(0);
 const doubleCount = computed(() => count() * 2);
 const tripleCount = computed(() => count() * 3);
