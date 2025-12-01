@@ -1,5 +1,5 @@
-import { computed, effect, trigger } from "alien-signals";
-import { describe, expect, test, vi } from "vitest";
+import { computed, effect, signal, trigger } from "alien-signals";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { batch } from "../../../core/batch/index.js";
 import type { KasstorSignalState } from "../../../typings/types.js";
 import { SignalProp } from "../index.js";
@@ -22,10 +22,12 @@ class Counter {
   total = computed(() => this.count * this.step);
 }
 
-class Rectangle {
-  declare $color: KasstorSignalState<Rectangle["color"]>;
-  declare $height: KasstorSignalState<Rectangle["height"]>;
-  declare $width: KasstorSignalState<Rectangle["width"]>;
+const length = signal(3);
+
+class Prism {
+  declare $color: KasstorSignalState<Prism["color"]>;
+  declare $height: KasstorSignalState<Prism["height"]>;
+  declare $width: KasstorSignalState<Prism["width"]>;
 
   constructor(height: number, width: number) {
     this.height = height;
@@ -35,10 +37,16 @@ class Rectangle {
   @SignalProp color: string = "red";
   @SignalProp height = 2;
   @SignalProp width;
+
+  volume = computed(() => this.height * this.width * length());
 }
 
 describe("[Decorator]", () => {
   describe("[SignalProp]", () => {
+    beforeEach(() => {
+      length(3);
+    });
+
     test("property initializers, setters and getters should work normally", () => {
       const c = new Counter();
 
@@ -75,7 +83,7 @@ describe("[Decorator]", () => {
     });
 
     test("constructor based initializers should work normally", () => {
-      const rect = new Rectangle(10, 20);
+      const rect = new Prism(10, 20);
 
       // Check the initial values
       expect(rect.height).toBe(10);
@@ -87,7 +95,7 @@ describe("[Decorator]", () => {
     });
 
     test("constructor based initializers should work well with setters and getters", () => {
-      const rect = new Rectangle(10, 20);
+      const rect = new Prism(10, 20);
 
       rect.height = 15;
       rect.width = 10;
@@ -289,6 +297,97 @@ describe("[Decorator]", () => {
       c.step = 1;
       trigger(c.total);
       expect(effectFnMock).toHaveBeenCalledTimes(4);
+    });
+
+    test("mixin of SignalProp decorated properties and regular signals should work with computed", () => {
+      const prism = new Prism(10, 20);
+
+      expect(prism.volume()).toBe(600);
+
+      length(4);
+      expect(prism.volume()).toBe(800);
+
+      prism.height = 5;
+      expect(prism.volume()).toBe(400);
+
+      prism.$width(10);
+      expect(prism.volume()).toBe(200);
+    });
+
+    test("mixin of SignalProp decorated properties and regular signals should work with effect", () => {
+      const prism = new Prism(10, 20);
+      const effectFnMock = vi.fn();
+
+      const stop = effect(() => {
+        effectFnMock(prism.volume() + prism.height + prism.width);
+      });
+
+      // Initial run
+      expect(effectFnMock).toHaveBeenCalledTimes(1);
+      expect(effectFnMock).toHaveBeenNthCalledWith(1, 630);
+
+      prism.height = 5;
+      expect(effectFnMock).toHaveBeenCalledTimes(2);
+      expect(effectFnMock).toHaveBeenNthCalledWith(2, 325);
+
+      prism.$width(10);
+      expect(effectFnMock).toHaveBeenCalledTimes(3);
+      expect(effectFnMock).toHaveBeenNthCalledWith(3, 165);
+
+      length(1);
+      expect(effectFnMock).toHaveBeenCalledTimes(4);
+      expect(effectFnMock).toHaveBeenNthCalledWith(4, 65);
+
+      // Stop the effect
+      stop();
+
+      prism.height = 20;
+      length(10);
+      expect(effectFnMock).toHaveBeenCalledTimes(4);
+    });
+
+    test("mixin of SignalProp decorated properties and regular signals should work with batch + trigger", () => {
+      const prism = new Prism(10, 20);
+      const effectFnMock = vi.fn();
+
+      const stop = effect(() => {
+        effectFnMock(prism.volume() + prism.height + prism.width + length());
+      });
+
+      // Initial run
+      expect(effectFnMock).toHaveBeenCalledTimes(1);
+      expect(effectFnMock).toHaveBeenNthCalledWith(1, 633);
+
+      batch(() => {
+        prism.height = 5;
+        prism.$width(10);
+        length(4);
+
+        // Effect should not be triggered yet
+        expect(effectFnMock).toHaveBeenCalledTimes(1);
+      });
+
+      expect(effectFnMock).toHaveBeenCalledTimes(2);
+      expect(effectFnMock).toHaveBeenNthCalledWith(2, 219);
+
+      length(2);
+      expect(effectFnMock).toHaveBeenCalledTimes(3);
+      expect(effectFnMock).toHaveBeenNthCalledWith(3, 117);
+
+      // Should trigger the effect 2 times, even if the computed value is
+      // memoized and the length signal didn't change
+      trigger(length);
+      trigger(prism.volume);
+      expect(effectFnMock).toHaveBeenCalledTimes(5);
+      expect(effectFnMock).toHaveBeenNthCalledWith(4, 117);
+      expect(effectFnMock).toHaveBeenNthCalledWith(5, 117);
+
+      // Stop the effect
+      stop();
+
+      prism.height = 20;
+      length(10);
+      expect(effectFnMock).toHaveBeenCalledTimes(5);
     });
   });
 });
