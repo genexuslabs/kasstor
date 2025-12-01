@@ -1,11 +1,16 @@
 import { computed } from "alien-signals";
 import { describe, expect, test } from "vitest";
-import { SignalProp } from "./index.js";
+import type { KasstorSignalState } from "../../../typings/types.js";
+import { SignalProp } from "../index.js";
 
 describe("[Decorator]", () => {
   describe("[SignalProp]", () => {
     test("should work with computed", () => {
       class Counter {
+        // TODO: Add support to auto-generate this
+        declare $count: KasstorSignalState<Counter["count"]>;
+        declare $step: KasstorSignalState<Counter["step"]>;
+
         @SignalProp count = 1;
 
         @SignalProp step = 2;
