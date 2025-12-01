@@ -40,13 +40,13 @@ Kasstor is open source and we appreciate issue reports and pull requests. See [C
 
 ### Setting up the repo for development
 
-Install Bun
+#### Install Bun
 
 ```bash
 npm i -g bun
 ```
 
-Initialize repo:
+#### Initialize repo
 
 ```bash
 git clone https://github.com/genexuslabs/kasstor
@@ -54,14 +54,38 @@ cd kasstor
 bun i
 ```
 
-Build the repo:
+#### Build the repo
 
 ```bash
 bun run build
 ```
 
-Test the repo:
+#### Testing the repo
 
-```bash
-bun run test
-```
+- To run the tests for all packages, run:
+
+  ```bash
+  bun run test
+  ```
+
+- If you want to run tests, for a specific package, then:
+
+  ```bash
+  cd packages/package-name
+  bun run test
+  ```
+
+- To execute only unit tests, run:
+
+  ```bash
+  bun run test:unit
+  ```
+
+- To execute only e2e tests, run:
+
+  ```bash
+  bun run test:e2e
+  ```
+
+- To create a tests that runs both in the browser and NodeJS, use the `.shared-test.ts` extension.
+
