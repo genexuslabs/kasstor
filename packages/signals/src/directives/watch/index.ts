@@ -80,6 +80,11 @@ export class WatchDirective<T> extends AsyncDirective {
 
   protected override reconnected(): void {
     this.#watchSignal();
+
+    // The host was reconnected, so we must update the value in the template
+    // in case it changed while disconnected. For example, setting a signal
+    // while the host was disconnected
+    untrack(() => this.#setValueComputation!());
   }
 
   // Only called on the client when the template changes
