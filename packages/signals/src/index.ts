@@ -18,7 +18,7 @@ export {
   startBatch,
   trigger
 } from "./core/index.js";
-export { untracked } from "./core/untracked/index.js";
+export { untrack } from "./core/untrack/index.js";
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //                        Decorators

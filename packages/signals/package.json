@@ -71,14 +71,14 @@
       "development": "./dist/browser/development/core/batch/index.js",
       "default": "./dist/browser/production/core/batch/index.js"
     },
-    "./core/untracked.js": {
+    "./core/untrack.js": {
       "node": {
-        "development": "./dist/node/development/core/untracked/index.js",
-        "default": "./dist/node/production/core/untracked/index.js"
+        "development": "./dist/node/development/core/untrack/index.js",
+        "default": "./dist/node/production/core/untrack/index.js"
       },
-      "types": "./dist/browser/development/core/untracked/index.d.ts",
-      "development": "./dist/browser/development/core/untracked/index.js",
-      "default": "./dist/browser/production/core/untracked/index.js"
+      "types": "./dist/browser/development/core/untrack/index.d.ts",
+      "development": "./dist/browser/development/core/untrack/index.js",
+      "default": "./dist/browser/production/core/untrack/index.js"
     },
     "./decorators/signal-prop.js": {
       "node": {

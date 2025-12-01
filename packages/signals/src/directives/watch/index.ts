@@ -2,7 +2,7 @@ import { computed } from "alien-signals";
 import type { LitElement, Part } from "lit";
 import { AsyncDirective, directive } from "lit/async-directive.js";
 
-import { untracked } from "../../core/untracked/index.js";
+import { untrack } from "../../core/untrack/index.js";
 import { Watcher } from "../../core/watcher/index.js";
 import type {
   KasstorSignal,
@@ -100,7 +100,7 @@ export class WatchDirective<T> extends AsyncDirective {
 
   // This ensures that the watch directive properly works with SSR
   render(signal: KasstorSignal<T>): T {
-    return untracked(() => signal());
+    return untrack(() => signal());
   }
 }
 
