@@ -4,20 +4,24 @@ import type { KasstorSignal, KasstorSignalComputed } from "../../typings/types";
 // TODO: We can implement a better and more performant solution for the Watcher,
 // that better matches the TC 39 proposal
 export class Watcher {
-  /** All watched signals */
-  #watchedDeps = new Map<KasstorSignal, Set<KasstorSignalComputed>>();
-
-  /** Per-signal effect disposer */
-  #disposers = new Map<KasstorSignal, () => void>();
-
   /** Callback supplied by user */
-  #callback: () => void;
-
-  /** Pending signals since last drain */
-  #pendingDeps = new Set<KasstorSignalComputed>();
+  #callback: (pendingComputations: KasstorSignalComputed[]) => void;
 
   /** Prevent reentrant notify loops */
   #notifying = false;
+
+  /** Pending signals since last drain */
+  #pendingDeps = new Set<KasstorSignal>();
+
+  /** All watched signals */
+  #watchedDeps = new Map<
+    KasstorSignal,
+    {
+      deps: Set<KasstorSignalComputed>;
+      stopEffect: () => void;
+      firstEffectRun: boolean;
+    }
+  >();
 
   /**
    * @param notify When a (recursive) source of Watcher is written to, call this callback,
@@ -25,7 +29,7 @@ export class Watcher {
    *
    * No signals may be read or written during the notify.
    */
-  constructor(notify: (this: Watcher) => void) {
+  constructor(notify: (pendingComputations: KasstorSignalComputed[]) => void) {
     this.#callback = notify;
   }
 
@@ -38,7 +42,13 @@ export class Watcher {
 
     queueMicrotask(() => {
       this.#notifying = false;
-      this.#callback();
+
+      const pendingComputations = this.getPending();
+      this.#pendingDeps.clear(); // Clear pending before callback to allow re-entrancy
+
+      if (pendingComputations.length !== 0) {
+        this.#callback(pendingComputations);
+      }
     });
   }
 
@@ -55,19 +65,35 @@ export class Watcher {
       // to add the current computation, because the dependency already has an
       // effect watching changes for it
       if (this.#watchedDeps.has(dependency)) {
-        this.#watchedDeps.get(dependency)!.add(computed);
+        this.#watchedDeps.get(dependency)!.deps.add(computed);
       }
       // First time the dependency is added
       else {
-        this.#watchedDeps.set(dependency, new Set([computed]));
+        const dependencyInfo = {
+          deps: new Set([computed]),
+          stopEffect: () => {},
+          firstEffectRun: true
+        };
+
+        this.#watchedDeps.set(dependency, dependencyInfo);
 
         // Create an effect that subscribes to the signal by reading it.
         // On change, it pushes to pending and schedules notify.
         const stopEffect = effect(() => {
           try {
             // This read registers this effect as a dependency, because the
-            // effect is dispatched when the signal value changes
+            // effect is dispatched when the signal value changes. If we move
+            // the if before this line, the effect will not be registered as
+            // a consumer of this dependency
             dependency();
+
+            // Skip the first run, as it is only used to register the effect
+            // IMPORTANT: DON'T move this check before reading the dependency,
+            // as it won't register the effect as a consumer of the signal
+            if (dependencyInfo.firstEffectRun === true) {
+              dependencyInfo.firstEffectRun = false;
+              return;
+            }
 
             // Mark as pending
             this.#pendingDeps.add(dependency);
@@ -78,7 +104,7 @@ export class Watcher {
           }
         });
 
-        this.#disposers.set(dependency, stopEffect);
+        dependencyInfo.stopEffect = stopEffect;
       }
     }
   }
@@ -93,45 +119,42 @@ export class Watcher {
       const { dependency, computed } = signals[index];
 
       if (this.#watchedDeps.has(dependency)) {
-        const computations = this.#watchedDeps.get(dependency)!;
+        const dependencyInfo = this.#watchedDeps.get(dependency)!;
 
-        computations.delete(computed);
+        dependencyInfo.deps.delete(computed);
 
         // The dependency no longer has computations, so we must remove it
-        if (computations.size === 0) {
+        if (dependencyInfo.deps.size === 0) {
           // Dispose effect to avoid memory leak
-          this.#disposers.get(dependency)!();
+          dependencyInfo.stopEffect();
 
           this.#pendingDeps.delete(dependency);
           this.#watchedDeps.delete(dependency);
         }
-
-        // TODO: Should we cancel the scheduled notify if there are no more pendings?
       }
     }
   }
 
-  /** Returns and clears pending signals */
+  /**
+   * Returns the pending signals to be processed in the next callback execution.
+   * */
   getPending(): KasstorSignalComputed[] {
     const pendingComputations: KasstorSignalComputed[] = [];
 
     this.#pendingDeps.forEach(dependency =>
-      pendingComputations.push(...this.#watchedDeps.get(dependency)!)
+      pendingComputations.push(...this.#watchedDeps.get(dependency)!.deps)
     );
 
-    this.#pendingDeps.clear();
     return pendingComputations;
   }
 
   /** Dispose all subscriptions */
   dispose(): void {
     // Dispose all effects to avoid memory leaks
-    this.#disposers.forEach(stop => stop());
+    this.#watchedDeps.forEach(dependencyInfo => dependencyInfo.stopEffect());
 
-    this.#disposers.clear();
     this.#watchedDeps.clear();
     this.#pendingDeps.clear();
-
-    // TODO: Should we cancel the scheduled notify?
   }
 }
+
