@@ -12,11 +12,9 @@ import type { WatchDirectiveFunction } from "./types.js";
 
 export type { WatchDirectiveFunction } from "./types.js";
 
-const signalWatcher = new Watcher(() => {
-  const computations = signalWatcher.getPending();
-
-  for (let index = 0; index < computations.length; index++) {
-    const setValueComputation = computations[index];
+export const signalWatcher = new Watcher(pendingComputations => {
+  for (let index = 0; index < pendingComputations.length; index++) {
+    const setValueComputation = pendingComputations[index];
     setValueComputation();
   }
 });
@@ -52,6 +50,9 @@ export class WatchDirective<T> extends AsyncDirective {
         // Side effect when this computed signals is read, which sets the value
         // in the template
         this.setValue(value);
+
+        // TODO: What happens if the host canceled the update?
+        // Should we re-schedule the signal update?
       }
 
       return value;
@@ -107,5 +108,29 @@ export class WatchDirective<T> extends AsyncDirective {
 /**
  * Renders a signal and subscribes to it, updating the part when the signal
  * changes.
+ *
+ * The directive works as follows:
+ *  - If the signal changes while the host component has a pending update,
+ *    the part will be updated during the host's update.
+ *
+ *  - If the signal changes while the host component does NOT have a pending
+ *    update, the part will be updated in a microtask.
+ *
+ * In general, all signals observed by the watch directive will update the
+ * templates in a microtask for coordination purposes, and, in the moment to
+ * update the part, it will check if the host has a pending update to avoid
+ * extra updates.
+ *
+ * @example
+ * ```typescript
+ * import { watch } from "@genexus/kasstor-signals/directives/watch.js";
+ * import { signal } from "alien-signals";
+ * import { html } from "lit";
+ *
+ * const count = signal(0);
+ *
+ * const myTemplate = html`<p>Count value: ${watch(count)}</p>`;
+ * ```
  */
 export const watch = directive(WatchDirective) as WatchDirectiveFunction;
+
