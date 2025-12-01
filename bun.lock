@@ -4,9 +4,6 @@
   "workspaces": {
     "": {
       "name": "@genexus/kasstor-monorepo",
-      "dependencies": {
-        "@genexus/kasstor-core": "workspace:*",
-      },
       "devDependencies": {
         "@eslint/js": "~9.36.0",
         "@types/node": "~22.15.17",
