@@ -3,7 +3,7 @@ import { property } from "lit/decorators/property.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-lit";
 
-import { Event, type EventEmitter } from "../index";
+import { Event, type EventEmitter } from "../index.js";
 
 /**
  * @fires event1

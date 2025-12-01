@@ -11,6 +11,8 @@ export default defineConfig({
           // Shared tests are included here to run them in Node environment
           include: ["**/*.{test,spec}.ts", "**/*.shared-test.ts"],
 
+          exclude: ["**/node_modules", "**/dist"],
+
           environment: "node"
         }
       },
@@ -22,7 +24,7 @@ export default defineConfig({
           // Shared tests are included here to run them in Browser environment
           include: ["**/*.e2e.ts", "**/*.shared-test.ts"],
 
-          exclude: ["node_modules", "dist"],
+          exclude: ["**/node_modules", "**/dist"],
 
           browser: {
             provider: "playwright",
