@@ -4,7 +4,6 @@ import {
 } from "@genexus/kasstor-core/decorators/component.js";
 import { html } from "lit";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { cleanup } from "vitest-browser-lit";
 import { watch } from "../../../directives/watch/index.js";
 import type { KasstorSignalState } from "../../../typings/types.js";
 import { SignalProp } from "../index.js";
@@ -61,7 +60,11 @@ describe("[Decorator]", () => {
       renderCount = 0;
     });
 
-    afterEach(() => cleanup());
+    afterEach(() => {
+      // Cleanup the DOM. Since we are not using the render from
+      // vitest-browser-lit, we must do it "manually"
+      document.body.innerHTML = "";
+    });
 
     test("properties with SignalProp should not trigger component updates", async () => {
       const { elementRef } = await renderElement();
