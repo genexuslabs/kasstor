@@ -21,6 +21,11 @@ export {
 export { untracked } from "./core/untracked/index.js";
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//                        Decorators
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+export { SignalProp } from "./decorators/signal-prop/index.js";
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //                        Directives
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 export {

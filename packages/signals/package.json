@@ -53,6 +53,42 @@
       "development": "./dist/browser/development/index.js",
       "default": "./dist/browser/production/index.js"
     },
+    "./core.js": {
+      "node": {
+        "development": "./dist/node/development/core/index.js",
+        "default": "./dist/node/production/core/index.js"
+      },
+      "types": "./dist/browser/development/core/index.d.ts",
+      "development": "./dist/browser/development/core/index.js",
+      "default": "./dist/browser/production/core/index.js"
+    },
+    "./core/batch.js": {
+      "node": {
+        "development": "./dist/node/development/core/batch/index.js",
+        "default": "./dist/node/production/core/batch/index.js"
+      },
+      "types": "./dist/browser/development/core/batch/index.d.ts",
+      "development": "./dist/browser/development/core/batch/index.js",
+      "default": "./dist/browser/production/core/batch/index.js"
+    },
+    "./core/untracked.js": {
+      "node": {
+        "development": "./dist/node/development/core/untracked/index.js",
+        "default": "./dist/node/production/core/untracked/index.js"
+      },
+      "types": "./dist/browser/development/core/untracked/index.d.ts",
+      "development": "./dist/browser/development/core/untracked/index.js",
+      "default": "./dist/browser/production/core/untracked/index.js"
+    },
+    "./decorators/signal-prop.js": {
+      "node": {
+        "development": "./dist/node/development/decorators/signal-prop/index.js",
+        "default": "./dist/node/production/decorators/signal-prop/index.js"
+      },
+      "types": "./dist/browser/development/decorators/signal-prop/index.d.ts",
+      "development": "./dist/browser/development/decorators/signal-prop/index.js",
+      "default": "./dist/browser/production/decorators/signal-prop/index.js"
+    },
     "./directives/watch.js": {
       "node": {
         "development": "./dist/node/development/directives/watch/index.js",
