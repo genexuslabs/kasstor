@@ -26,9 +26,10 @@
     "build:signals": "cd packages/signals && bun run build",
     "build:webkit": "cd packages/webkit && bun run build",
     "watch": "concurrently 'bun build:core --watch' 'bun build:signals --watch' 'bun build:webkit --watch'",
-    "test": "bunx playwright install && vitest",
+    "test": "bun dev && playwright install && vitest",
     "test.ci": "bun run test --watch=false --browser.headless",
-    "test.ui": "bun run test --ui"
+    "test:unit": "bun dev && vitest --project unit",
+    "test:e2e": "bun dev && playwright install && vitest --project browser"
   },
   "license": "Apache-2.0",
   "devDependencies": {

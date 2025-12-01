@@ -33,7 +33,9 @@
     "watch": "bun run clear.dist && concurrently 'bun build:dev:browser --watch' 'bun build:dev:node --watch' 'bun build:prod:browser --watch' 'bun build:prod:node --watch' 'bun dev.types --watch'",
     "clear.dist": "bun run ./scripts/remove-dist.ts",
     "test": "playwright install && vitest",
-    "test.ci": "bun run test --watch=false --browser.headless"
+    "test.ci": "bun run test --watch=false --browser.headless",
+    "test:unit": "vitest --project unit",
+    "test:e2e": "playwright install && vitest --project browser"
   },
   "peerDependencies": {
     "@genexus/kasstor-core": "^0.1.0",
