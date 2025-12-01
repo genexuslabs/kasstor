@@ -15,9 +15,9 @@ const getSignalRefAndCreateItIfNecessary = (
 
     // If the property existed directly on the instance (initializer),
     // read and delete it so the signal picks it up.
-    if (Object.prototype.hasOwnProperty.call(this, propName)) {
-      const initialValue = (this as any)[propName];
-      delete (this as any)[propName];
+    if (Object.prototype.hasOwnProperty.call(instance, propName)) {
+      const initialValue = (instance as any)[propName];
+      delete (instance as any)[propName];
 
       // Set the signal value
       signalRef(initialValue);
@@ -69,3 +69,4 @@ export function SignalProp<Target extends object>(
     }
   });
 }
+
