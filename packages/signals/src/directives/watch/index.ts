@@ -128,8 +128,8 @@ export class WatchDirective<T> extends AsyncDirective {
  *
  * @example
  * ```typescript
+ * import { signal } from "@genexus/kasstor-signals/core.js";
  * import { watch } from "@genexus/kasstor-signals/directives/watch.js";
- * import { signal } from "alien-signals";
  * import { html } from "lit";
  *
  * const count = signal(0);
@@ -138,4 +138,3 @@ export class WatchDirective<T> extends AsyncDirective {
  * ```
  */
 export const watch = directive(WatchDirective) as WatchDirectiveFunction;
-
