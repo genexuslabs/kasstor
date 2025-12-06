@@ -16,6 +16,13 @@ jobs:
       publish: false
       package: "packages/core"
 
+  signals:
+    uses: ./.github/workflows/common-ci-checks.yml
+    with:
+      cache: true
+      publish: false
+      package: "packages/signals"
+
   webkit:
     uses: ./.github/workflows/common-ci-checks.yml
     with:
