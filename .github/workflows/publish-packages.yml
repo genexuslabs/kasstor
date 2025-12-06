@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       core-changed: ${{ steps.check-core.outputs.version-changed }}
+      signals-changed: ${{ steps.check-signals.outputs.version-changed }}
       webkit-changed: ${{ steps.check-webkit.outputs.version-changed }}
     steps:
       # Pinning to a specific commit hash for security reasons.
@@ -26,6 +27,13 @@ jobs:
           LATEST_CORE_VERSION=$(curl -s https://registry.npmjs.org/$PACKAGE_NAME | jq -r '.["dist-tags"].latest')
           echo "latest_core_version=$LATEST_CORE_VERSION" >> $GITHUB_ENV
 
+      - name: Get the latest Kasstor Signals version
+        id: get-latest-signals-version
+        run: |
+          PACKAGE_NAME=@genexus/kasstor-signals
+          LATEST_SIGNALS_VERSION=$(curl -s https://registry.npmjs.org/$PACKAGE_NAME | jq -r '.["dist-tags"].latest')
+          echo "latest_signals_version=$LATEST_SIGNALS_VERSION" >> $GITHUB_ENV
+
       - name: Get the latest Kasstor Webkit version
         id: get-latest-webkit-version
         run: |
@@ -36,6 +44,7 @@ jobs:
       - name: Print last published versions
         run: |
           echo "The latest Kasstor Core version is ${{ env.latest_core_version }}"
+          echo "The latest Kasstor Signals version is ${{ env.latest_signals_version }}"
           echo "The latest Kasstor Webkit version is ${{ env.latest_webkit_version }}"
 
       - name: Check if `core` version changed
@@ -43,6 +52,18 @@ jobs:
         run: |
           CURRENT_VERSION=$(jq -r .version packages/core/package.json)
           PREVIOUS_VERSION=${{ env.latest_core_version }}
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "Version changed!"
+            echo "version-changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "version-changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if `signals` version changed
+        id: check-signals
+        run: |
+          CURRENT_VERSION=$(jq -r .version packages/signals/package.json)
+          PREVIOUS_VERSION=${{ env.latest_signals_version }}
           if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
             echo "Version changed!"
             echo "version-changed=true" >> $GITHUB_OUTPUT
@@ -70,6 +91,16 @@ jobs:
       cache: false
       publish: true
       package: "packages/core"
+    secrets: inherit
+
+  publish-signals:
+    needs: check-version
+    if: needs.check-version.outputs.signals-changed == 'true'
+    uses: ./.github/workflows/common-ci-checks.yml
+    with:
+      cache: false
+      publish: true
+      package: "packages/signals"
     secrets: inherit
 
   publish-webkit:

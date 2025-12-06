@@ -62,11 +62,17 @@ jobs:
         run: bun i --linker hoisted
         working-directory: ${{ inputs.package }}
 
-      # We need to pre-build webkit, because the mercury-core package needs it.
-      # TODO: We should only build it when the package is Mercury
+      # We need to pre-build webkit, because the kasstor-core package needs it.
+      # TODO: We should only build it when the package is kasstor-core or kasstor-signals
       - name: Pre-build webkit
         run: bun dev
         working-directory: "packages/webkit"
+
+      # We need to pre-build core, because the kasstor-signals package needs it.
+      # TODO: We should only build it when the package is kasstor-signals
+      - name: Pre-build core
+        run: bun dev
+        working-directory: "packages/core"
 
       # This is a faster check than trying to build the whole package
       - name: Build types

@@ -1,5 +1,5 @@
 {
-  "name": "@genexus/kasstor-core",
+  "name": "@genexus/kasstor-signals",
   "version": "0.1.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
@@ -38,7 +38,8 @@
     "test:e2e": "playwright install && vitest --project browser"
   },
   "peerDependencies": {
-    "@genexus/kasstor-webkit": "^0.1.0",
+    "@genexus/kasstor-core": "^0.1.0",
+    "alien-signals": "^3.1.1",
     "lit": "^3.3.1"
   },
   "lint-staged": {
@@ -54,32 +55,50 @@
       "development": "./dist/browser/development/index.js",
       "default": "./dist/browser/production/index.js"
     },
-    "./decorators/component.js": {
+    "./core.js": {
       "node": {
-        "development": "./dist/node/development/decorators/Component/index.js",
-        "default": "./dist/node/production/decorators/Component/index.js"
+        "development": "./dist/node/development/core/index.js",
+        "default": "./dist/node/production/core/index.js"
       },
-      "types": "./dist/browser/development/decorators/Component/index.d.ts",
-      "development": "./dist/browser/development/decorators/Component/index.js",
-      "default": "./dist/browser/production/decorators/Component/index.js"
+      "types": "./dist/browser/development/core/index.d.ts",
+      "development": "./dist/browser/development/core/index.js",
+      "default": "./dist/browser/production/core/index.js"
     },
-    "./decorators/event.js": {
+    "./core/batch.js": {
       "node": {
-        "development": "./dist/node/development/decorators/Event/index.js",
-        "default": "./dist/node/production/decorators/Event/index.js"
+        "development": "./dist/node/development/core/batch/index.js",
+        "default": "./dist/node/production/core/batch/index.js"
       },
-      "types": "./dist/browser/development/decorators/Event/index.d.ts",
-      "development": "./dist/browser/development/decorators/Event/index.js",
-      "default": "./dist/browser/production/decorators/Event/index.js"
+      "types": "./dist/browser/development/core/batch/index.d.ts",
+      "development": "./dist/browser/development/core/batch/index.js",
+      "default": "./dist/browser/production/core/batch/index.js"
     },
-    "./decorators/watch.js": {
+    "./core/untrack.js": {
       "node": {
-        "development": "./dist/node/development/decorators/Watch/index.js",
-        "default": "./dist/node/production/decorators/Watch/index.js"
+        "development": "./dist/node/development/core/untrack/index.js",
+        "default": "./dist/node/production/core/untrack/index.js"
       },
-      "types": "./dist/browser/development/decorators/Watch/index.d.ts",
-      "development": "./dist/browser/development/decorators/Watch/index.js",
-      "default": "./dist/browser/production/decorators/Watch/index.js"
+      "types": "./dist/browser/development/core/untrack/index.d.ts",
+      "development": "./dist/browser/development/core/untrack/index.js",
+      "default": "./dist/browser/production/core/untrack/index.js"
+    },
+    "./decorators/signal-prop.js": {
+      "node": {
+        "development": "./dist/node/development/decorators/signal-prop/index.js",
+        "default": "./dist/node/production/decorators/signal-prop/index.js"
+      },
+      "types": "./dist/browser/development/decorators/signal-prop/index.d.ts",
+      "development": "./dist/browser/development/decorators/signal-prop/index.js",
+      "default": "./dist/browser/production/decorators/signal-prop/index.js"
+    },
+    "./directives/watch.js": {
+      "node": {
+        "development": "./dist/node/development/directives/watch/index.js",
+        "default": "./dist/node/production/directives/watch/index.js"
+      },
+      "types": "./dist/browser/development/directives/watch/index.d.ts",
+      "development": "./dist/browser/development/directives/watch/index.js",
+      "default": "./dist/browser/production/directives/watch/index.js"
     }
   }
 }

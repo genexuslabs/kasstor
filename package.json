@@ -17,16 +17,19 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently 'bun dev:core' 'bun dev:webkit'",
+    "dev": "concurrently 'bun dev:core' 'bun dev:signals' 'bun dev:webkit'",
     "dev:core": "cd packages/core && bun dev",
+    "dev:signals": "cd packages/signals && bun dev",
     "dev:webkit": "cd packages/webkit && bun dev",
-    "build": "bun build:webkit && bun build:core",
+    "build": "bun build:core && bun build:signals && bun build:webkit",
     "build:core": "cd packages/core && bun run build",
+    "build:signals": "cd packages/signals && bun run build",
     "build:webkit": "cd packages/webkit && bun run build",
-    "watch": "concurrently 'bun build:core --watch' 'bun build:webkit --watch'",
-    "test": "bunx playwright install && vitest",
+    "watch": "concurrently 'bun build:core --watch' 'bun build:signals --watch' 'bun build:webkit --watch'",
+    "test": "bun dev && playwright install && vitest",
     "test.ci": "bun run test --watch=false --browser.headless",
-    "test.ui": "bun run test --ui"
+    "test:unit": "bun dev && vitest --project unit",
+    "test:e2e": "bun dev && playwright install && vitest --project browser"
   },
   "license": "Apache-2.0",
   "devDependencies": {
@@ -53,6 +56,8 @@
     "vitest-browser-lit": "~0.1.0"
   },
   "overrides": {
+    "@genexus/kasstor-core": "workspace:*",
     "@genexus/kasstor-webkit": "workspace:*"
   }
 }
+
