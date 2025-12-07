@@ -4,12 +4,12 @@
  *
  * @example
  * ```ts
- * type ChameleonControlsTagName = FilterKeys<
+ * type ChameleonControlsTagName = FilterObjectKeys<
  *   HTMLElementTagNameMap,
  *   `ch-${string}`
  * >
  * ```
  */
-export type FilterKeys<T, U> = {
+export type FilterObjectKeys<T, U> = {
   [K in keyof T]: K extends U ? K : never;
 }[keyof T];
