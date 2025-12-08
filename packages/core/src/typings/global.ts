@@ -9,6 +9,9 @@ declare global {
   // TODO: Add support to this
   var kasstorCoreVersions: string[] | undefined;
 
+  // We use the window to initialize these variables, since multiple libraries
+  // can use this utility but we don't want to set multiple MutationObservers
+  // for the same task
   var kasstorCoreCustomElementLoaders:
     | {
         /**
