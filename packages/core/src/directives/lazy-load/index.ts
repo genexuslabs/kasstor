@@ -1,14 +1,14 @@
 import {
+  AsyncDirective,
   directive,
-  Directive,
   PartType,
   type PartInfo
-} from "lit/directive.js";
+} from "lit/async-directive.js";
 import { nothing, type ElementPart } from "lit/html.js";
 import { loadComponent } from "../../bootstrapping/load-component.js";
 import type { CustomElementTagNames } from "../../bootstrapping/typings/non-standard-elements.js";
 
-class LazyLoadDirective extends Directive {
+class LazyLoadDirective extends AsyncDirective {
   #elementPart?: Element;
 
   constructor(partInfo: PartInfo) {
@@ -20,7 +20,7 @@ class LazyLoadDirective extends Directive {
     }
   }
 
-  override update(part: ElementPart) {
+  #checkElementRegistered = (part: ElementPart) => {
     const elementChanged =
       this.#elementPart === undefined ||
       // Don't apply toLowerCase() in this stage to improve the if performance
@@ -33,6 +33,15 @@ class LazyLoadDirective extends Directive {
       const tagName = this.#elementPart.tagName.toLowerCase();
       loadComponent(tagName as CustomElementTagNames);
     }
+  };
+
+  protected override reconnected(): void {
+    console.log("LazyLoadDirective: reconnected");
+  }
+
+  override update(part: ElementPart) {
+    console.log("LazyLoadDirective: update");
+    this.#checkElementRegistered(part);
     return nothing;
   }
 
