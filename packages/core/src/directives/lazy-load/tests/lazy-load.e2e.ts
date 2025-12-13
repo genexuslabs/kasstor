@@ -1,4 +1,4 @@
-import { html, nothing } from "lit";
+import { html, nothing, render } from "lit";
 import { property } from "lit/decorators/property.js";
 import { html as staticHTML, unsafeStatic } from "lit/static-html.js";
 import {
@@ -29,9 +29,9 @@ class LazyLoadDirectiveComponentTest extends SSRLitElement {
   override render() {
     return this.condition
       ? staticHTML`<${unsafeStatic(this.templateTagName)} ${lazyLoad()}></${unsafeStatic(this.templateTagName)}>`
-      : html`<test-lazy-load-component
+      : html`<test-lazy-load-component-1
           ${lazyLoad()}
-        ></test-lazy-load-component>`;
+        ></test-lazy-load-component-1>`;
   }
 }
 
@@ -77,6 +77,7 @@ describe("[Directives]", () => {
         libraryPrefix: "test-",
         defaultCustomElementWatchingBehavior: "never-observe",
 
+        // Define 10 "test-lazy-load-component-x" components
         customElements: Object.fromEntries(
           Array.from({ length: 10 }, (_, index) => [
             `test-lazy-load-component-${index + 1}`,
@@ -128,6 +129,7 @@ describe("[Directives]", () => {
     });
 
     test("should not call again the loader if the element is already registered", async () => {
+      // First element
       const el1 = document.createElement(
         "lazy-load-directive-component-test-3"
       );
@@ -136,6 +138,7 @@ describe("[Directives]", () => {
 
       expect(testLazyMock).toHaveBeenCalledTimes(1);
 
+      // Attach the same element
       const el2 = document.createElement(
         "lazy-load-directive-component-test-3"
       );
@@ -146,7 +149,49 @@ describe("[Directives]", () => {
       expect(testLazyMock).toHaveBeenCalledTimes(1);
     });
 
-    test.todo("should work without a component", () => {});
+    test("should work without a component (using the imperative 'render' function)", async () => {
+      document.body.innerHTML = "<div></div>";
+
+      render(
+        html`<test-lazy-load-component-4
+          ${lazyLoad()}
+        ></test-lazy-load-component-4>`,
+        document.body.querySelector("div")!
+      );
+
+      expect(testLazyMock).toHaveBeenCalledTimes(1);
+    });
+
+    test("if the same element is attached twice at the same time, only one loader should be called", async () => {
+      document.body.innerHTML = "<div></div>";
+
+      render(
+        html`<test-lazy-load-component-5
+            ${lazyLoad()}
+          ></test-lazy-load-component-5>
+          <test-lazy-load-component-5
+            ${lazyLoad()}
+          ></test-lazy-load-component-5>`,
+        document.body.querySelector("div")!
+      );
+
+      expect(testLazyMock).toHaveBeenCalledTimes(1);
+
+      // Wait one microtask to ensure the promise's "then" has been called
+      await new Promise<void>(resolve => queueMicrotask(resolve));
+
+      // The promise should no longer be stored to avoid memory leaks
+      expect(
+        globalThis.kasstorCoreCustomElementLoaders!.customElementLoaderPromises.get(
+          "test-lazy-load-component-5" as never
+        )
+      ).toBe(undefined);
+    });
+
+    test.todo(
+      "should continue working even if the custom element lazy loading fails",
+      () => {}
+    );
 
     test.todo(
       "if the element is not registered when the lazyLoad directive is called, should await its registration",
