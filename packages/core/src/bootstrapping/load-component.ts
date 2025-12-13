@@ -1,10 +1,44 @@
 import { DEV_MODE } from "../development-flags";
 import type { CustomElementTagNames } from "./typings/non-standard-elements";
 
-export const loadComponent = (tagName: CustomElementTagNames) => {
-  const { kasstorCoreCustomElementLoaders } = globalThis;
+// An alias to "globalThis" to improve minification
+const global = globalThis;
 
-  // No libraries registered
+const storeTagNameToLazyLoadItAfterItHasALoader = (
+  tagName: CustomElementTagNames
+) => {
+  global.kasstorCoreAttachedCustomElementsWithoutLoader ??= new Set();
+  global.kasstorCoreAttachedCustomElementsWithoutLoader.add(tagName);
+};
+
+const markTheCustomElementAsLoaded = (tagName: CustomElementTagNames) => {
+  global.kasstorCoreLazyLoadedCustomElements ??= new Set();
+  global.kasstorCoreLazyLoadedCustomElements.add(tagName);
+
+  global.kasstorCoreAttachedCustomElementsWithoutLoader?.delete(tagName);
+};
+
+export const loadComponent = (tagName: CustomElementTagNames) => {
+  const {
+    kasstorCoreCustomElementLoaders,
+    kasstorCoreLazyLoadedCustomElements
+  } = global;
+
+  // The element has been already loaded
+  if (kasstorCoreLazyLoadedCustomElements?.has(tagName)) {
+    return;
+  }
+  const customElementWasManuallyRegistered =
+    customElements.get(tagName) !== undefined;
+
+  // No need to call the loader, as it was already loaded without using the
+  // "loadComponent" function (for example, top level import)
+  if (customElementWasManuallyRegistered) {
+    return markTheCustomElementAsLoaded(tagName);
+  }
+
+  // No libraries registered and it was not manually registered. Register the
+  // tagName
   if (kasstorCoreCustomElementLoaders === undefined) {
     if (
       DEV_MODE &&
@@ -15,14 +49,11 @@ export const loadComponent = (tagName: CustomElementTagNames) => {
       );
     }
 
-    return;
+    return storeTagNameToLazyLoadItAfterItHasALoader(tagName);
   }
-  const {
-    customElementLoaderPromises,
-    lazyLoadedCustomElements,
-    registeredLoaders
-  } = kasstorCoreCustomElementLoaders;
 
+  const { customElementLoaderPromises, registeredLoaders } =
+    kasstorCoreCustomElementLoaders;
   const customElementLoaderPromise = customElementLoaderPromises.get(tagName);
 
   // The custom element is already being lazy loaded
@@ -30,50 +61,38 @@ export const loadComponent = (tagName: CustomElementTagNames) => {
     return customElementLoaderPromise;
   }
 
-  // The element has been already loaded or the element doesn't have a loader
-  if (
-    lazyLoadedCustomElements.has(tagName) ||
-    !registeredLoaders.has(tagName)
-  ) {
-    if (
-      DEV_MODE &&
-      customElements.get(tagName) === undefined && // The element was not "manually" registered
-      !registeredLoaders.has(tagName) // It doesn't have a loader
-    ) {
+  // The element doesn't have a loader and it was not "manually" registered.
+  // Store its tagName to lazy loading it after a library has defined a loader
+  // for it
+  if (!registeredLoaders.has(tagName)) {
+    if (DEV_MODE) {
       console.log(
         `[@genexus/kasstor-core]: The "${tagName}" can not be auto loaded, because it is not registered in any library. You must register it in a library, before trying to load it.`
       );
     }
 
-    return;
+    return storeTagNameToLazyLoadItAfterItHasALoader(tagName);
   }
 
   // The element was not "manually" registered, but the loader exists
-  if (customElements.get(tagName) === undefined) {
-    const { elementInfo } = registeredLoaders.get(tagName)!;
+  const { elementInfo } = registeredLoaders.get(tagName)!;
 
-    const loaderPromise = elementInfo
-      .loader()
-      .then(() => {
-        // Mark the component as loaded
-        lazyLoadedCustomElements.add(tagName);
-        customElementLoaderPromises.delete(tagName);
-      })
-      .catch(error =>
-        console.error(
-          `[@genexus/kasstor-core]: There was an error trying to load the "${tagName}" element.`,
-          error
-        )
-      );
+  const loaderPromise = elementInfo
+    .loader()
+    .then(() => {
+      markTheCustomElementAsLoaded(tagName);
+      customElementLoaderPromises.delete(tagName);
+    })
+    .catch(error =>
+      console.error(
+        `[@genexus/kasstor-core]: There was an error trying to load the "${tagName}" element.`,
+        error
+      )
+    );
 
-    // Store the promise to optimize lazy loading the same element multiple
-    // times
-    customElementLoaderPromises.set(tagName, loaderPromise);
+  // Store the promise to optimize lazy loading the same element multiple
+  // times
+  customElementLoaderPromises.set(tagName, loaderPromise);
 
-    return loaderPromise;
-  }
-
-  // Mark the component as loaded
-  lazyLoadedCustomElements.add(tagName);
-  return undefined;
+  return loaderPromise;
 };

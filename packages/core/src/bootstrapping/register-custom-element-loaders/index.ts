@@ -13,7 +13,6 @@ export const registerCustomElementLoaders = <Prefix extends LibraryPrefix>(
   // Define the global config if not previously set
   globalThis.kasstorCoreCustomElementLoaders ??= {
     customElementLoaderPromises: new Map(),
-    lazyLoadedCustomElements: new Set(),
     registeredLibraries: new Map(),
     registeredLoaders: new Map(),
     watcher: setMutationObserver()
@@ -42,7 +41,7 @@ export const registerCustomElementLoaders = <Prefix extends LibraryPrefix>(
   // Register the library
   registeredLibraries.set(libraryPrefix, options as never); // TODO: Fix this type issue
 
-  let atLeastOneNewCustomElementWasRegistered = false;
+  const newLoadersForCustomElements: CustomElementTagNames[] = [];
 
   // Register all new custom element loaders
   for (let index = 0; index < customElementTagNamesToRegister.length; index++) {
@@ -53,7 +52,7 @@ export const registerCustomElementLoaders = <Prefix extends LibraryPrefix>(
         `The custom element "${customElementTagName}" was already registered by the "${registeredLoaders.get(customElementTagName)!.libraryName}" library, so its loader won't be replaced with the one from "${libraryName}" library.`
       );
     } else {
-      atLeastOneNewCustomElementWasRegistered = true;
+      newLoadersForCustomElements.push(customElementTagName);
 
       const elementInfo = customElements[customElementTagName];
 
@@ -71,7 +70,7 @@ export const registerCustomElementLoaders = <Prefix extends LibraryPrefix>(
     }
   }
 
-  if (atLeastOneNewCustomElementWasRegistered) {
-    autoLoadCustomElementsIfNeeded();
+  if (newLoadersForCustomElements.length !== 0) {
+    autoLoadCustomElementsIfNeeded(newLoadersForCustomElements);
   }
 };

@@ -9,17 +9,23 @@ declare global {
   // TODO: Add support to this
   var kasstorCoreVersions: string[] | undefined;
 
+  var kasstorCoreAttachedCustomElementsWithoutLoader:
+    | Set<CustomElementTagNames>
+    | undefined;
+
+  /**
+   * Set of custom elements that have been lazy loaded.
+   * This is used to avoid loading the same element multiple times.
+   */
+  var kasstorCoreLazyLoadedCustomElements:
+    | Set<CustomElementTagNames>
+    | undefined;
+
   // We use the window to initialize these variables, since multiple libraries
   // can use this utility but we don't want to set multiple MutationObservers
   // for the same task
   var kasstorCoreCustomElementLoaders:
     | {
-        /**
-         * Set of custom elements that have been lazy loaded.
-         * This is used to avoid loading the same element multiple times.
-         */
-        readonly lazyLoadedCustomElements: Set<CustomElementTagNames>;
-
         /**
          * If a custom element is being lazy loaded, its promise will be stored
          * in this map.

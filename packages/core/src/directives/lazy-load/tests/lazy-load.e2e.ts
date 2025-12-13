@@ -188,13 +188,71 @@ describe("[Directives]", () => {
       ).toBe(undefined);
     });
 
+    test("if the element is not registered when the lazyLoad directive is called, should await its registration", async () => {
+      document.body.innerHTML = "<div></div>";
+      render(
+        html`<non-registered-element ${lazyLoad()}></non-registered-element> `,
+        document.body.querySelector("div")!
+      );
+
+      expect(testLazyMock).toHaveBeenCalledTimes(0);
+
+      // Should set the element as waiting for its loader
+      expect([
+        ...globalThis.kasstorCoreAttachedCustomElementsWithoutLoader!.keys()
+      ]).toEqual(["non-registered-element"]);
+
+      // Wait some time
+      await new Promise(resolve =>
+        setTimeout(() => requestAnimationFrame(resolve), 50)
+      );
+
+      registerCustomElementLoaders({
+        libraryName: "Test Library 2",
+        libraryPrefix: "non-",
+        defaultCustomElementWatchingBehavior: "never-observe",
+
+        customElements: {
+          "non-registered-element": {
+            loader: () => Promise.resolve(testLazyMock())
+          }
+        }
+      });
+
+      expect(testLazyMock).toHaveBeenCalledTimes(1);
+
+      // Wait one microtask to ensure the promise's "then" has been called and
+      // the element has been registered
+      await new Promise<void>(resolve => queueMicrotask(resolve));
+
+      // The element should no longer be waiting for its loader, as it was defined
+      expect(
+        globalThis.kasstorCoreAttachedCustomElementsWithoutLoader!.size
+      ).toBe(0);
+    });
+
     test.todo(
       "should continue working even if the custom element lazy loading fails",
       () => {}
     );
 
     test.todo(
-      "if the element is not registered when the lazyLoad directive is called, should await its registration",
+      "if the element is not registered when the lazyLoad directive is called, should await its registration even if there are no libraries registered",
+      async () => {}
+    );
+
+    test.todo(
+      "if the custom element is waiting for its loader to be defined, but it was manually loaded before the lazy loader was set, it should not call the loader",
+      () => {}
+    );
+
+    test.todo(
+      "if the custom element was manually loaded (for example, top level import), the lazy loader should not be called",
+      () => {}
+    );
+
+    test.todo(
+      "if the doesn't have a lazy loader, but it was manually loaded (for example, top level import), its tagName should not be globally stored",
       () => {}
     );
 
