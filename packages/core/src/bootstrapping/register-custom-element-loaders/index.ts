@@ -3,7 +3,11 @@ import type {
   LibraryPrefix
 } from "../typings/library-components";
 import type { CustomElementTagNames } from "../typings/non-standard-elements";
-import type { LibraryLoaderOptions } from "../typings/types";
+import type {
+  CustomElementInfo,
+  LibraryLoaderOptions,
+  RegisteredLoaderInfo
+} from "../typings/types";
 import { autoLoadCustomElementsIfNeeded } from "./auto-load-custom-elements-if-needed.js";
 import { setMutationObserver } from "./set-mutation-observer.js";
 
@@ -12,9 +16,12 @@ export const registerCustomElementLoaders = <Prefix extends LibraryPrefix>(
 ) => {
   // Define the global config if not previously set
   globalThis.kasstorCoreCustomElementLoaders ??= {
-    customElementLoaderPromises: new Map(),
+    customElementLoaderPromises: new Map<
+      CustomElementTagNames,
+      Promise<unknown>
+    >(),
     registeredLibraries: new Map(),
-    registeredLoaders: new Map(),
+    registeredLoaders: new Map<CustomElementTagNames, RegisteredLoaderInfo>(),
     watcher: setMutationObserver()
   };
 
@@ -54,7 +61,9 @@ export const registerCustomElementLoaders = <Prefix extends LibraryPrefix>(
     } else {
       newLoadersForCustomElements.push(customElementTagName);
 
-      const elementInfo = customElements[customElementTagName];
+      const elementInfo = customElements[
+        customElementTagName
+      ] as CustomElementInfo<LibraryComponents<Prefix>>;
 
       // Modify the original object to set the default dependency behavior.
       // This reduces the memory usage, because the original object reference is

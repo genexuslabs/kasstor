@@ -12,20 +12,18 @@ const storeTagNameToLazyLoadItAfterItHasALoader = (
 };
 
 const markTheCustomElementAsLoaded = (tagName: CustomElementTagNames) => {
-  global.kasstorCoreLazyLoadedCustomElements ??= new Set();
-  global.kasstorCoreLazyLoadedCustomElements.add(tagName);
+  global.kasstorCoreLoadedCustomElements ??= new Set();
+  global.kasstorCoreLoadedCustomElements.add(tagName);
 
   global.kasstorCoreAttachedCustomElementsWithoutLoader?.delete(tagName);
 };
 
 export const loadComponent = (tagName: CustomElementTagNames) => {
-  const {
-    kasstorCoreCustomElementLoaders,
-    kasstorCoreLazyLoadedCustomElements
-  } = global;
+  const { kasstorCoreCustomElementLoaders, kasstorCoreLoadedCustomElements } =
+    global;
 
   // The element has been already loaded
-  if (kasstorCoreLazyLoadedCustomElements?.has(tagName)) {
+  if (kasstorCoreLoadedCustomElements?.has(tagName)) {
     return;
   }
   const customElementWasManuallyRegistered =

@@ -1,8 +1,9 @@
 import type { LibraryPrefix } from "../bootstrapping/typings/library-components";
 import type { CustomElementTagNames } from "../bootstrapping/typings/non-standard-elements";
 import type {
-  LibraryLoaderOptions,
-  RegisteredLibraries
+  CustomElementInfo,
+  RegisteredLibraries,
+  RegisteredLoaderInfo
 } from "../bootstrapping/typings/types";
 
 declare global {
@@ -14,12 +15,10 @@ declare global {
     | undefined;
 
   /**
-   * Set of custom elements that have been lazy loaded.
+   * Set of custom elements that have been loaded.
    * This is used to avoid loading the same element multiple times.
    */
-  var kasstorCoreLazyLoadedCustomElements:
-    | Set<CustomElementTagNames>
-    | undefined;
+  var kasstorCoreLoadedCustomElements: Set<CustomElementTagNames> | undefined;
 
   // We use the window to initialize these variables, since multiple libraries
   // can use this utility but we don't want to set multiple MutationObservers
@@ -36,9 +35,7 @@ declare global {
          */
         readonly customElementLoaderPromises: Map<
           CustomElementTagNames,
-          ReturnType<
-            LibraryLoaderOptions<LibraryPrefix>["customElements"][CustomElementTagNames]["loader"]
-          >
+          ReturnType<CustomElementInfo<CustomElementTagNames>["loader"]>
         >;
 
         /**
@@ -53,12 +50,7 @@ declare global {
          */
         readonly registeredLoaders: Map<
           CustomElementTagNames,
-          {
-            readonly elementInfo: Required<
-              LibraryLoaderOptions<LibraryPrefix>["customElements"][CustomElementTagNames]
-            >;
-            readonly libraryName: string;
-          }
+          RegisteredLoaderInfo
         >;
 
         /**
