@@ -12,6 +12,7 @@ export const registerCustomElementLoaders = <Prefix extends LibraryPrefix>(
 ) => {
   // Define the global config if not previously set
   globalThis.kasstorCoreCustomElementLoaders ??= {
+    customElementLoaderPromises: new Map(),
     lazyLoadedCustomElements: new Set(),
     registeredLibraries: new Map(),
     registeredLoaders: new Map(),

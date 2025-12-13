@@ -17,8 +17,18 @@ export const loadComponent = (tagName: CustomElementTagNames) => {
 
     return;
   }
-  const { lazyLoadedCustomElements, registeredLoaders } =
-    kasstorCoreCustomElementLoaders;
+  const {
+    customElementLoaderPromises,
+    lazyLoadedCustomElements,
+    registeredLoaders
+  } = kasstorCoreCustomElementLoaders;
+
+  const customElementLoaderPromise = customElementLoaderPromises.get(tagName);
+
+  // The custom element is already being lazy loaded
+  if (customElementLoaderPromise !== undefined) {
+    return customElementLoaderPromise;
+  }
 
   // The element has been already loaded or the element doesn't have a loader
   if (
@@ -42,11 +52,12 @@ export const loadComponent = (tagName: CustomElementTagNames) => {
   if (customElements.get(tagName) === undefined) {
     const { elementInfo } = registeredLoaders.get(tagName)!;
 
-    return elementInfo
+    const loaderPromise = elementInfo
       .loader()
       .then(() => {
         // Mark the component as loaded
         lazyLoadedCustomElements.add(tagName);
+        customElementLoaderPromises.delete(tagName);
       })
       .catch(error =>
         console.error(
@@ -54,6 +65,12 @@ export const loadComponent = (tagName: CustomElementTagNames) => {
           error
         )
       );
+
+    // Store the promise to optimize lazy loading the same element multiple
+    // times
+    customElementLoaderPromises.set(tagName, loaderPromise);
+
+    return loaderPromise;
   }
 
   // Mark the component as loaded

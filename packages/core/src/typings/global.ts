@@ -21,6 +21,21 @@ declare global {
         readonly lazyLoadedCustomElements: Set<CustomElementTagNames>;
 
         /**
+         * If a custom element is being lazy loaded, its promise will be stored
+         * in this map.
+         *
+         * The main purpose of this Map is to improve the render performance by
+         * only having one promise for the same element (even if it is attached
+         * multiple times).
+         */
+        readonly customElementLoaderPromises: Map<
+          CustomElementTagNames,
+          ReturnType<
+            LibraryLoaderOptions<LibraryPrefix>["customElements"][CustomElementTagNames]["loader"]
+          >
+        >;
+
+        /**
          * Mapping between the library's prefix and the options to define
          * the custom elements of that library.
          */
