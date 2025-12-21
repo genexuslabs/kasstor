@@ -1,13 +1,10 @@
-import { computed } from "alien-signals";
 import type { LitElement, Part } from "lit";
 import { AsyncDirective, directive } from "lit/async-directive.js";
 
+import { effect } from "alien-signals";
 import { untrack } from "../../core/untrack/index.js";
 import { Watcher } from "../../core/watcher/index.js";
-import type {
-  KasstorSignal,
-  KasstorSignalComputed
-} from "../../typings/types.js";
+import type { KasstorSignal } from "../../typings/types.js";
 import type { WatchDirectiveFunction } from "./types.js";
 
 export type { WatchDirectiveFunction } from "./types.js";
@@ -19,10 +16,23 @@ export const signalWatcher = new Watcher(pendingComputations => {
   }
 });
 
+type WatchedSignalInfo = {
+  computations: Set<(value: unknown) => void>;
+  stopEffect: () => void;
+  firstEffectCall: boolean;
+};
+
+const watchedSignals = new WeakMap<KasstorSignal, WatchedSignalInfo>();
+
+const dummyStopEffect = () => {};
+
+let queuedMicroTask = false;
+const signalsComputationsForNextMicroTask = new Set<KasstorSignal>();
+
 export class WatchDirective<T> extends AsyncDirective {
   #host?: LitElement | undefined;
 
-  #setValueComputation?: KasstorSignalComputed<T | undefined> | undefined;
+  #setValueComputation?: (value: unknown) => void;
 
   #signalRef?: KasstorSignal<T>;
 
@@ -34,16 +44,10 @@ export class WatchDirective<T> extends AsyncDirective {
     }
     this.#watching = true;
 
-    // We use a computed value to avoid setting the value in the following scenario:
-    //   - signalRef has value = 1
-    //   - signalRef(2) // now has the value = 2
-    //   - signalRef(1) // now has the value = 1
-    //
-    // After the microtask has ended, the computed value didn't change, even
-    // when the signal's value was changed
-    this.#setValueComputation = computed(() => {
-      const value = this.#signalRef!();
+    const watchedSignal = this.#signalRef!;
+    const signalComputations = watchedSignals.get(watchedSignal);
 
+    this.#setValueComputation = (value: unknown) => {
       // Only update the template imperatively if there is not a pending update.
       // Otherwise, the host's render method will update the value
       if (this.#host === undefined || this.#host.isUpdatePending === false) {
@@ -54,22 +58,58 @@ export class WatchDirective<T> extends AsyncDirective {
         // TODO: What happens if the host canceled the update?
         // Should we re-schedule the signal update?
       }
+    };
 
-      return value;
-    });
+    if (signalComputations === undefined) {
+      const watchedSignalInfo: WatchedSignalInfo = {
+        computations: new Set([this.#setValueComputation]),
+        firstEffectCall: true,
+        stopEffect: dummyStopEffect
+      };
 
-    // Observe the changes in the signal
-    signalWatcher.watch({
-      dependency: this.#signalRef!,
-      computed: this.#setValueComputation!
-    });
+      effect(() => {
+        watchedSignal(); // Read the signal
+
+        if (watchedSignalInfo.firstEffectCall === true) {
+          watchedSignalInfo.firstEffectCall = false;
+          return;
+        }
+        signalsComputationsForNextMicroTask.add(watchedSignal);
+
+        if (queuedMicroTask === true) {
+          return;
+        }
+        queuedMicroTask = true;
+
+        // This should not be called if the effect is stopped when it is queued. Can this happen????
+        queueMicrotask(() => {
+          queuedMicroTask = false;
+
+          const newValue = watchedSignal();
+
+          signalsComputationsForNextMicroTask.forEach(watchedSignal =>
+            watchedSignals
+              .get(watchedSignal)
+              ?.computations.forEach(computation => computation(newValue))
+          );
+
+          signalsComputationsForNextMicroTask.clear();
+        });
+      });
+
+      watchedSignals.set(watchedSignal, watchedSignalInfo);
+    } else {
+      signalComputations.computations.add(this.#setValueComputation);
+    }
   };
 
   #unwatchSignal = () => {
-    signalWatcher.unwatch({
-      dependency: this.#signalRef!,
-      computed: this.#setValueComputation!
-    });
+    const { computations, stopEffect } = watchedSignals.get(this.#signalRef!)!;
+    computations.delete(this.#setValueComputation!);
+
+    if (computations.size === 0) {
+      stopEffect();
+    }
 
     this.#watching = false;
   };
@@ -84,7 +124,7 @@ export class WatchDirective<T> extends AsyncDirective {
     // The host was reconnected, so we must update the value in the template
     // in case it changed while disconnected. For example, setting a signal
     // while the host was disconnected
-    untrack(() => this.#setValueComputation!());
+    untrack(() => this.#setValueComputation!(this.#signalRef?.()));
   }
 
   // Only called on the client when the template changes
