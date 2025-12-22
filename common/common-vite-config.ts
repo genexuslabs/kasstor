@@ -4,19 +4,25 @@ import { createLogger, Plugin, UserConfig } from "vite";
 
 import { updateDevelopmentFlags } from "./update-development-flags";
 
-const packageJson = await import("./package.json");
-
 // Original logger
 const logger = createLogger();
 const loggerInfo = logger.info;
 
-const RELATIVE_SRC_PATH = "packages/webkit/";
-const RELATIVE_SRC_PATH_LENGTH = RELATIVE_SRC_PATH.length;
+const packagePathToPackageName = {
+  "packages/core/": "@genexus/kasstor-core",
+  "packages/signals/": "@genexus/kasstor-signals",
+  "packages/webkit/": "@genexus/kasstor-webkit"
+} as const;
 
-export const defineDistributionConfiguration = (
-  isNode: boolean,
-  isProduction: boolean
-): UserConfig => {
+export const defineDistributionConfiguration = (options: {
+  isNode: boolean;
+  isProduction: boolean;
+  peerDependencies: string[];
+  packagePath: "packages/core/" | "packages/signals/" | "packages/webkit/";
+}): UserConfig => {
+  const { isNode, isProduction, packagePath, peerDependencies } = options;
+  const PACKAGE_PATH_LENGTH = packagePath.length;
+
   const envFolder = isProduction ? "production" : "development";
   const nodeOrBrowserFolder = isNode ? "node/" : "browser/";
   const outDir = `dist/${nodeOrBrowserFolder}${envFolder}`;
@@ -50,7 +56,7 @@ export const defineDistributionConfiguration = (
     build: {
       lib: {
         entry: resolve(__dirname, "./src/index.ts"),
-        name: "kasstor/core",
+        name: packagePathToPackageName[packagePath],
         formats: ["es"],
         fileName: () => `[name].js`
       },
@@ -77,26 +83,22 @@ export const defineDistributionConfiguration = (
       },
 
       rollupOptions: {
-        external: [
-          ...Object.keys(packageJson.peerDependencies),
-          /^tslib/,
-          /^lit/
-        ],
+        external: [/^@genexus/, /^tslib/, /^lit/, ...peerDependencies],
         output: {
           // Keep file structure
           preserveModules: true,
 
           // Replace the file structure from src/ to dist/
           entryFileNames: ({ name: fileName }) => {
-            const relativePath = fileName.startsWith(RELATIVE_SRC_PATH)
-              ? fileName.substring(RELATIVE_SRC_PATH_LENGTH)
+            const relativePath = fileName.startsWith(packagePath)
+              ? fileName.substring(PACKAGE_PATH_LENGTH)
               : fileName;
             return `${relativePath}.js`;
           },
 
           chunkFileNames: ({ name: fileName }) => {
-            const relativePath = fileName.startsWith(RELATIVE_SRC_PATH)
-              ? fileName.substring(RELATIVE_SRC_PATH_LENGTH)
+            const relativePath = fileName.startsWith(packagePath)
+              ? fileName.substring(PACKAGE_PATH_LENGTH)
               : fileName;
             return `${relativePath}.js`;
           }
@@ -133,3 +135,4 @@ export const defineDistributionConfiguration = (
     ]
   };
 };
+
