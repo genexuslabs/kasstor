@@ -1,6 +1,22 @@
-import fs from "fs/promises";
+import fs, { readFile } from "fs/promises";
 import path from "path";
 import type { HmrContext, ModuleNode, Plugin, ViteDevServer } from "vite";
+
+/**
+ * Virtual module that contains logic to fetch transpiled CSS and replace styles
+ * This module is also served as a virtual module so we can import it from the
+ * client HMR listener above.
+ */
+const getClientHandlerModule = await readFile(
+  "./get-client-handler-module.ts",
+  "utf-8"
+);
+
+/**
+ * Generates the client-side code that listens for HMR events.
+ * The client module uses import.meta.hot and will be served by Vite.
+ */
+const getClientCode = await readFile("./get-client-code.ts", "utf-8");
 
 /**
  * Options for the Lit Refresh Vite plugin
@@ -199,245 +215,6 @@ export function litRefreshPlugin(options: LitRefreshPluginOptions): Plugin {
     return Array.from(tags);
   };
 
-  /**
-   * Generates the client-side code that listens for HMR events.
-   * The client module uses import.meta.hot and will be served by Vite.
-   */
-  const getClientCode = (): string => {
-    return `
-// Lit Refresh Plugin - HMR Event Listener (client)
-if (import.meta.hot) {
-  import.meta.hot.on("lit-refresh:update", (data) => {
-    console.log('[lit-refresh] Received update (client):', data);
-
-    if (data.fileType === 'scss') {
-      // data.tags contains the component tagNames that reference this SCSS file
-        if (Array.isArray(data.tags) && data.tags.length > 0) {
-          import('virtual:lit-refresh-handler').then(m => {
-            // virtual module provided by the plugin
-            if (m && typeof m.handleScssUpdate === 'function') {
-              m.handleScssUpdate(data.file, data.tags);
-            }
-          }).catch(e => console.error('[lit-refresh] failed to load handler:', e));
-        }
-    }
-  });
-  console.log('[lit-refresh] HMR listener registered (client)');
-}
-export {};
-`;
-  };
-
-  /**
-   * Virtual module that contains logic to fetch transpiled CSS and replace styles
-   * This module is also served as a virtual module so we can import it from the
-   * client HMR listener above.
-   */
-  const getClientHandlerModule = (): string => {
-    return `
-export async function handleScssUpdate(scssPath, tags) {
-  try {
-    const cssUrl = scssPath + '?inline&t=' + Date.now();
-    const res = await fetch(cssUrl);
-    if (!res.ok) throw new Error('Failed to fetch CSS: ' + res.status);
-    const moduleText = await res.text();
-
-    let css = moduleText;
-    try {
-      const blob = new Blob([moduleText], { type: 'application/javascript' });
-      const blobUrl = URL.createObjectURL(blob);
-      const mod = await import(blobUrl);
-      URL.revokeObjectURL(blobUrl);
-      if (mod && mod.default) css = mod.default;
-    } catch (e) {
-      // Fallback to raw text as CSS
-    }
-
-    // Prefer the global registry provided by the library (populated by SSRLitElement)
-    const globalMap = typeof globalThis !== 'undefined' ? globalThis.kasstorCoreRegisteredInstances : undefined;
-
-    if (globalMap) {
-      // Update styles using global registry (no monkey patching needed)
-      for (const tag of tags) {
-        try {
-          const instances = globalMap.get(tag);
-          if (!instances || instances.size === 0) {
-            console.warn('[lit-refresh] global registry: No instances for', tag);
-            continue;
-          }
-
-          const newStyleSheet = new CSSStyleSheet();
-          newStyleSheet.replaceSync(css);
-
-          for (const el of instances) {
-            if (!el.shadowRoot) continue;
-            const adopted = el.shadowRoot.adoptedStyleSheets || [];
-            // Replace first stylesheet or prepend
-            if (adopted.length > 0) {
-              const copy = [...adopted];
-              copy[0] = newStyleSheet;
-              el.shadowRoot.adoptedStyleSheets = copy;
-            } else {
-              el.shadowRoot.adoptedStyleSheets = [newStyleSheet];
-            }
-          }
-
-          console.log('[lit-refresh] (global) Updated styles for', (instances && instances.size) || 0, 'instance(s) of', tag);
-        } catch (e) {
-          console.error('[lit-refresh] (global) error replacing styles for', tag, e);
-        }
-      }
-
-      return;
-    }
-
-    // Fallback: previous behavior (local registry + monkey-patch) when global map is not available
-
-    // --- Client-side registry and helper (same idea as previous client implementation) ---
-    const componentRegistry = new Map();
-    const tagToStyleSheetMap = new Map();
-    const originalDefine = customElements.define.bind(customElements);
-
-    function registerComponent(element) {
-      const tagName = element.tagName.toLowerCase();
-      if (!componentRegistry.has(tagName)) componentRegistry.set(tagName, new Set());
-      componentRegistry.get(tagName).add(element);
-      if (element.shadowRoot && element.shadowRoot.adoptedStyleSheets.length > 0) {
-        const stylesheet = element.shadowRoot.adoptedStyleSheets[0];
-        if (!tagToStyleSheetMap.has(tagName)) tagToStyleSheetMap.set(tagName, stylesheet);
-      }
-    }
-
-    function unregisterComponent(element) {
-      const tagName = element.tagName.toLowerCase();
-      const set = componentRegistry.get(tagName);
-      if (set) {
-        set.delete(element);
-        if (set.size === 0) componentRegistry.delete(tagName);
-      }
-    }
-
-    function patchConstructor(name) {
-      const ctor = customElements.get(name);
-      if (!ctor) return;
-      const proto = ctor.prototype;
-      if (!proto) return;
-
-      const origConnected = proto.connectedCallback;
-      const origDisconnected = proto.disconnectedCallback;
-
-      if (proto.__litRefreshPatched) return; // avoid double patching
-      proto.__litRefreshPatched = true;
-
-      proto.connectedCallback = function() {
-        if (origConnected) origConnected.call(this);
-        registerComponent(this);
-      };
-      proto.disconnectedCallback = function() {
-        unregisterComponent(this);
-        if (origDisconnected) origDisconnected.call(this);
-      };
-    }
-
-    function registerExistingInstances() {
-      const seenTags = new Set();
-      document.querySelectorAll('*').forEach(el => {
-        const tag = el.tagName.toLowerCase();
-        if (!seenTags.has(tag)) {
-          seenTags.add(tag);
-          try {
-            if (customElements.get(tag)) {
-              patchConstructor(tag);
-            }
-          } catch (e) {
-            // ignore
-          }
-        }
-      });
-
-      document.querySelectorAll('*').forEach(el => {
-        const tag = el.tagName.toLowerCase();
-        if (customElements.get(tag)) {
-          registerComponent(el);
-        }
-      });
-    }
-
-    customElements.define = function(name, constructor, options) {
-      const originalConnected = constructor.prototype.connectedCallback;
-      const originalDisconnected = constructor.prototype.disconnectedCallback;
-      constructor.prototype.connectedCallback = function() {
-        if (originalConnected) originalConnected.call(this);
-        registerComponent(this);
-      };
-      constructor.prototype.disconnectedCallback = function() {
-        unregisterComponent(this);
-        if (originalDisconnected) originalDisconnected.call(this);
-      };
-      const result = originalDefine(name, constructor, options);
-      patchConstructor(name);
-      return result;
-    };
-
-    setTimeout(() => {
-      try {
-        registerExistingInstances();
-      } catch (e) {
-        console.error('[lit-refresh] registerExistingInstances error', e);
-      }
-    }, 0);
-
-    function replaceStylesForComponent(tagName, newCss) {
-      const instances = componentRegistry.get(tagName);
-      if (!instances || instances.size === 0) {
-        console.warn('[lit-refresh] No instances for', tagName);
-        return;
-      }
-
-      const newStyleSheet = new CSSStyleSheet();
-      newStyleSheet.replaceSync(newCss);
-      const old = tagToStyleSheetMap.get(tagName);
-
-      let updated = 0;
-      for (const el of instances) {
-        if (!el.shadowRoot) continue;
-        const adopted = el.shadowRoot.adoptedStyleSheets || [];
-        if (old) {
-          const idx = adopted.indexOf(old);
-          if (idx !== -1) {
-            const copy = [...adopted];
-            copy[idx] = newStyleSheet;
-            el.shadowRoot.adoptedStyleSheets = copy;
-            updated++;
-          } else {
-            el.shadowRoot.adoptedStyleSheets = [newStyleSheet, ...adopted];
-            updated++;
-          }
-        } else {
-          if (adopted.length > 0) el.shadowRoot.adoptedStyleSheets = [newStyleSheet, ...adopted.slice(1)];
-          else el.shadowRoot.adoptedStyleSheets = [newStyleSheet];
-          updated++;
-        }
-      }
-      tagToStyleSheetMap.set(tagName, newStyleSheet);
-      console.log('[lit-refresh] Updated styles for', updated, 'instance(s) of', tagName);
-    }
-
-    // finally, run replacement using the fallback registry for requested tags
-    for (const tag of tags) {
-      try {
-        replaceStylesForComponent(tag, css);
-      } catch (e) {
-        console.error('[lit-refresh] error replacing styles for', tag, e);
-      }
-    }
-  } catch (e) {
-    console.error('[lit-refresh] handleScssUpdate error', e);
-  }
-}
-`;
-  };
-
   return {
     name: "vite-plugin-lit-refresh",
 
@@ -462,10 +239,10 @@ export async function handleScssUpdate(scssPath, tags) {
      */
     load(id: string) {
       if (id === RESOLVED_VIRTUAL_MODULE_ID) {
-        return getClientCode();
+        return getClientCode;
       }
       if (id === "\0virtual:lit-refresh-handler") {
-        return getClientHandlerModule();
+        return getClientHandlerModule;
       }
       return null;
     },
