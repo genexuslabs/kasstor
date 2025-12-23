@@ -19,10 +19,10 @@ export default defineConfig({
     mercury(),
 
     // Lit Fast Refresh Plugin - captures .lit.ts and .scss file changes
+    // and replaces adoptedStyleSheets when SCSS files change
     litRefreshPlugin({
       componentFilePattern: /\.lit\.ts$/,
-      scssFilePattern: /\.scss$/,
-      browserCallbackName: "onLitComponentRefresh"
+      scssFilePattern: /\.scss$/
     }),
 
     // Print bundle summary
