@@ -180,6 +180,20 @@ export abstract class SSRLitElement extends LitElement {
     if (this.globalStyles) {
       addGlobalStyleSheet(this, this.globalStyles);
     }
+
+    // Register instance globally for dev-time tooling (HMR, style replacement)
+    // Only in dev mode
+    if (DEV_MODE) {
+      const tagName =
+        (this.constructor as any).is || this.tagName.toLowerCase();
+      globalThis.kasstorCoreRegisteredInstances ??= new Map();
+
+      const { kasstorCoreRegisteredInstances } = globalThis;
+      if (!kasstorCoreRegisteredInstances.has(tagName)) {
+        kasstorCoreRegisteredInstances.set(tagName, new Set());
+      }
+      kasstorCoreRegisteredInstances.get(tagName)!.add(this);
+    }
   }
 
   // Throttle updates when there are too many at the same time. This mechanism
@@ -230,9 +244,20 @@ export abstract class SSRLitElement extends LitElement {
   protected firstWillUpdate(_changedProperties: PropertyValues): void {}
 
   override disconnectedCallback(): void {
+    super.disconnectedCallback();
+
     if (this.globalStyles) {
       removeGlobalStyleSheet(this, this.globalStyles);
     }
-    super.disconnectedCallback();
+
+    // Unregister instance globally for dev-time tooling (HMR, style replacement)
+    // Only in dev mode
+    if (DEV_MODE) {
+      const tagName =
+        (this.constructor as any).is || this.tagName.toLowerCase();
+
+      globalThis.kasstorCoreRegisteredInstances!.get(tagName)!.delete(this);
+    }
   }
 }
+

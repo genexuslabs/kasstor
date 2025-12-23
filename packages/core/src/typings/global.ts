@@ -5,6 +5,7 @@ import type {
   RegisteredLibraries,
   RegisteredLoaderInfo
 } from "../bootstrapping/typings/types";
+import type { SSRLitElement } from "../decorators/Component/index";
 
 declare global {
   // TODO: Add support to this
@@ -12,6 +13,10 @@ declare global {
 
   var kasstorCoreAttachedCustomElementsWithoutLoader:
     | Set<CustomElementTagNames>
+    | undefined;
+
+  var kasstorCoreRegisteredInstances:
+    | Map<string, Set<SSRLitElement>>
     | undefined;
 
   /**
@@ -65,3 +70,4 @@ declare global {
 
 // Necessary to auto-detect this module in the project
 export type {};
+
