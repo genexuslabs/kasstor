@@ -1,4 +1,3 @@
-import { resolve } from "path";
 import summary from "rollup-plugin-summary";
 import { createLogger, Plugin, UserConfig } from "vite";
 
@@ -55,7 +54,7 @@ export const defineDistributionConfiguration = (options: {
 
     build: {
       lib: {
-        entry: resolve(__dirname, "./src/index.ts"),
+        entry: "./src/index.ts",
         name: packagePathToPackageName[packagePath],
         formats: ["es"],
         fileName: () => `[name].js`
