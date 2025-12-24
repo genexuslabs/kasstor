@@ -1,19 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import type { SSRLitElement } from "./index.js";
 
-const proxiesForTagNames = new Map<
-  string,
-  {
-    originalProxy: Function;
-    currentProxy: Function;
-    originalClass: SSRLitElement;
-    currentClass: SSRLitElement;
-  }
->();
+globalThis.kasstorCoreHmrData ??= {
+  proxiesForTagNames: new Map(),
+  tagNameForClasses: new Map()
+};
 
-const tagNameForClasses = new Map<SSRLitElement, string>();
+const { proxiesForTagNames, tagNameForClasses } = globalThis.kasstorCoreHmrData;
 
 const proxyMethods = [
   "construct",

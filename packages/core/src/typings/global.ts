@@ -15,16 +15,6 @@ declare global {
     | Set<CustomElementTagNames>
     | undefined;
 
-  var kasstorCoreRegisteredInstances:
-    | Map<string, Set<SSRLitElement>>
-    | undefined;
-
-  /**
-   * Set of custom elements that have been loaded.
-   * This is used to avoid loading the same element multiple times.
-   */
-  var kasstorCoreLoadedCustomElements: Set<CustomElementTagNames> | undefined;
-
   // We use the window to initialize these variables, since multiple libraries
   // can use this utility but we don't want to set multiple MutationObservers
   // for the same task
@@ -65,6 +55,45 @@ declare global {
          */
         readonly watcher: MutationObserver;
       }
+    | undefined;
+
+  /**
+   * HMR (Hot Module Replacement) data that tracks the current state of HMR.
+   *
+   * Only available in dev mode and when serving a library with Vite.
+   */
+  var kasstorCoreHmrData:
+    | {
+        proxiesForTagNames: Map<
+          string,
+          {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+            originalProxy: Function;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+            currentProxy: Function;
+            originalClass: SSRLitElement;
+            currentClass: SSRLitElement;
+          }
+        >;
+
+        tagNameForClasses: Map<SSRLitElement, string>;
+      }
+    | undefined;
+
+  /**
+   * Set of custom element tag names that have been loaded/registered.
+   * This is used to avoid loading the same element multiple times.
+   */
+  var kasstorCoreLoadedCustomElements: Set<CustomElementTagNames> | undefined;
+
+  /**
+   * Set of registered instances of SSRLitElement components.
+   * This is used for managing component instances globally.
+   *
+   * Only available in dev mode.
+   */
+  var kasstorCoreRegisteredInstances:
+    | Map<string, Set<SSRLitElement>>
     | undefined;
 }
 

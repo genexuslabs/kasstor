@@ -8,7 +8,7 @@ import type { HmrContext, ModuleNode, Plugin, ViteDevServer } from "vite";
  * client HMR listener above.
  */
 const getClientHandlerModule = await readFile(
-  "./get-client-handler-module.ts",
+  "./src/get-client-handler-module.ts",
   "utf-8"
 );
 
@@ -16,7 +16,67 @@ const getClientHandlerModule = await readFile(
  * Generates the client-side code that listens for HMR events.
  * The client module uses import.meta.hot and will be served by Vite.
  */
-const getClientCode = await readFile("./get-client-code.ts", "utf-8");
+const getClientCode = await readFile("./src/get-client-code.ts", "utf-8");
+
+/**
+ * Given a module node, returns its absolute file path if possible
+ */
+const moduleNodeToFilePath = (node?: ModuleNode | null): string | null => {
+  if (!node) {
+    return null;
+  }
+  if (node.file) {
+    return node.file;
+  }
+  if (node.id && node.id.startsWith("/@fs/")) {
+    return node.id.replace("/@fs/", "");
+  }
+  if (node.id && node.id.startsWith("file://")) {
+    return node.id.replace("file://", "");
+  }
+  return node.id ?? null;
+};
+
+/**
+ * Walk up the importer graph to find all modules that match componentFilePattern.
+ * Returns an array of module file paths (absolute) for component modules.
+ */
+const findReferencingComponentModules = (
+  startNode: ModuleNode | null,
+  componentFilePattern: RegExp
+): string[] => {
+  if (!startNode) {
+    return [];
+  }
+  const visited = new Set<ModuleNode>();
+  const queue: ModuleNode[] = [startNode];
+  const result = new Set<string>();
+
+  while (queue.length) {
+    const node = queue.shift();
+    if (!node || visited.has(node)) {
+      continue;
+    }
+    visited.add(node);
+
+    // If this node represents a component module, record it
+    const filePath = moduleNodeToFilePath(node);
+    if (filePath && componentFilePattern.test(filePath)) {
+      result.add(filePath);
+      // do not need to traverse its importers further for this path
+    } else {
+      // otherwise enqueue importers
+      const importers = node.importers ?? new Set();
+      for (const importer of importers) {
+        if (!visited.has(importer)) {
+          queue.push(importer);
+        }
+      }
+    }
+  }
+
+  return Array.from(result);
+};
 
 /**
  * Options for the Lit Refresh Vite plugin
@@ -57,11 +117,8 @@ export function litRefreshPlugin(options: LitRefreshPluginOptions): Plugin {
   /**
    * Checks if a file path matches any of the configured patterns
    */
-  const isMatchingFile = (filePath: string): boolean => {
-    return (
-      componentFilePattern.test(filePath) || scssFilePattern.test(filePath)
-    );
-  };
+  const isMatchingFile = (filePath: string): boolean =>
+    componentFilePattern.test(filePath) || scssFilePattern.test(filePath);
 
   /**
    * Determines the type of file that changed
@@ -74,65 +131,6 @@ export function litRefreshPlugin(options: LitRefreshPluginOptions): Plugin {
       return "scss";
     }
     return "unknown";
-  };
-
-  /**
-   * Given a module node, returns its absolute file path if possible
-   */
-  const moduleNodeToFilePath = (node?: ModuleNode | null): string | null => {
-    if (!node) {
-      return null;
-    }
-    if (node.file) {
-      return node.file;
-    }
-    if (node.id && node.id.startsWith("/@fs/")) {
-      return node.id.replace("/@fs/", "");
-    }
-    if (node.id && node.id.startsWith("file://")) {
-      return node.id.replace("file://", "");
-    }
-    return node.id ?? null;
-  };
-
-  /**
-   * Walk up the importer graph to find all modules that match componentFilePattern.
-   * Returns an array of module file paths (absolute) for component modules.
-   */
-  const findReferencingComponentModules = (
-    startNode: ModuleNode | null
-  ): string[] => {
-    if (!startNode) {
-      return [];
-    }
-    const visited = new Set<ModuleNode>();
-    const queue: ModuleNode[] = [startNode];
-    const result = new Set<string>();
-
-    while (queue.length) {
-      const node = queue.shift();
-      if (!node || visited.has(node)) {
-        continue;
-      }
-      visited.add(node);
-
-      // If this node represents a component module, record it
-      const filePath = moduleNodeToFilePath(node);
-      if (filePath && componentFilePattern.test(filePath)) {
-        result.add(filePath);
-        // do not need to traverse its importers further for this path
-      } else {
-        // otherwise enqueue importers
-        const importers = node.importers ?? new Set();
-        for (const importer of importers) {
-          if (!visited.has(importer)) {
-            queue.push(importer);
-          }
-        }
-      }
-    }
-
-    return Array.from(result);
   };
 
   /**
@@ -194,7 +192,10 @@ export function litRefreshPlugin(options: LitRefreshPluginOptions): Plugin {
       return [];
     }
 
-    const componentModulePaths = findReferencingComponentModules(node);
+    const componentModulePaths = findReferencingComponentModules(
+      node,
+      componentFilePattern
+    );
     const tags = new Set<string>();
 
     for (const compPath of componentModulePaths) {
