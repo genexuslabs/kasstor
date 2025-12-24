@@ -6,6 +6,7 @@ import {
   addGlobalStyleSheet,
   removeGlobalStyleSheet
 } from "./global-stylesheets.js";
+import { replaceConstructorWithProxy } from "./hmr-for-component.js";
 import type { ComponentOptions } from "./types";
 import { getDelayForUpdate } from "./update-scheduler.js";
 
@@ -161,6 +162,12 @@ export abstract class SSRLitElement extends LitElement {
       // Call the original implementation
       willUpdateOriginalImplementation.call(this, changedProperties);
     };
+
+    // TODO: Add an additional flag for checking when the vite server is on
+    // HMR support for dev mode only
+    if (DEV_MODE) {
+      replaceConstructorWithProxy(this);
+    }
   }
 
   /**
