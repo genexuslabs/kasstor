@@ -76,3 +76,26 @@ export async function handleScssUpdate(scssPath, tags) {
   }
 }
 
+/**
+ * Handle component module updates.
+ *
+ * The goal here is simply to force the component module to be re-evaluated
+ * so that the @Component decorator runs again. The decorator uses the HMR
+ * runtime (`register(tagName, classRef)`) which will swap the implementation
+ * behind the proxies and trigger updates on existing instances.
+ */
+export async function handleComponentUpdate(componentPath) {
+  try {
+    // Use a cache-busting query param so the browser and Vite deliver
+    // the latest version of the module.
+    const url = `${componentPath}?t=${Date.now()}`;
+
+    console.log("[lit-refresh] Re-importing component module:", url);
+
+    // Avoid Vite trying to pre-bundle this import by annotating it.
+    await import(/* @vite-ignore */ url);
+  } catch (e) {
+    console.error("[lit-refresh] handleComponentUpdate error", e);
+  }
+}
+

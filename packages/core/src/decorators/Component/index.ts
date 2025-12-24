@@ -6,7 +6,7 @@ import {
   addGlobalStyleSheet,
   removeGlobalStyleSheet
 } from "./global-stylesheets.js";
-import { replaceConstructorWithProxy } from "./hmr-for-component.js";
+import { register, replaceConstructorWithProxy } from "./hmr-for-component.js";
 import type { ComponentOptions } from "./types";
 import { getDelayForUpdate } from "./update-scheduler.js";
 
@@ -51,6 +51,10 @@ export const Component = <
 
     // Check if the element is already defined
     const existing = customElements.get(tag);
+
+    if (DEV_MODE) {
+      register(tag, target as any);
+    }
 
     if (existing && (existing as any) !== target) {
       console.warn(

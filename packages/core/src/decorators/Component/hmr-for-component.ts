@@ -87,9 +87,7 @@ export const replaceConstructorWithProxy = (classRef: SSRLitElement) => {
  * Registers a web component class. Triggers a hot replacement if the
  * class was already registered before.
  */
-export function register(classRef: SSRLitElement) {
-  const tagName = classRef.tagName.toLowerCase();
-
+export function register(tagName: string, classRef: SSRLitElement) {
   const existing = proxiesForTagNames.get(tagName);
 
   if (!existing) {
@@ -126,12 +124,6 @@ export function register(classRef: SSRLitElement) {
   Promise.resolve().then(() => {
     // call optional HMR on the class if they exist, after next microtask to ensure
     // module bodies have executed fully
-    try {
-      classRef.requestUpdate();
-    } catch (error) {
-      console.error(error);
-    }
-
     const connectedElements =
       globalThis.kasstorCoreRegisteredInstances?.get(tagName) ?? new Set();
 
