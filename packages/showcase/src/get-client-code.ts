@@ -11,7 +11,9 @@
 //    implementation behind the proxies.
 if (import.meta.hot) {
   import.meta.hot.on("lit-refresh:update", data => {
-    console.log("[lit-refresh] Received update (client):", data);
+    if (data.debug) {
+      console.log("[lit-refresh] Received update (client):", data);
+    }
 
     // Handle SCSS updates (styles only)
     if (data.fileType === "scss") {

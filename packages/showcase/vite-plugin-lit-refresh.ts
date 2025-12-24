@@ -89,6 +89,8 @@ export interface LitRefreshPluginOptions {
    */
   componentFilePattern: RegExp;
 
+  debug?: boolean;
+
   /**
    * Regular expression to match SCSS files for Lit components.
    * Defaults to /\.scss$/ if not provided.
@@ -112,7 +114,7 @@ const RESOLVED_VIRTUAL_MODULE_ID = "\0" + VIRTUAL_MODULE_ID;
  * we can accurately determine which tag names must have their styles replaced.
  */
 export function litRefreshPlugin(options: LitRefreshPluginOptions): Plugin {
-  const { componentFilePattern, scssFilePattern = /\.scss$/ } = options;
+  const { componentFilePattern, debug, scssFilePattern = /\.scss$/ } = options;
 
   /**
    * Checks if a file path matches any of the configured patterns
@@ -262,42 +264,6 @@ export function litRefreshPlugin(options: LitRefreshPluginOptions): Plugin {
     },
 
     /**
-     * Configure the dev server to handle custom HMR events
-     */
-    configureServer(server: ViteDevServer) {
-      // Listen for file changes and send custom events to the client
-      server.watcher.on("change", async (filePath: string) => {
-        if (isMatchingFile(filePath)) {
-          const fileType = getFileType(filePath);
-
-          // Normalize the file path to be relative to the project root for client fetches
-          const normalizedPath = path.posix.join(
-            "/",
-            path.relative(server.config.root, filePath)
-          );
-
-          // Compute tags for scss files
-          let tags: string[] = [];
-          if (fileType === "scss") {
-            tags = await findReferencingTags(filePath, server);
-          }
-
-          // Send custom event to all connected clients
-          server.ws.send({
-            type: "custom",
-            event: "lit-refresh:update",
-            data: {
-              file: normalizedPath,
-              fileType,
-              tags,
-              timestamp: Date.now()
-            }
-          });
-        }
-      });
-    },
-
-    /**
      * Handle HMR updates - prevent full page reload for matching files
      */
     async handleHotUpdate(ctx: HmrContext) {
@@ -325,7 +291,8 @@ export function litRefreshPlugin(options: LitRefreshPluginOptions): Plugin {
             file: normalizedPath,
             fileType,
             tags,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            debug
           }
         });
 
