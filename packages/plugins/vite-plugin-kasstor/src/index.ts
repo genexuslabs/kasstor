@@ -228,6 +228,9 @@ export function kasstor(options: KasstorPluginOptions): Plugin {
   return {
     name: "vite-plugin-lit-refresh",
 
+    // Only apply this plugin in development mode
+    apply: "serve",
+
     // Ensure this plugin runs before Vite's built-in HMR
     enforce: "pre",
 
