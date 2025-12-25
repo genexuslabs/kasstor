@@ -1,7 +1,7 @@
+import { kasstor } from "@genexus/vite-plugin-kasstor";
 import { mercury } from "@genexus/vite-plugin-mercury";
 import summary from "rollup-plugin-summary";
 import { defineConfig, PluginOption } from "vite";
-import { litRefreshPlugin } from "./vite-plugin-lit-refresh";
 
 export default defineConfig({
   esbuild: {
@@ -20,7 +20,7 @@ export default defineConfig({
 
     // Lit Fast Refresh Plugin - captures .lit.ts and .scss file changes
     // and replaces adoptedStyleSheets when SCSS files change
-    litRefreshPlugin({
+    kasstor({
       componentFilePattern: /\.lit\.ts$/,
       scssFilePattern: /\.scss$/
     }),

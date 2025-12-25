@@ -4,7 +4,8 @@
     "dbaeumer.vscode-eslint", // ESLint
     "eamodio.gitlens", // GitLens
     "esbenp.prettier-vscode", // Prettier
-    "bierner.lit-html", // Lit templates
+    "jackolope.lit-analyzer-plugin", // Lit templates
     "wix.vscode-import-cost" // Bundle size of each import: This extension will display inline in the editor the size of the imported package
   ]
 }
+

@@ -30,7 +30,6 @@
     "strict": true,
     "verbatimModuleSyntax": true,
 
-    "types": ["@vitest/browser/providers/playwright"],
     "plugins": [
       {
         "name": "@jackolope/ts-lit-plugin",
@@ -77,3 +76,4 @@
   // TODO: Exclude test files expect when running tests
   "exclude": ["node_modules", "vite.config.ts"]
 }
+

@@ -1,0 +1,45 @@
+{
+  "name": "@genexus/vite-plugin-kasstor",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/genexuslabs/kasstor",
+  "description": "A set of utilities to build and test Lit applications and libraries.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/genexuslabs/kasstor.git"
+  },
+  "keywords": [
+    "lit",
+    "lit decorators",
+    "web components"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "jsnext:main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "dev": "tsgo",
+    "build": "tsc",
+    "test": "playwright install && vitest",
+    "test.ci": "bun run test --watch=false --browser.headless",
+    "test:unit": "vitest --project unit",
+    "test:e2e": "playwright install && vitest --project browser"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
+  },
+  "peerDependencies": {
+    "@genexus/kasstor-core": "0.1.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  }
+}
+

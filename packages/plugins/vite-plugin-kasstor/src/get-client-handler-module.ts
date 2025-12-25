@@ -1,4 +1,4 @@
-const replaceStyles = (css, tags) => {
+const replaceStyles = (css: string, tags: string[]) => {
   // Prefer the global registry provided by the library (populated by SSRLitElement)
   const kasstorCoreRegisteredInstances =
     typeof globalThis !== "undefined"
@@ -45,7 +45,7 @@ const replaceStyles = (css, tags) => {
   }
 };
 
-export async function handleScssUpdate(scssPath, tags) {
+export async function handleScssUpdate(scssPath: string, tags: string[]) {
   try {
     const cssUrl = scssPath + "?inline&t=" + Date.now();
     const res = await fetch(cssUrl);
@@ -84,7 +84,7 @@ export async function handleScssUpdate(scssPath, tags) {
  * runtime (`register(tagName, classRef)`) which will swap the implementation
  * behind the proxies and trigger updates on existing instances.
  */
-export async function handleComponentUpdate(componentPath) {
+export async function handleComponentUpdate(componentPath: string) {
   try {
     // Use a cache-busting query param so the browser and Vite deliver
     // the latest version of the module.

@@ -1,6 +1,10 @@
-import fs, { readFile } from "fs/promises";
-import path from "path";
+import { readFile } from "fs/promises";
+import { dirname, posix, relative, resolve } from "path";
+import { fileURLToPath } from "url";
 import type { HmrContext, ModuleNode, Plugin, ViteDevServer } from "vite";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Virtual module that contains logic to fetch transpiled CSS and replace styles
@@ -8,7 +12,7 @@ import type { HmrContext, ModuleNode, Plugin, ViteDevServer } from "vite";
  * client HMR listener above.
  */
 const getClientHandlerModule = await readFile(
-  "./src/get-client-handler-module.ts",
+  resolve(__dirname, "./get-client-handler-module.js"),
   "utf-8"
 );
 
@@ -16,7 +20,10 @@ const getClientHandlerModule = await readFile(
  * Generates the client-side code that listens for HMR events.
  * The client module uses import.meta.hot and will be served by Vite.
  */
-const getClientCode = await readFile("./src/get-client-code.ts", "utf-8");
+const getClientCode = await readFile(
+  resolve(__dirname, "./get-client-code.js"),
+  "utf-8"
+);
 
 /**
  * Given a module node, returns its absolute file path if possible
@@ -81,7 +88,7 @@ const findReferencingComponentModules = (
 /**
  * Options for the Lit Refresh Vite plugin
  */
-export interface LitRefreshPluginOptions {
+export interface KasstorPluginOptions {
   /**
    * Regular expression to match Lit component files.
    * Files matching this pattern will trigger the refresh callback.
@@ -113,7 +120,7 @@ const RESOLVED_VIRTUAL_MODULE_ID = "\0" + VIRTUAL_MODULE_ID;
  * modules actually import (directly or indirectly) a given SCSS file, so
  * we can accurately determine which tag names must have their styles replaced.
  */
-export function litRefreshPlugin(options: LitRefreshPluginOptions): Plugin {
+export function kasstor(options: KasstorPluginOptions): Plugin {
   const { componentFilePattern, debug, scssFilePattern = /\.scss$/ } = options;
 
   /**
@@ -202,7 +209,7 @@ export function litRefreshPlugin(options: LitRefreshPluginOptions): Plugin {
 
     for (const compPath of componentModulePaths) {
       try {
-        const code = await fs.readFile(compPath, "utf-8");
+        const code = await readFile(compPath, "utf-8");
         const tag = extractTagNameFromSource(code);
         if (tag) {
           tags.add(tag);
@@ -273,9 +280,9 @@ export function litRefreshPlugin(options: LitRefreshPluginOptions): Plugin {
         const fileType = getFileType(file);
 
         // Normalize the file path
-        const normalizedPath = path.posix.join(
+        const normalizedPath = posix.join(
           "/",
-          path.relative(server.config.root, file)
+          relative(server.config.root, file)
         );
 
         // Compute tags when scss changed
@@ -306,5 +313,5 @@ export function litRefreshPlugin(options: LitRefreshPluginOptions): Plugin {
   };
 }
 
-export default litRefreshPlugin;
+export default kasstor;
 

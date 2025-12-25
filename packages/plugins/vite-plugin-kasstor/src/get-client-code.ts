@@ -19,6 +19,8 @@ if (import.meta.hot) {
     if (data.fileType === "scss") {
       // data.tags contains the component tagNames that reference this SCSS file
       if (Array.isArray(data.tags) && data.tags.length > 0) {
+        // @ts-expect-error TODO: Use a different approach for divining the
+        // implementation into multiple files
         import("virtual:lit-refresh-handler")
           .then(m => {
             // virtual module provided by the plugin
@@ -35,6 +37,8 @@ if (import.meta.hot) {
 
     // Handle component updates (re-import the module so decorators run again)
     if (data.fileType === "component") {
+      // @ts-expect-error TODO: Use a different approach for divining the
+      // implementation into multiple files
       import("virtual:lit-refresh-handler")
         .then(m => {
           if (m && typeof m.handleComponentUpdate === "function") {
