@@ -52,7 +52,7 @@ export const Component = <
     // Check if the element is already defined
     const existing = customElements.get(tag);
 
-    if (DEV_MODE) {
+    if (DEV_MODE && !IS_SERVER && globalThis.kasstorCoreHmrComponent) {
       register(tag, target as any);
     }
 
@@ -169,7 +169,7 @@ export abstract class SSRLitElement extends LitElement {
 
     // TODO: Add an additional flag for checking when the vite server is on
     // HMR support for dev mode only
-    if (DEV_MODE) {
+    if (DEV_MODE && !IS_SERVER && globalThis.kasstorCoreHmrComponent) {
       replaceConstructorWithProxy(this);
     }
   }

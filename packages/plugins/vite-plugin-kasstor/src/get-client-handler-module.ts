@@ -59,7 +59,7 @@ export async function handleScssUpdate(scssPath: string, tags: string[]) {
       const blob = new Blob([moduleText], { type: "application/javascript" });
 
       const blobUrl = URL.createObjectURL(blob);
-      const mod = await import(blobUrl);
+      const mod = await import(/* @vite-ignore */ blobUrl);
       URL.revokeObjectURL(blobUrl); // Free the memory
 
       if (mod && mod.default) {

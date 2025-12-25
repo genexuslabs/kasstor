@@ -94,7 +94,19 @@ export interface KasstorPluginOptions {
    * Files matching this pattern will trigger the refresh callback.
    * @example /\.lit\.ts$/
    */
-  componentFilePattern: RegExp;
+  componentFilePattern?: RegExp;
+
+  /**
+   * Enables or disables Hot Module Replacement (HMR) for components and styles.
+   *
+   * If `true`, HMR is enabled for both components and styles.
+   */
+  hmr?:
+    | boolean
+    | {
+        component?: boolean;
+        styles?: boolean;
+      };
 
   debug?: boolean;
 
@@ -120,8 +132,18 @@ const RESOLVED_VIRTUAL_MODULE_ID = "\0" + VIRTUAL_MODULE_ID;
  * modules actually import (directly or indirectly) a given SCSS file, so
  * we can accurately determine which tag names must have their styles replaced.
  */
-export function kasstor(options: KasstorPluginOptions): Plugin {
-  const { componentFilePattern, debug, scssFilePattern = /\.scss$/ } = options;
+export function kasstor(options?: KasstorPluginOptions): Plugin {
+  const {
+    componentFilePattern = /\.lit\.ts$/,
+    debug,
+    hmr,
+    scssFilePattern = /\.scss$/
+  } = options ?? {};
+
+  const hmrForComponent =
+    typeof hmr === "object" ? hmr.component !== false : hmr !== false;
+  const hmrForStyles =
+    typeof hmr === "object" ? hmr.styles !== false : hmr !== false;
 
   /**
    * Checks if a file path matches any of the configured patterns
@@ -234,6 +256,16 @@ export function kasstor(options: KasstorPluginOptions): Plugin {
     // Ensure this plugin runs before Vite's built-in HMR
     enforce: "pre",
 
+    // Define import.meta properties for HMR flags, so the SSRLitElement class
+    // decides if adds supports for HMR
+    config() {
+      return {
+        define: {
+          "globalThis.kasstorCoreHmrComponent": hmrForComponent
+        }
+      };
+    },
+
     /**
      * Resolve the virtual module ID
      */
@@ -279,39 +311,50 @@ export function kasstor(options: KasstorPluginOptions): Plugin {
     async handleHotUpdate(ctx: HmrContext) {
       const { file, server } = ctx;
 
-      if (isMatchingFile(file)) {
-        const fileType = getFileType(file);
+      const hmrIsDisabled =
+        hmr === false || (!hmrForComponent && !hmrForStyles);
 
-        // Normalize the file path
-        const normalizedPath = posix.join(
-          "/",
-          relative(server.config.root, file)
-        );
-
-        // Compute tags when scss changed
-        let tags: string[] = [];
-        if (fileType === "scss") {
-          tags = await findReferencingTags(file, server);
-        }
-
-        server.ws.send({
-          type: "custom",
-          event: "lit-refresh:update",
-          data: {
-            file: normalizedPath,
-            fileType,
-            tags,
-            timestamp: Date.now(),
-            debug
-          }
-        });
-
-        // Return empty array to prevent default HMR behavior (full reload)
-        return [];
+      if (hmrIsDisabled || !isMatchingFile(file)) {
+        // Let Vite handle other files normally
+        return undefined;
       }
 
-      // Let Vite handle other files normally
-      return undefined;
+      const fileType = getFileType(file);
+
+      if (
+        (fileType === "component" && !hmrForComponent) ||
+        (fileType === "scss" && !hmrForStyles)
+      ) {
+        // Let Vite handle other files normally
+        return undefined;
+      }
+
+      // Normalize the file path
+      const normalizedPath = posix.join(
+        "/",
+        relative(server.config.root, file)
+      );
+
+      // Compute tags when scss changed
+      let tags: string[] = [];
+      if (fileType === "scss") {
+        tags = await findReferencingTags(file, server);
+      }
+
+      server.ws.send({
+        type: "custom",
+        event: "lit-refresh:update",
+        data: {
+          file: normalizedPath,
+          fileType,
+          tags,
+          timestamp: Date.now(),
+          debug
+        }
+      });
+
+      // Return empty array to prevent default HMR behavior (full reload)
+      return [];
     }
   };
 }

@@ -58,6 +58,12 @@ declare global {
     | undefined;
 
   /**
+   * Indicates whether the Hot Module Replacement (HMR) feature for components
+   * is enabled.
+   */
+  var kasstorCoreHmrComponent: boolean | undefined;
+
+  /**
    * HMR (Hot Module Replacement) data that tracks the current state of HMR.
    *
    * Only available in dev mode and when serving a library with Vite.
