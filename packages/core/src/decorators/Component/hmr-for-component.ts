@@ -2,12 +2,14 @@
 // @ts-nocheck
 import type { SSRLitElement } from "./index.js";
 
-globalThis.kasstorCoreHmrData ??= {
-  proxiesForTagNames: new Map(),
-  tagNameForClasses: new Map()
-};
+const initializeGlobalVariables = () => {
+  globalThis.kasstorCoreHmrData ??= {
+    proxiesForTagNames: new Map(),
+    tagNameForClasses: new Map()
+  };
 
-const { proxiesForTagNames, tagNameForClasses } = globalThis.kasstorCoreHmrData;
+  return globalThis.kasstorCoreHmrData;
+};
 
 const proxyMethods = [
   "construct",
@@ -50,6 +52,8 @@ function createProxy(originalTarget: unknown, getCurrentTarget: () => unknown) {
  * that references the latest implementation
  */
 function replacePrototypesWithProxies(instance: HTMLElement) {
+  const { proxiesForTagNames, tagNameForClasses } = initializeGlobalVariables();
+
   let previous = instance;
   let proto = Object.getPrototypeOf(instance);
 
@@ -70,6 +74,7 @@ function replacePrototypesWithProxies(instance: HTMLElement) {
 }
 
 export const replaceConstructorWithProxy = (classRef: SSRLitElement) => {
+  const { proxiesForTagNames, tagNameForClasses } = initializeGlobalVariables();
   const tagName = tagNameForClasses.get(classRef.constructor);
 
   // check if the constructor is registered
@@ -88,6 +93,7 @@ export const replaceConstructorWithProxy = (classRef: SSRLitElement) => {
  * class was already registered before.
  */
 export function register(tagName: string, classRef: SSRLitElement) {
+  const { proxiesForTagNames, tagNameForClasses } = initializeGlobalVariables();
   const existing = proxiesForTagNames.get(tagName);
 
   if (!existing) {
