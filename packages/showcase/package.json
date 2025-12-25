@@ -24,6 +24,8 @@
   ],
   "scripts": {
     "start": "vite --port 5200 --open",
+    "build": "tsc --noEmit && vite build",
+    "preview": "bun run build && vite preview --port 5200 --open",
     "test": "playwright install && vitest",
     "test.ci": "bun run test --watch=false --browser.headless",
     "test:unit": "vitest --project unit",

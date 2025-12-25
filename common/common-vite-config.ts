@@ -59,7 +59,7 @@ export const defineDistributionConfiguration = (options: {
         formats: ["es"],
         fileName: () => `[name].js`
       },
-      minify: isProduction ? "terser" : false,
+      minify: isProduction ? "oxc" : false,
 
       // We must not empty the outDir, otherwise watch mode won't work at all,
       // because types are not regenerated

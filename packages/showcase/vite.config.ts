@@ -1,18 +1,42 @@
 import { kasstor } from "@genexus/vite-plugin-kasstor";
 import { mercury } from "@genexus/vite-plugin-mercury";
+import {
+  defaultMinifyOptions,
+  minifyHTMLLiterals as minifyLiterals
+} from "minify-html-literals";
+import pkgMinifyHTML from "rollup-plugin-minify-html-literals";
 import summary from "rollup-plugin-summary";
 import { defineConfig, PluginOption } from "vite";
 
+// @ts-expect-error wrong type. TODO: This is a WA to use the default exported function
+const minifyHTML: typeof pkgMinifyHTML = pkgMinifyHTML.default;
+
 export default defineConfig({
-  esbuild: {
-    // drop: ["console", "debugger"], // Removes console and debugger statements
-    format: "esm",
-    target: "esnext"
+  build: {
+    cssMinify: "lightningcss",
+    minify: "oxc",
+    sourcemap: true,
+    emptyOutDir: true,
+
+    rolldownOptions: {
+      experimental: {
+        nativeMagicString: true
+      },
+
+      optimization: {
+        inlineConst: { mode: "all", pass: 2 }
+      },
+
+      output: {
+        format: "esm",
+        minifyInternalExports: true,
+        legalComments: "inline"
+      }
+    }
   },
 
-  build: {
-    minify: "terser", // When downloading the bundles in the browser this compression is better than ESBuild
-    target: "esnext" // Necessary to force the ECMA script target version
+  oxc: {
+    target: "esnext"
   },
 
   plugins: [
@@ -23,6 +47,21 @@ export default defineConfig({
     kasstor({
       componentFilePattern: /\.lit\.ts$/,
       scssFilePattern: /\.scss$/
+    }),
+
+    minifyHTML({
+      minifyHTMLLiterals: (source, options) =>
+        minifyLiterals(source, {
+          ...options,
+          minifyOptions: {
+            ...defaultMinifyOptions,
+            // For some reason, Lit manages to work with complex attribute
+            // binding expressions that don't have "" in the binding, so we
+            // can enable this optimization. See more in:
+            // https://lit.dev/docs/templates/expressions/#attribute-expressions
+            removeAttributeQuotes: true
+          }
+        })
     }),
 
     // Print bundle summary
