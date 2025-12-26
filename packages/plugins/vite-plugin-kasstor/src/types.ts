@@ -15,6 +15,11 @@ export interface KasstorPluginOptions {
    * Enables or disables Hot Module Replacement (HMR) for components and styles.
    *
    * If `true`, HMR is enabled for both components and styles.
+   *
+   * When the HMR is enabled for components, private fields (#field) are
+   * transformed to public fields (__field), enabling proxy-based HMR for class
+   * instances. Without this, HMR for class instances is not possible when they
+   * use private fields.
    */
   hmr?:
     | boolean
@@ -38,3 +43,4 @@ export interface KasstorPluginOptions {
    */
   scssFilePattern?: RegExp;
 }
+

@@ -2,6 +2,7 @@ import { readFile } from "fs/promises";
 import { dirname, posix, relative, resolve } from "path";
 import { fileURLToPath } from "url";
 import type { HmrContext, ModuleNode, Plugin, ViteDevServer } from "vite";
+import { transformPrivateFieldsToPublic } from "./transform-private-fields.js";
 import type { KasstorPluginOptions } from "./types";
 
 export type { KasstorPluginOptions };
@@ -274,6 +275,31 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
           injectTo: "head-prepend"
         }
       ];
+    },
+
+    /**
+     * Transform source code to replace private fields with public fields in dev mode
+     */
+    transform(code: string) {
+      if (!hmrForComponent) {
+        return null;
+      }
+
+      // Check if the code contains private fields
+      if (!/#[a-zA-Z_$][a-zA-Z0-9_$]*/.test(code)) {
+        return null;
+      }
+
+      const transformed = transformPrivateFieldsToPublic(code);
+
+      if (transformed === code) {
+        return null;
+      }
+
+      return {
+        code: transformed,
+        map: null
+      };
     },
 
     /**
