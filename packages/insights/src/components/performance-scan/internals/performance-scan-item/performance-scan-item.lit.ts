@@ -12,9 +12,9 @@ import styles from "./performance-scan-item.scss?inline";
  */
 @Component({
   styles,
-  tag: "ch-performance-scan-item"
+  tag: "kst-performance-scan-item"
 })
-export class ChPerformanceScanItem extends SSRLitElement {
+export class KstPerformanceScanItem extends SSRLitElement {
   /**
    * Specifies a reference for the scanned element.
    */
@@ -60,10 +60,11 @@ export class ChPerformanceScanItem extends SSRLitElement {
   }
 }
 
-export default ChPerformanceScanItem;
+export default KstPerformanceScanItem;
 
 declare global {
   interface HTMLElementTagNameMap {
-    "ch-performance-scan-item": ChPerformanceScanItem;
+    "kst-performance-scan-item": KstPerformanceScanItem;
   }
 }
+

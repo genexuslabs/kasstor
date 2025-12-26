@@ -29,9 +29,9 @@ const renderedItems: PerformanceScanRenderedItems = IS_SERVER
  */
 @Component({
   styles,
-  tag: "ch-performance-scan"
+  tag: "kst-performance-scan"
 })
-export class ChPerformanceScan extends SSRLitElement {
+export class KstPerformanceScan extends SSRLitElement {
   /**
    * `true` to show the FPS
    */
@@ -60,19 +60,20 @@ export class ChPerformanceScan extends SSRLitElement {
       renderedItems.values(),
       item => item.id,
       item =>
-        html`<ch-performance-scan-item
+        html`<kst-performance-scan-item
           .anchorRef=${item.model.anchorRef}
           .anchorTagName=${item.model.anchorTagName}
           .renderCount=${item.renderCount}
-        ></ch-performance-scan-item>`
+        ></kst-performance-scan-item>`
     )}`;
   }
 }
 
-export default ChPerformanceScan;
+export default KstPerformanceScan;
 
 declare global {
   interface HTMLElementTagNameMap {
-    "ch-performance-scan": ChPerformanceScan;
+    "kst-performance-scan": KstPerformanceScan;
   }
 }
+
