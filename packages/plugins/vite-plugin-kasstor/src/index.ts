@@ -2,6 +2,9 @@ import { readFile } from "fs/promises";
 import { dirname, posix, relative, resolve } from "path";
 import { fileURLToPath } from "url";
 import type { HmrContext, ModuleNode, Plugin, ViteDevServer } from "vite";
+import type { KasstorPluginOptions } from "./types";
+
+export type { KasstorPluginOptions };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -84,38 +87,6 @@ const findReferencingComponentModules = (
 
   return Array.from(result);
 };
-
-/**
- * Options for the Lit Refresh Vite plugin
- */
-export interface KasstorPluginOptions {
-  /**
-   * Regular expression to match Lit component files.
-   * Files matching this pattern will trigger the refresh callback.
-   * @example /\.lit\.ts$/
-   */
-  componentFilePattern?: RegExp;
-
-  /**
-   * Enables or disables Hot Module Replacement (HMR) for components and styles.
-   *
-   * If `true`, HMR is enabled for both components and styles.
-   */
-  hmr?:
-    | boolean
-    | {
-        component?: boolean;
-        styles?: boolean;
-      };
-
-  debug?: boolean;
-
-  /**
-   * Regular expression to match SCSS files for Lit components.
-   * Defaults to /\.scss$/ if not provided.
-   */
-  scssFilePattern?: RegExp;
-}
 
 // Virtual module ID for the HMR client code
 const VIRTUAL_MODULE_ID = "virtual:lit-refresh-client";

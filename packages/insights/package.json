@@ -1,0 +1,69 @@
+{
+  "name": "@genexus/kasstor-insights",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/genexuslabs/kasstor",
+  "description": "A set of utilities to build and test Lit applications and libraries.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/genexuslabs/kasstor.git"
+  },
+  "keywords": [
+    "lit",
+    "lit decorators",
+    "web components"
+  ],
+  "main": "./dist/browser/production/index.js",
+  "module": "./dist/browser/production/index.js",
+  "jsnext:main": "./dist/browser/production/index.js",
+  "types": "./dist/browser/development/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "dev": "bun dev.types && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun dev.types'",
+    "dev.types": "tsgo --project tsconfig-types.json",
+    "build": "tsc --noEmit && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun build:prod:browser' 'bun build:prod:node' 'bun build.types'",
+    "build:dev:browser": "vite build --mode browser-development",
+    "build:dev:node": "vite build --mode node-development",
+    "build:prod:browser": "vite build --mode browser-production",
+    "build:prod:node": "vite build --mode node-production",
+    "build.types": "tsc --project tsconfig-types.json",
+    "watch": "bun run clear.dist && concurrently 'bun build:dev:browser --watch' 'bun build:dev:node --watch' 'bun build:prod:browser --watch' 'bun build:prod:node --watch' 'bun dev.types --watch'",
+    "clear.dist": "bun run ./scripts/remove-dist.ts",
+    "test": "playwright install && vitest",
+    "test.ci": "bun run test --watch=false --browser.headless",
+    "test:unit": "vitest --project unit",
+    "test:e2e": "playwright install && vitest --project browser"
+  },
+  "peerDependencies": {
+    "@genexus/kasstor-webkit": "^0.1.0",
+    "lit": "^3.3.1"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
+  },
+  "exports": {
+    ".": {
+      "node": {
+        "development": "./dist/node/development/index.js",
+        "default": "./dist/node/production/index.js"
+      },
+      "types": "./dist/browser/development/index.d.ts",
+      "development": "./dist/browser/development/index.js",
+      "default": "./dist/browser/production/index.js"
+    },
+    "./decorators/component.js": {
+      "node": {
+        "development": "./dist/node/development/decorators/Component/index.js",
+        "default": "./dist/node/production/decorators/Component/index.js"
+      },
+      "types": "./dist/browser/development/decorators/Component/index.d.ts",
+      "development": "./dist/browser/development/decorators/Component/index.js",
+      "default": "./dist/browser/production/decorators/Component/index.js"
+    },
+   
+  }
+}
+
