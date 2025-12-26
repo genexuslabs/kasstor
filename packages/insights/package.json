@@ -62,8 +62,7 @@
       "types": "./dist/browser/development/decorators/Component/index.d.ts",
       "development": "./dist/browser/development/decorators/Component/index.js",
       "default": "./dist/browser/production/decorators/Component/index.js"
-    },
-   
+    }
   }
 }
 
