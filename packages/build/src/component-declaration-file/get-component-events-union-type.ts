@@ -1,6 +1,6 @@
-import { capitalize } from "../capitalize";
-import { getFormattedPropertyOrEventDescription } from "../get-formatted-property-or-event-description";
-import { getComponentEventTypeInterfaceName } from "../global-type-declarations/get-global-type-declaration";
+import { capitalize } from "../capitalize.js";
+import { getFormattedPropertyOrEventDescription } from "../get-formatted-property-or-event-description.js";
+import { getComponentEventTypeInterfaceName } from "../global-type-declarations/get-global-type-declaration.js";
 import type {
   ComponentDefinition,
   LibraryComponents

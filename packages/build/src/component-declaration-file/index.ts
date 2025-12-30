@@ -1,18 +1,18 @@
 import type { LibraryComponents } from "../library-summary/types";
-import { getComponentEvents } from "./get-component-events-union-type";
+import { getComponentEvents } from "./get-component-events-union-type.js";
 import {
   getComponentBaseClass,
   getComponentProperties,
   getComponentPropertiesSolidJS
-} from "./get-component-properties-union-type";
-import { getImportPaths } from "./get-import-paths";
+} from "./get-component-properties-union-type.js";
+import { getImportPaths } from "./get-import-paths.js";
 import {
   getLocalJSXTypes,
   getReactModuleTypes,
   getSolidJsModuleTypes,
   getSolidJsTypes,
   getStencilJsModuleTypes
-} from "./get-local-jsx-types";
+} from "./get-local-jsx-types.js";
 
 export const getComponentDeclaration = (components: LibraryComponents) =>
   components.length === 0

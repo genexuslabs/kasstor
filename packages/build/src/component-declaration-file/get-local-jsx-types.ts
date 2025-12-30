@@ -1,10 +1,10 @@
-import { getFullJSDocWithFiresTags } from "../global-type-declarations/get-global-type-declaration";
+import { getFullJSDocWithFiresTags } from "../global-type-declarations/get-global-type-declaration.js";
 import type {
   ComponentDefinition,
   LibraryComponents
 } from "../library-summary/types";
-import { COMPONENT_PROPERTIES_NAMESPACE_NAMES } from "./constants";
-import { getComponentEventsUnionType } from "./get-component-events-union-type";
+import { COMPONENT_PROPERTIES_NAMESPACE_NAMES } from "./constants.js";
+import { getComponentEventsUnionType } from "./get-component-events-union-type.js";
 
 const LOCAL_JSX_NAMESPACE = "LocalJSX";
 const SOLID_JS_NAMESPACE = "SolidJsJSX";

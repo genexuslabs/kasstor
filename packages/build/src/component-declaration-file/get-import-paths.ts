@@ -3,7 +3,7 @@ import type {
   ComponentImportTypes,
   LibraryComponents
 } from "../library-summary/types";
-import { getImportClassName } from "./get-import-class-name";
+import { getImportClassName } from "./get-import-class-name.js";
 
 export const sortImports = (modulePathA: string, modulePathB: string) => {
   if (modulePathA.startsWith("./") && !modulePathB.startsWith("./")) {

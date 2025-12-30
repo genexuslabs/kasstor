@@ -1,8 +1,8 @@
-import { capitalize } from "../capitalize";
+import { capitalize } from "../capitalize.js";
 import type {
   ComponentDefinition,
   ComponentDefinitionEvents
-} from "../library-summary/types";
+} from "../library-summary/types.js";
 
 const JSDOC_CLOSE_TAG_REGEX = /\*+\//g;
 const EMPTY_JSDOC_REGEX = /\/\*+\//g;

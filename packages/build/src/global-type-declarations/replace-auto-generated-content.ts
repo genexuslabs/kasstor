@@ -2,7 +2,7 @@ import { constants } from "fs";
 import { access, readFile, writeFile } from "fs/promises";
 import { resolve } from "path";
 import { styleText } from "util";
-import { AUTO_GENERATED_MARKER } from "./constants";
+import { AUTO_GENERATED_MARKER } from "./constants.js";
 
 /**
  * Error types for better error handling
@@ -287,3 +287,4 @@ export async function extractPreservedContent(
     return null;
   }
 }
+

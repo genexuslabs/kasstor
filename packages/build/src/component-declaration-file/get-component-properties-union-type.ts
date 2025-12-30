@@ -1,10 +1,10 @@
-import { getFormattedPropertyOrEventDescription } from "../get-formatted-property-or-event-description";
+import { getFormattedPropertyOrEventDescription } from "../get-formatted-property-or-event-description.js";
 import type {
   ComponentDefinition,
   LibraryComponents
-} from "../library-summary/types";
-import { COMPONENT_PROPERTIES_NAMESPACE_NAMES } from "./constants";
-import { getImportClassName } from "./get-import-class-name";
+} from "../library-summary/types.js";
+import { COMPONENT_PROPERTIES_NAMESPACE_NAMES } from "./constants.js";
+import { getImportClassName } from "./get-import-class-name.js";
 
 export const getComponentPropertiesUnionType = (
   component: ComponentDefinition

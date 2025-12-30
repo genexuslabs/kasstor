@@ -8,7 +8,7 @@ import type { ComponentDefinition, LibraryComponents } from "./types";
 /**
  * Generate a library summary by analyzing all components in a directory
  */
-export const getLibrarySummary = async (options: {
+export const getLibraryComponents = async (options: {
   customDecoratorNames: string[] | undefined;
   defaultComponentAccess: ComponentDefinition["access"];
   excludedPaths: string[] | undefined;
@@ -35,10 +35,16 @@ export const getLibrarySummary = async (options: {
   const components: LibraryComponents = [];
   const validator = new ComponentValidator();
 
+  const filePathAndContents = await Promise.all(
+    litFiles.map(async filePath => ({
+      filePath,
+      fileContent: await readFile(filePath, "utf-8")
+    }))
+  );
+
   // Process files sequentially to validate incrementally
-  for (const filePath of litFiles) {
+  for (const { filePath, fileContent } of filePathAndContents) {
     try {
-      const fileContent = await readFile(filePath, "utf-8");
       const relativePath = relative(relativeComponentsSrcPath, filePath);
 
       const result = await extractComponentDefinition(
