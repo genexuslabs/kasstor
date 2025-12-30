@@ -78,8 +78,6 @@ export const buildLibrary = async (options?: KasstorBuildOptions) => {
 
   await Promise.all(promises);
 
-  console.log("HOLAAAAAA");
-
-  console.log(`Build compleasdasdted in ${performance.now() - startTime}ms`);
+  console.log(`Build completed in ${performance.now() - startTime}ms`);
 };
 
