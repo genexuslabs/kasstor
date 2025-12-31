@@ -64,6 +64,7 @@
     "vitest-browser-lit": "~0.1.0"
   },
   "overrides": {
+    "@genexus/kasstor-build": "workspace:*",
     "@genexus/kasstor-core": "workspace:*",
     "@genexus/kasstor-webkit": "workspace:*",
     "vite": "8.0.0-beta.5"
