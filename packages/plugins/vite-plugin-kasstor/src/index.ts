@@ -1,7 +1,14 @@
+import { buildLibrary } from "@genexus/kasstor-build";
 import { readFile } from "fs/promises";
 import { dirname, posix, relative, resolve } from "path";
 import { fileURLToPath } from "url";
-import type { HmrContext, ModuleNode, Plugin, ViteDevServer } from "vite";
+import {
+  normalizePath,
+  type HmrContext,
+  type ModuleNode,
+  type Plugin,
+  type ViteDevServer
+} from "vite";
 import { transformPrivateFieldsToPublic } from "./transform-private-fields.js";
 import type { KasstorPluginOptions } from "./types";
 
@@ -117,11 +124,9 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
   const hmrForStyles =
     typeof hmr === "object" ? hmr.styles !== false : hmr !== false;
 
-  /**
-   * Checks if a file path matches any of the configured patterns
-   */
-  const isMatchingFile = (filePath: string): boolean =>
-    componentFilePattern.test(filePath) || scssFilePattern.test(filePath);
+  // Cache to store file contents and detect changes
+  // Maps file path to file content hash
+  const fileContentCache = new Map<string, string>();
 
   /**
    * Determines the type of file that changed
@@ -303,6 +308,75 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
     },
 
     /**
+     * Configure the dev server to watch for file changes and execute custom logic
+     * This runs independently of HMR, so it works even if HMR is disabled.
+     *
+     * In this case, when a file is changed, we update the auto-generated
+     * content for the changed files.
+     */
+    configureServer(server) {
+      // Watch for file changes using Vite's watcher
+      // This is independent of HMR and will execute even if HMR is disabled
+      return () => {
+        server.watcher.add(
+          server.config.root +
+            "/**/*" +
+            componentFilePattern.source.replace(/\$/, "")
+        );
+        server.watcher.add(
+          server.config.root +
+            "/**/*" +
+            scssFilePattern.source.replace(/\$/, "")
+        );
+
+        server.watcher.on("change", async (filePath: string) => {
+          const fileType = getFileType(filePath);
+
+          if (fileType !== "component") {
+            return;
+          }
+
+          try {
+            // Read the current file content
+            const currentContent = await readFile(filePath, "utf-8");
+
+            // Check if the content has changed since last time
+            const cachedContent = fileContentCache.get(filePath);
+            if (cachedContent === currentContent) {
+              // Content hasn't changed, skip buildLibrary
+              return;
+            }
+
+            // Update the cache with the new content
+            fileContentCache.set(filePath, currentContent);
+
+            // Content has changed, run buildLibrary
+            await buildLibrary({
+              // TODO: Add support for incremental librarySummary when running
+              // the dev server
+              fileGeneration: {
+                // At the moment, we won't regenerate the librarySummary on file
+                // changes, because it will only contain the processed file
+                librarySummary: false
+              },
+
+              // Only process the changed component file
+              includedPaths: [
+                new RegExp(
+                  normalizePath(relative(server.config.root, filePath))
+                )
+              ]
+            });
+          } catch (error) {
+            server.config.logger.error(
+              `[kasstor] Error processing file ${filePath}: ${error}`
+            );
+          }
+        });
+      };
+    },
+
+    /**
      * Handle HMR updates - prevent full page reload for matching files
      */
     async handleHotUpdate(ctx: HmrContext) {
@@ -310,13 +384,12 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
 
       const hmrIsDisabled =
         hmr === false || (!hmrForComponent && !hmrForStyles);
+      const fileType = getFileType(file);
 
-      if (hmrIsDisabled || !isMatchingFile(file)) {
+      if (hmrIsDisabled || fileType === "unknown") {
         // Let Vite handle other files normally
         return undefined;
       }
-
-      const fileType = getFileType(file);
 
       if (
         (fileType === "component" && !hmrForComponent) ||
