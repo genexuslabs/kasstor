@@ -1,6 +1,14 @@
 import { posix, relative } from "path";
+import { styleText } from "util";
 import type { HmrContext } from "vite";
 import { findReferencingTags } from "../internal/find-referencing-tags.js";
+import { prettyTimeMark } from "../internal/pretty-time-mark.js";
+
+/**
+ * Map to track operation start times for performance metrics
+ * operationId -> startTime (in milliseconds)
+ */
+const operationTimings = new Map<string, number>();
 
 /**
  * Handle HMR updates - prevent full page reload for matching files
@@ -42,6 +50,15 @@ export const handleHotUpdate = async (options: {
   // Normalize the file path
   const normalizedPath = posix.join("/", relative(server.config.root, file));
 
+  // Generate a unique operation ID for tracking performance metrics
+  const operationId = `${fileType}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+  // Record the start time for this operation
+  const startTime = performance.now();
+  if (operationTimings) {
+    operationTimings.set(operationId, startTime);
+  }
+
   // Compute tags when scss changed
   let tags: string[] = [];
   if (fileType === "scss") {
@@ -59,8 +76,40 @@ export const handleHotUpdate = async (options: {
       file: normalizedPath,
       fileType,
       tags,
-      timestamp: Date.now(),
+      timestamp: startTime,
+      operationId,
       debug
+    }
+  });
+
+  // Listen for performance metrics from the client
+  server.ws.on("custom:lit-refresh:performance", (data: unknown) => {
+    const message = data as {
+      operationId?: string;
+      operationType?: string;
+      components?: string[];
+    };
+    const { components, operationId, operationType } = message;
+
+    if (!operationId || !components) {
+      return;
+    }
+
+    // Calculate elapsed time from when the operation started
+    const startTime = operationTimings.get(operationId);
+
+    if (startTime) {
+      const elapsedTime = performance.now() - startTime;
+
+      server.config.logger.info(
+        styleText("dim", "[kasstor] ") +
+          `updated ${operationType}: ` +
+          styleText("cyan", components.join(", ")) +
+          styleText("dim", ` in ${prettyTimeMark(elapsedTime)}`)
+      );
+
+      // Clean up the timing entry
+      operationTimings.delete(operationId);
     }
   });
 

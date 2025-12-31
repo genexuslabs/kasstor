@@ -25,7 +25,7 @@ if (import.meta.hot) {
           .then(m => {
             // virtual module provided by the plugin
             if (m && typeof m.handleScssUpdate === "function") {
-              m.handleScssUpdate(data.file, data.tags);
+              m.handleScssUpdate(data.file, data.tags, data.operationId);
             }
           })
           .catch(e =>
@@ -42,7 +42,7 @@ if (import.meta.hot) {
       import("virtual:lit-refresh-handler")
         .then(m => {
           if (m && typeof m.handleComponentUpdate === "function") {
-            m.handleComponentUpdate(data.file);
+            m.handleComponentUpdate(data.file, data.tags, data.operationId);
           }
         })
         .catch(e => console.error("[lit-refresh] failed to load handler:", e));

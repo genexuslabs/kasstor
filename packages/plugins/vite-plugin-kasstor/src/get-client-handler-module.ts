@@ -1,4 +1,24 @@
-const replaceStyles = (css: string, tags: string[]) => {
+/**
+ * Send a performance metric to the dev server
+ * @param operationId - Unique identifier for this operation
+ * @param operationType - Type of operation (e.g., 'scss-update', 'component-update')
+ */
+const sendPerformanceMetric = (
+  operationId: string,
+  operationType: string,
+  components: string[]
+) => {
+  if (typeof import.meta !== "undefined" && import.meta.hot) {
+    import.meta.hot.send("custom:lit-refresh:performance", {
+      operationId,
+      operationType,
+      components,
+      timestamp: Date.now()
+    });
+  }
+};
+
+const replaceStyles = (css: string, tags: string[], operationId: string) => {
   // Prefer the global registry provided by the library (populated by SSRLitElement)
   const kasstorCoreRegisteredInstances =
     typeof globalThis !== "undefined"
@@ -43,9 +63,16 @@ const replaceStyles = (css: string, tags: string[]) => {
       tag
     );
   }
+
+  // Send performance metric to dev server when operation completes
+  sendPerformanceMetric(operationId, "style", tags);
 };
 
-export async function handleScssUpdate(scssPath: string, tags: string[]) {
+export async function handleScssUpdate(
+  scssPath: string,
+  tags: string[],
+  operationId: string
+) {
   try {
     const cssUrl = scssPath + "?inline&t=" + Date.now();
     const res = await fetch(cssUrl);
@@ -70,7 +97,7 @@ export async function handleScssUpdate(scssPath: string, tags: string[]) {
       // Fallback to raw text as CSS
     }
 
-    replaceStyles(css, tags);
+    replaceStyles(css, tags, operationId);
   } catch (e) {
     console.error("[lit-refresh] handleScssUpdate error", e);
   }
@@ -84,16 +111,20 @@ export async function handleScssUpdate(scssPath: string, tags: string[]) {
  * runtime (`register(tagName, classRef)`) which will swap the implementation
  * behind the proxies and trigger updates on existing instances.
  */
-export async function handleComponentUpdate(componentPath: string) {
+export async function handleComponentUpdate(
+  componentPath: string,
+  tags: string[],
+  operationId: string
+) {
   try {
     // Use a cache-busting query param so the browser and Vite deliver
     // the latest version of the module.
     const url = `${componentPath}?t=${Date.now()}`;
 
-    console.log("[lit-refresh] Re-importing component module:", url);
-
     // Avoid Vite trying to pre-bundle this import by annotating it.
     await import(/* @vite-ignore */ url);
+
+    sendPerformanceMetric(operationId, "component", tags);
   } catch (e) {
     console.error("[lit-refresh] handleComponentUpdate error", e);
   }
