@@ -1,4 +1,4 @@
-import { VIRTUAL_MODULE_ID } from "../constants.js";
+import { VIRTUAL_CLIENT_MODULE_ID } from "../constants.js";
 
 /**
  * Transform the HTML to import our virtual module(s).
@@ -14,7 +14,7 @@ export const transformIndexHtml = (isDevServer: boolean) => {
   return [
     {
       tag: "script",
-      attrs: { type: "module", src: `/@id/__x00__${VIRTUAL_MODULE_ID}` },
+      attrs: { type: "module", src: `/@id/__x00__${VIRTUAL_CLIENT_MODULE_ID}` },
       injectTo: "head-prepend"
     } as const
   ];

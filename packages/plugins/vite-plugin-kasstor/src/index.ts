@@ -4,7 +4,10 @@ import { dirname, relative, resolve } from "path";
 import { fileURLToPath } from "url";
 import { normalizePath, type HmrContext, type Plugin } from "vite";
 
-import { RESOLVED_VIRTUAL_MODULE_ID } from "./constants.js";
+import {
+  RESOLVED_VIRTUAL_CLIENT_HANDLERS_MODULE_ID,
+  RESOLVED_VIRTUAL_CLIENT_MODULE_ID
+} from "./constants.js";
 import { handleHotUpdate } from "./hooks/handle-hot-update.js";
 import { resolveId } from "./hooks/resolve-id.js";
 import { transformIndexHtml } from "./hooks/transform-index-html.js";
@@ -80,7 +83,7 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
   };
 
   return {
-    name: "vite-plugin-lit-refresh",
+    name: "vite-plugin-kasstor",
 
     // Ensure this plugin runs before Vite's built-in HMR
     enforce: "pre",
@@ -126,10 +129,10 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
         return null;
       }
 
-      if (id === RESOLVED_VIRTUAL_MODULE_ID) {
+      if (id === RESOLVED_VIRTUAL_CLIENT_MODULE_ID) {
         return getClientCode;
       }
-      if (id === "\0virtual:lit-refresh-handler") {
+      if (id === RESOLVED_VIRTUAL_CLIENT_HANDLERS_MODULE_ID) {
         return getClientHandlerModule;
       }
       return null;

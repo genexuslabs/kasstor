@@ -9,7 +9,7 @@ const sendPerformanceMetric = (
   components: string[]
 ) => {
   if (typeof import.meta !== "undefined" && import.meta.hot) {
-    import.meta.hot.send("custom:lit-refresh:performance", {
+    import.meta.hot.send("custom:kasstor:performance", {
       operationId,
       operationType,
       components,

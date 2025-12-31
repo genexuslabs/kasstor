@@ -1,4 +1,9 @@
-import { RESOLVED_VIRTUAL_MODULE_ID, VIRTUAL_MODULE_ID } from "../constants.js";
+import {
+  RESOLVED_VIRTUAL_CLIENT_HANDLERS_MODULE_ID,
+  RESOLVED_VIRTUAL_CLIENT_MODULE_ID,
+  VIRTUAL_CLIENT_HANDLERS_MODULE_ID,
+  VIRTUAL_CLIENT_MODULE_ID
+} from "../constants.js";
 
 /**
  * Resolve the virtual module ID.
@@ -11,11 +16,11 @@ export const resolveId = (id: string, isDevServer: boolean) => {
     return null;
   }
 
-  if (id === VIRTUAL_MODULE_ID) {
-    return RESOLVED_VIRTUAL_MODULE_ID;
+  if (id === VIRTUAL_CLIENT_MODULE_ID) {
+    return RESOLVED_VIRTUAL_CLIENT_MODULE_ID;
   }
-  if (id === "virtual:lit-refresh-handler") {
-    return "\0virtual:lit-refresh-handler";
+  if (id === VIRTUAL_CLIENT_HANDLERS_MODULE_ID) {
+    return RESOLVED_VIRTUAL_CLIENT_HANDLERS_MODULE_ID;
   }
   return null;
 };

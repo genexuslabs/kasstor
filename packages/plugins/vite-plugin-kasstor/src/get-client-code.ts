@@ -1,7 +1,7 @@
 // Kasstor Plugin - HMR Event Listener (client)
 //
 // This client receives custom HMR events from the Vite plugin and delegates
-// the actual handling to the virtual `virtual:lit-refresh-handler` module.
+// the actual handling to the virtual `virtual:kasstor-client-handlers` module.
 //
 // Responsibilities:
 //  - For SCSS updates: compute the affected tags server-side and trigger a
@@ -10,25 +10,23 @@
 //    the decorator runs again and the HMR runtime (`register`) can swap the
 //    implementation behind the proxies.
 if (import.meta.hot) {
-  import.meta.hot.on("lit-refresh:update", data => {
-    if (data.debug) {
-      console.log("[kasstor] Received update (client):", data);
-    }
-
+  import.meta.hot.on("kasstor:update", data => {
     // Handle SCSS updates (styles only)
     if (data.fileType === "scss") {
       // data.tags contains the component tagNames that reference this SCSS file
       if (Array.isArray(data.tags) && data.tags.length > 0) {
         // @ts-expect-error TODO: Use a different approach for divining the
         // implementation into multiple files
-        import("virtual:lit-refresh-handler")
+        import("virtual:kasstor-client-handlers")
           .then(m => {
             // virtual module provided by the plugin
             if (m && typeof m.handleScssUpdate === "function") {
               m.handleScssUpdate(data.file, data.tags, data.operationId);
             }
           })
-          .catch(e => console.error("[kasstor] failed to load handler:", e));
+          .catch(e =>
+            console.error("[kasstor] Failed to load handler for styles:", e)
+          );
       }
       return;
     }
@@ -37,16 +35,18 @@ if (import.meta.hot) {
     if (data.fileType === "component") {
       // @ts-expect-error TODO: Use a different approach for divining the
       // implementation into multiple files
-      import("virtual:lit-refresh-handler")
+      import("virtual:kasstor-client-handlers")
         .then(m => {
           if (m && typeof m.handleComponentUpdate === "function") {
             m.handleComponentUpdate(data.file, data.tags, data.operationId);
           }
         })
-        .catch(e => console.error("[kasstor] failed to load handler:", e));
+        .catch(e =>
+          console.error("[kasstor] Failed to load handler for components:", e)
+        );
     }
   });
 
-  console.log("[kasstor] HMR listener registered (client)");
+  console.log("[kasstor] HMR listener registered");
 }
 

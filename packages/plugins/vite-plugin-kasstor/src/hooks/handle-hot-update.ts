@@ -74,7 +74,7 @@ export const handleHotUpdate = async (options: {
 
   server.ws.send({
     type: "custom",
-    event: "lit-refresh:update",
+    event: "kasstor:update",
     data: {
       file: normalizedPath,
       fileType,
@@ -86,7 +86,7 @@ export const handleHotUpdate = async (options: {
   });
 
   // Listen for performance metrics from the client
-  server.ws.on("custom:lit-refresh:performance", (data: unknown) => {
+  server.ws.on("custom:kasstor:performance", (data: unknown) => {
     const message = data as {
       operationId: string;
       operationType: string;

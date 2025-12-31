@@ -46,16 +46,3 @@ export function transformPrivateFieldsToPublic(code: string): string {
   return transformed;
 }
 
-/**
- * Check if a file should be transformed
- * @param filePath - The file path to check
- * @param filePattern - The pattern to match against
- * @returns True if the file should be transformed
- */
-export function shouldTransformFile(
-  filePath: string,
-  filePattern: RegExp
-): boolean {
-  return filePattern.test(filePath);
-}
-

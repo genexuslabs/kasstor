@@ -1,4 +1,9 @@
 // Virtual module ID for the HMR client code
-export const VIRTUAL_MODULE_ID = "virtual:lit-refresh-client";
-export const RESOLVED_VIRTUAL_MODULE_ID = "\0" + VIRTUAL_MODULE_ID;
+export const VIRTUAL_CLIENT_MODULE_ID = "virtual:kasstor-client";
+export const RESOLVED_VIRTUAL_CLIENT_MODULE_ID =
+  "\0" + VIRTUAL_CLIENT_MODULE_ID;
 
+export const VIRTUAL_CLIENT_HANDLERS_MODULE_ID =
+  "virtual:kasstor-client-handlers";
+export const RESOLVED_VIRTUAL_CLIENT_HANDLERS_MODULE_ID =
+  "\0" + VIRTUAL_CLIENT_HANDLERS_MODULE_ID;
