@@ -1,6 +1,7 @@
 import { posix, relative } from "path";
 import type { HmrContext } from "vite";
-import { findReferencingTags } from "../internal/find-referencing-tags.js";
+import { findReferencingTagsForComponent } from "../internal/find-referencing-tags-for-component.js";
+import { findReferencingTagsForScss } from "../internal/find-referencing-tags-for-scss.js";
 import { getStringForLogger } from "../internal/get-string-for-logger.js";
 
 /**
@@ -58,15 +59,18 @@ export const handleHotUpdate = async (options: {
     operationTimings.set(operationId, startTime);
   }
 
-  // Compute tags when scss changed
-  let tags: string[] = [];
-  if (fileType === "scss") {
-    tags = await findReferencingTags({
-      componentFilePattern,
-      scssPath: file,
-      server
-    });
-  }
+  // Compute tags based on file type
+  const tags: string[] =
+    fileType === "scss"
+      ? await findReferencingTagsForScss({
+          componentFilePattern,
+          scssPath: file,
+          server
+        })
+      : await findReferencingTagsForComponent({
+          componentPath: file,
+          server
+        });
 
   server.ws.send({
     type: "custom",

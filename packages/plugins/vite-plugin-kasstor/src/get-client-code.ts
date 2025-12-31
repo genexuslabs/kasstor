@@ -1,4 +1,4 @@
-// Lit Refresh Plugin - HMR Event Listener (client)
+// Kasstor Plugin - HMR Event Listener (client)
 //
 // This client receives custom HMR events from the Vite plugin and delegates
 // the actual handling to the virtual `virtual:lit-refresh-handler` module.
@@ -12,7 +12,7 @@
 if (import.meta.hot) {
   import.meta.hot.on("lit-refresh:update", data => {
     if (data.debug) {
-      console.log("[lit-refresh] Received update (client):", data);
+      console.log("[kasstor] Received update (client):", data);
     }
 
     // Handle SCSS updates (styles only)
@@ -28,9 +28,7 @@ if (import.meta.hot) {
               m.handleScssUpdate(data.file, data.tags, data.operationId);
             }
           })
-          .catch(e =>
-            console.error("[lit-refresh] failed to load handler:", e)
-          );
+          .catch(e => console.error("[kasstor] failed to load handler:", e));
       }
       return;
     }
@@ -45,10 +43,10 @@ if (import.meta.hot) {
             m.handleComponentUpdate(data.file, data.tags, data.operationId);
           }
         })
-        .catch(e => console.error("[lit-refresh] failed to load handler:", e));
+        .catch(e => console.error("[kasstor] failed to load handler:", e));
     }
   });
 
-  console.log("[lit-refresh] HMR listener registered (client)");
+  console.log("[kasstor] HMR listener registered (client)");
 }
 

@@ -37,7 +37,7 @@ const replaceStyles = (css: string, tags: string[], operationId: string) => {
   for (const tag of tags) {
     const instances = kasstorCoreRegisteredInstances.get(tag);
     if (!instances || instances.size === 0) {
-      console.warn("[lit-refresh] global registry: No instances for", tag);
+      console.warn("[kasstor] global registry: No instances for", tag);
       continue;
     }
 
@@ -55,13 +55,6 @@ const replaceStyles = (css: string, tags: string[], operationId: string) => {
         el.shadowRoot.adoptedStyleSheets = [newStyleSheet];
       }
     }
-
-    console.log(
-      "[lit-refresh] (global) Updated styles for",
-      (instances && instances.size) || 0,
-      "instance(s) of",
-      tag
-    );
   }
 
   // Send performance metric to dev server when operation completes
@@ -99,7 +92,7 @@ export async function handleScssUpdate(
 
     replaceStyles(css, tags, operationId);
   } catch (e) {
-    console.error("[lit-refresh] handleScssUpdate error", e);
+    console.error("[kasstor] Error while hot updating styles", e);
   }
 }
 
@@ -126,7 +119,7 @@ export async function handleComponentUpdate(
 
     sendPerformanceMetric(operationId, "component", tags);
   } catch (e) {
-    console.error("[lit-refresh] handleComponentUpdate error", e);
+    console.error("[kasstor] Error while hot updating components", e);
   }
 }
 

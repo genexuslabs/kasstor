@@ -10,7 +10,7 @@ import { moduleNodeToFilePath } from "./module-node-to-file-path.js";
  * that (directly or indirectly) import that scss file by inspecting the module graph
  * and parsing component module sources to extract the tag name.
  */
-export const findReferencingTags = async (options: {
+export const findReferencingTagsForScss = async (options: {
   componentFilePattern: RegExp;
   scssPath: string;
   server: ViteDevServer;
@@ -61,7 +61,7 @@ export const findReferencingTags = async (options: {
     } catch (e) {
       // ignore read errors
       server.config.logger.warn(
-        `[lit-refresh] Could not read module ${compPath}: ${e}`
+        `[kasstor] Could not read module ${compPath}: ${e}`
       );
     }
   }
