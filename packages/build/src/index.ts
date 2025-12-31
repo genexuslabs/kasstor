@@ -24,7 +24,12 @@ const DEFAULT_COMPONENT_ACCESS =
 const DEFAULT_INCLUDED_PATHS = /\.lit\.ts$/;
 const DEFAULT_RELATIVE_COMPONENTS_SRC_PATH = "src/";
 
-export const buildLibrary = async (options?: KasstorBuildOptions) => {
+export const buildLibrary = async (
+  options?: KasstorBuildOptions
+): Promise<{
+  elapsedTime: number;
+  updatedComponentDocs?: string[];
+}> => {
   const startTime = performance.now();
 
   const {
@@ -79,6 +84,9 @@ export const buildLibrary = async (options?: KasstorBuildOptions) => {
 
   await Promise.all(promises);
 
-  console.log(`Build completed in ${performance.now() - startTime}ms`);
+  return {
+    elapsedTime: performance.now() - startTime,
+    updatedComponentDocs: libraryComponents.map(c => c.tagName)
+  };
 };
 

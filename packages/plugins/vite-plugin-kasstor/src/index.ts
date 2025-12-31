@@ -9,6 +9,7 @@ import { handleHotUpdate } from "./hooks/handle-hot-update.js";
 import { resolveId } from "./hooks/resolve-id.js";
 import { transformIndexHtml } from "./hooks/transform-index-html.js";
 import { transform } from "./hooks/transform.js";
+import { getStringForLogger } from "./internal/get-string-for-logger.js";
 import type { KasstorPluginOptions } from "./types";
 
 export type { KasstorPluginOptions };
@@ -196,7 +197,7 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
             fileContentCache.set(filePath, currentContent);
 
             // Content has changed, run buildLibrary
-            await buildLibrary({
+            const { elapsedTime, updatedComponentDocs } = await buildLibrary({
               // TODO: Add support for incremental librarySummary when running
               // the dev server
               fileGeneration: {
@@ -212,6 +213,12 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
                 )
               ]
             });
+
+            if (updatedComponentDocs && updatedComponentDocs.length > 0) {
+              server.config.logger.info(
+                getStringForLogger("docs", updatedComponentDocs, elapsedTime)
+              );
+            }
           } catch (error) {
             server.config.logger.error(
               `[kasstor] Error processing file ${filePath}: ${error}`

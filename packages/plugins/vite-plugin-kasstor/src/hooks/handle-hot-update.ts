@@ -1,8 +1,7 @@
 import { posix, relative } from "path";
-import { styleText } from "util";
 import type { HmrContext } from "vite";
 import { findReferencingTags } from "../internal/find-referencing-tags.js";
-import { prettyTimeMark } from "../internal/pretty-time-mark.js";
+import { getStringForLogger } from "../internal/get-string-for-logger.js";
 
 /**
  * Map to track operation start times for performance metrics
@@ -85,15 +84,11 @@ export const handleHotUpdate = async (options: {
   // Listen for performance metrics from the client
   server.ws.on("custom:lit-refresh:performance", (data: unknown) => {
     const message = data as {
-      operationId?: string;
-      operationType?: string;
-      components?: string[];
+      operationId: string;
+      operationType: string;
+      components: string[];
     };
     const { components, operationId, operationType } = message;
-
-    if (!operationId || !components) {
-      return;
-    }
 
     // Calculate elapsed time from when the operation started
     const startTime = operationTimings.get(operationId);
@@ -102,10 +97,7 @@ export const handleHotUpdate = async (options: {
       const elapsedTime = performance.now() - startTime;
 
       server.config.logger.info(
-        styleText("dim", "[kasstor] ") +
-          `updated ${operationType}: ` +
-          styleText("cyan", components.join(", ")) +
-          styleText("dim", ` in ${prettyTimeMark(elapsedTime)}`)
+        getStringForLogger(operationType, components, elapsedTime)
       );
 
       // Clean up the timing entry
