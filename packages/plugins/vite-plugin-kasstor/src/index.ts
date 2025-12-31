@@ -112,6 +112,8 @@ const RESOLVED_VIRTUAL_MODULE_ID = "\0" + VIRTUAL_MODULE_ID;
  * we can accurately determine which tag names must have their styles replaced.
  */
 export function kasstor(options?: KasstorPluginOptions): Plugin {
+  let isDevServer = false;
+
   const {
     componentFilePattern = /\.lit\.ts$/,
     debug,
@@ -227,15 +229,14 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
   return {
     name: "vite-plugin-lit-refresh",
 
-    // Only apply this plugin in development mode
-    apply: "serve",
-
     // Ensure this plugin runs before Vite's built-in HMR
     enforce: "pre",
 
     // Define import.meta properties for HMR flags, so the SSRLitElement class
     // decides if adds supports for HMR
-    config() {
+    config(_, env) {
+      isDevServer = env.command === "serve";
+
       return {
         define: {
           "globalThis.kasstorCoreHmrComponent": hmrForComponent
@@ -244,9 +245,24 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
     },
 
     /**
-     * Resolve the virtual module ID
+     * Hook that runs at the start of the build process (both dev and production).
+     *
+     * In this case, we build all the types for the library
+     */
+    async buildStart() {
+      await buildLibrary();
+    },
+
+    /**
+     * Resolve the virtual module ID.
+     * Only applies in dev server.
      */
     resolveId(id: string) {
+      // Only works for dev server
+      if (!isDevServer) {
+        return null;
+      }
+
       if (id === VIRTUAL_MODULE_ID) {
         return RESOLVED_VIRTUAL_MODULE_ID;
       }
@@ -258,8 +274,14 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
 
     /**
      * Load the virtual module with client-side HMR code
+     * Only applies in dev server
      */
     load(id: string) {
+      // Only works for dev server
+      if (!isDevServer) {
+        return null;
+      }
+
       if (id === RESOLVED_VIRTUAL_MODULE_ID) {
         return getClientCode;
       }
@@ -271,8 +293,14 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
 
     /**
      * Transform the HTML to import our virtual module(s)
+     * Only applies in dev server.
      */
     transformIndexHtml() {
+      // Only works for dev server
+      if (!isDevServer) {
+        return undefined;
+      }
+
       return [
         {
           tag: "script",
@@ -284,9 +312,11 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
 
     /**
      * Transform source code to replace private fields with public fields in dev mode
+     * Only applies in dev server.
      */
     transform(code: string) {
-      if (!hmrForComponent) {
+      // Only works for dev server
+      if (!hmrForComponent || !isDevServer) {
         return null;
       }
 
