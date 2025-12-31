@@ -82,7 +82,7 @@ const getComponentAddEventListener = <Class extends string>(
   !events || events.length === 0
     ? ""
     : (`
-    /* prettier-ignore */ addEventListener<K extends keyof ${getComponentEventTypesInterfaceName(className)}>(type: K, listener: (this: ${getComponentHTMLInterfaceName(className)}, ev: ${getComponentEventTypesInterfaceName(className)}[K]) => unknown, options?: boolean | AddEventListenerOptions): void;` as const);
+    addEventListener<K extends keyof ${getComponentEventTypesInterfaceName(className)}>(type: K, listener: (this: ${getComponentHTMLInterfaceName(className)}, ev: ${getComponentEventTypesInterfaceName(className)}[K]) => unknown, options?: boolean | AddEventListenerOptions): void;` as const);
 
 const getComponentRemoveEventListener = <Class extends string>(
   className: Class,
@@ -91,7 +91,7 @@ const getComponentRemoveEventListener = <Class extends string>(
   !events || events.length === 0
     ? ""
     : (`
-    /* prettier-ignore */ removeEventListener<K extends keyof ${getComponentEventTypesInterfaceName(className)}>(type: K, listener: (this: ${getComponentHTMLInterfaceName(className)}, ev: ${getComponentEventTypesInterfaceName(className)}[K]) => unknown, options?: boolean | EventListenerOptions): void;` as const);
+    removeEventListener<K extends keyof ${getComponentEventTypesInterfaceName(className)}>(type: K, listener: (this: ${getComponentHTMLInterfaceName(className)}, ev: ${getComponentEventTypesInterfaceName(className)}[K]) => unknown, options?: boolean | EventListenerOptions): void;` as const);
 
 const alignJSDoc = (jsDoc: string) => "\n  " + jsDoc.split("\n").join("\n  ");
 
@@ -142,7 +142,7 @@ export const getFullJSDocWithFiresTags = (
 
   fullClassJSDocWithFires = splittedJSDoc.join("\n");
 
-  return alignJSDoc(fullClassJSDocWithFires);
+  return alignJSDoc(fullClassJSDocWithFires) + "\n  ";
 };
 
 export const getComponentClassExtend = ({
@@ -150,17 +150,16 @@ export const getComponentClassExtend = ({
   fullClassJSDoc,
   events
 }: ComponentDefinition) => `
-${getFullJSDocWithFiresTags(fullClassJSDoc, events)}
-  // prettier-ignore
+${getFullJSDocWithFiresTags(fullClassJSDoc, events)}// prettier-ignore
   interface ${getComponentHTMLInterfaceName(className)} extends ${className} {
     // Extend the ${className} class redefining the event listener methods to improve type safety when using them${getComponentAddEventListener(className, events)}
-    /* prettier-ignore */ addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
-    /* prettier-ignore */ addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
-    /* prettier-ignore */ addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+    addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
+    addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
+    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
     ${getComponentRemoveEventListener(className, events)}
-    /* prettier-ignore */ removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
-    /* prettier-ignore */ removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
-    /* prettier-ignore */ removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
   }`;
 
 export const getExtendTagNameMap = ({
