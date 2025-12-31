@@ -13,6 +13,7 @@ import { resolveId } from "./hooks/resolve-id.js";
 import { transformIndexHtml } from "./hooks/transform-index-html.js";
 import { transform } from "./hooks/transform.js";
 import { getStringForLogger } from "./internal/get-string-for-logger.js";
+import { invalidateNextUpdateForComponents } from "./internal/invalidate-next-hmr-for-component.js";
 import type { KasstorPluginOptions } from "./types";
 
 export type { KasstorPluginOptions };
@@ -218,6 +219,11 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
             });
 
             if (updatedComponentDocs && updatedComponentDocs.length > 0) {
+              // This will prevent a common issue, where the docs update of the
+              // component triggers and extra HMR update, so at the end of the
+              // day, the component is updated twice.
+              invalidateNextUpdateForComponents(updatedComponentDocs);
+
               server.config.logger.info(
                 getStringForLogger("docs", updatedComponentDocs, elapsedTime)
               );

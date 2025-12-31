@@ -12,8 +12,7 @@ const sendPerformanceMetric = (
     import.meta.hot.send("custom:kasstor:performance", {
       operationId,
       operationType,
-      components,
-      timestamp: Date.now()
+      components
     });
   }
 };
