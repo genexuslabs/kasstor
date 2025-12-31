@@ -106,8 +106,14 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
      *
      * In this case, we build all the types for the library
      */
-    async buildStart() {
-      await buildLibrary();
+    async buildStart(this) {
+      const { elapsedTime, updatedComponentDocs } = await buildLibrary();
+
+      if (updatedComponentDocs && updatedComponentDocs.length !== 0) {
+        this.info(
+          getStringForLogger("docs", updatedComponentDocs, elapsedTime)
+        );
+      }
     },
 
     /**
