@@ -33,6 +33,7 @@
     "**/*": "prettier --write --ignore-unknown"
   },
   "peerDependencies": {
+    "@genexus/kasstor-build": "0.1.0",
     "@genexus/kasstor-core": "0.1.0"
   },
   "exports": {
