@@ -104,17 +104,22 @@ export async function handleScssUpdate(
  * behind the proxies and trigger updates on existing instances.
  */
 export async function handleComponentUpdate(
-  componentPath: string,
+  componentPaths: string[],
   tags: string[],
   operationId: string
 ) {
   try {
-    // Use a cache-busting query param so the browser and Vite deliver
-    // the latest version of the module.
-    const url = `${componentPath}?t=${Date.now()}`;
+    // Download all new files in parallel to improve the HMR performance
+    await Promise.all(
+      componentPaths.map(componentPath => {
+        // Use a cache-busting query param so the browser and Vite deliver
+        // the latest version of the module.
+        const url = `${componentPath}?t=${Date.now()}`;
 
-    // Avoid Vite trying to pre-bundle this import by annotating it.
-    await import(/* @vite-ignore */ url);
+        // Avoid Vite trying to pre-bundle this import by annotating it.
+        return import(/* @vite-ignore */ url);
+      })
+    );
 
     sendPerformanceMetric(operationId, "component", tags);
   } catch (e) {

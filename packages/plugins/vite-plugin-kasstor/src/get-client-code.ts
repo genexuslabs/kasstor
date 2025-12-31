@@ -14,14 +14,14 @@ if (import.meta.hot) {
     // Handle SCSS updates (styles only)
     if (data.fileType === "scss") {
       // data.tags contains the component tagNames that reference this SCSS file
-      if (Array.isArray(data.tags) && data.tags.length > 0) {
+      if (data.tags.length > 0) {
         // @ts-expect-error TODO: Use a different approach for divining the
         // implementation into multiple files
         import("virtual:kasstor-client-handlers")
           .then(m => {
             // virtual module provided by the plugin
             if (m && typeof m.handleScssUpdate === "function") {
-              m.handleScssUpdate(data.file, data.tags, data.operationId);
+              m.handleScssUpdate(data.scssPath, data.tags, data.operationId);
             }
           })
           .catch(e =>
@@ -32,19 +32,21 @@ if (import.meta.hot) {
     }
 
     // Handle component updates (re-import the module so decorators run again)
-    if (data.fileType === "component") {
-      // @ts-expect-error TODO: Use a different approach for divining the
-      // implementation into multiple files
-      import("virtual:kasstor-client-handlers")
-        .then(m => {
-          if (m && typeof m.handleComponentUpdate === "function") {
-            m.handleComponentUpdate(data.file, data.tags, data.operationId);
-          }
-        })
-        .catch(e =>
-          console.error("[kasstor] Failed to load handler for components:", e)
-        );
-    }
+    // @ts-expect-error TODO: Use a different approach for divining the
+    // implementation into multiple files
+    import("virtual:kasstor-client-handlers")
+      .then(m => {
+        if (m && typeof m.handleComponentUpdate === "function") {
+          m.handleComponentUpdate(
+            data.componentPaths,
+            data.tags,
+            data.operationId
+          );
+        }
+      })
+      .catch(e =>
+        console.error("[kasstor] Failed to load handler for components:", e)
+      );
   });
 
   console.log("[kasstor] HMR listener registered");

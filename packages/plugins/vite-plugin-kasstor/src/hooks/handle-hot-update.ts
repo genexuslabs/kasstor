@@ -1,6 +1,10 @@
 import { posix, relative } from "path";
-import type { HmrContext, ViteDevServer } from "vite";
+import type { HmrContext, ModuleNode, ViteDevServer } from "vite";
 import { findReferencingTagsForComponent } from "../internal/find-referencing-tags-for-component.js";
+import {
+  findReferencingTagsForHelper,
+  type ComponentReference
+} from "../internal/find-referencing-tags-for-helper.js";
 import { findReferencingTagsForScss } from "../internal/find-referencing-tags-for-scss.js";
 import { getStringForLogger } from "../internal/get-string-for-logger.js";
 import { checkIfShouldInvalidateNextUpdate } from "../internal/invalidate-next-hmr-for-component.js";
@@ -67,30 +71,76 @@ export const handleHotUpdate = async (options: {
   const hmrIsDisabled = !hmrForComponent && !hmrForStyles;
   const fileType = getFileType(file);
 
-  if (hmrIsDisabled || fileType === "unknown") {
-    // Let Vite handle other files normally
-    return undefined;
-  }
+  // Listen for performance metrics from the client
+  registerListenerForPerformanceMetrics(server);
 
   if (
+    hmrIsDisabled ||
     (fileType === "component" && !hmrForComponent) ||
+    (fileType === "unknown" && !hmrForComponent) ||
     (fileType === "scss" && !hmrForStyles)
   ) {
     // Let Vite handle other files normally
     return undefined;
   }
 
-  // Listen for performance metrics from the client
-  registerListenerForPerformanceMetrics(server);
-
-  // Normalize the file path
-  const normalizedPath = posix.join("/", relative(server.config.root, file));
+  let componentsThatUsedTheUtility: ComponentReference[] = [];
 
   // Generate a unique operation ID for tracking performance metrics
   const operationId = `${fileType}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
   // Record the start time for this operation
   operationTimings.set(operationId, performance.now());
+
+  // Check if the file is being used by a component
+  if (fileType === "unknown") {
+    componentsThatUsedTheUtility = await findReferencingTagsForHelper({
+      componentFilePattern,
+      helperPath: file,
+      server
+    });
+
+    // The file was not referenced by any component, so trigger a full reload
+    // TODO: We should investigate if we really want to trigger a full reload.
+    // In some cases we could handle this more gracefully.
+    if (componentsThatUsedTheUtility.length === 0) {
+      operationTimings.delete(operationId);
+
+      // Let Vite handle other files normally
+      return undefined;
+    }
+
+    const invalidatedModules = new Set<ModuleNode>();
+
+    // Since the file was referenced by some components, invalidate those
+    // modules and trigger HMR in the components to download again those
+    // modules
+    for (const mod of ctx.modules) {
+      server.moduleGraph.invalidateModule(
+        mod,
+        invalidatedModules,
+        ctx.timestamp,
+        true
+      );
+    }
+
+    server.ws.send({
+      type: "custom",
+      event: "kasstor:update",
+      data: {
+        componentPaths: componentsThatUsedTheUtility.map(c => c.path),
+        fileType,
+        tags: componentsThatUsedTheUtility.map(c => c.tag),
+        operationId,
+        debug
+      }
+    });
+
+    return [];
+  }
+
+  // Normalize the file path
+  const normalizedPath = posix.join("/", relative(server.config.root, file));
 
   // Compute tags based on file type
   const tags: string[] =
@@ -121,7 +171,8 @@ export const handleHotUpdate = async (options: {
     type: "custom",
     event: "kasstor:update",
     data: {
-      file: normalizedPath,
+      componentPaths: [normalizedPath],
+      scssPath: normalizedPath,
       fileType,
       tags,
       operationId,
