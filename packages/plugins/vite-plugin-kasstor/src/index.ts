@@ -1,15 +1,14 @@
 import { buildLibrary } from "@genexus/kasstor-build";
 import { readFile } from "fs/promises";
-import { dirname, posix, relative, resolve } from "path";
+import { dirname, relative, resolve } from "path";
 import { fileURLToPath } from "url";
-import {
-  normalizePath,
-  type HmrContext,
-  type ModuleNode,
-  type Plugin,
-  type ViteDevServer
-} from "vite";
-import { transformPrivateFieldsToPublic } from "./transform-private-fields.js";
+import { normalizePath, type HmrContext, type Plugin } from "vite";
+
+import { RESOLVED_VIRTUAL_MODULE_ID } from "./constants.js";
+import { handleHotUpdate } from "./hooks/handle-hot-update.js";
+import { resolveId } from "./hooks/resolve-id.js";
+import { transformIndexHtml } from "./hooks/transform-index-html.js";
+import { transform } from "./hooks/transform.js";
 import type { KasstorPluginOptions } from "./types";
 
 export type { KasstorPluginOptions };
@@ -35,70 +34,6 @@ const getClientCode = await readFile(
   resolve(__dirname, "./get-client-code.js"),
   "utf-8"
 );
-
-/**
- * Given a module node, returns its absolute file path if possible
- */
-const moduleNodeToFilePath = (node?: ModuleNode | null): string | null => {
-  if (!node) {
-    return null;
-  }
-  if (node.file) {
-    return node.file;
-  }
-  if (node.id && node.id.startsWith("/@fs/")) {
-    return node.id.replace("/@fs/", "");
-  }
-  if (node.id && node.id.startsWith("file://")) {
-    return node.id.replace("file://", "");
-  }
-  return node.id ?? null;
-};
-
-/**
- * Walk up the importer graph to find all modules that match componentFilePattern.
- * Returns an array of module file paths (absolute) for component modules.
- */
-const findReferencingComponentModules = (
-  startNode: ModuleNode | null,
-  componentFilePattern: RegExp
-): string[] => {
-  if (!startNode) {
-    return [];
-  }
-  const visited = new Set<ModuleNode>();
-  const queue: ModuleNode[] = [startNode];
-  const result = new Set<string>();
-
-  while (queue.length) {
-    const node = queue.shift();
-    if (!node || visited.has(node)) {
-      continue;
-    }
-    visited.add(node);
-
-    // If this node represents a component module, record it
-    const filePath = moduleNodeToFilePath(node);
-    if (filePath && componentFilePattern.test(filePath)) {
-      result.add(filePath);
-      // do not need to traverse its importers further for this path
-    } else {
-      // otherwise enqueue importers
-      const importers = node.importers ?? new Set();
-      for (const importer of importers) {
-        if (!visited.has(importer)) {
-          queue.push(importer);
-        }
-      }
-    }
-  }
-
-  return Array.from(result);
-};
-
-// Virtual module ID for the HMR client code
-const VIRTUAL_MODULE_ID = "virtual:lit-refresh-client";
-const RESOLVED_VIRTUAL_MODULE_ID = "\0" + VIRTUAL_MODULE_ID;
 
 /**
  * Creates a Vite plugin that enables fast refresh for Lit components.
@@ -143,89 +78,6 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
     return "unknown";
   };
 
-  /**
-   * Parse a component module source and extract the declared tag name from
-   * @Component decorator or from customElements.define calls.
-   */
-  const extractTagNameFromSource = (source: string): string | null => {
-    // Try to find @Component({... tag: "my-tag" ...})
-    const compRegex = /@Component\s*\(\s*\{[\s\S]*?tag\s*:\s*["']([^"']+)["']/m;
-    const compMatch = source.match(compRegex);
-    if (compMatch) {
-      return compMatch[1];
-    }
-
-    // Fallback: customElements.define('my-tag', ...)
-    const defineRegex = /customElements\.define\s*\(\s*["']([^"']+)["']/m;
-    const defineMatch = source.match(defineRegex);
-    if (defineMatch) {
-      return defineMatch[1];
-    }
-
-    return null;
-  };
-
-  /**
-   * Given a scss file absolute path and the dev server, return all component tag names
-   * that (directly or indirectly) import that scss file by inspecting the module graph
-   * and parsing component module sources to extract the tag name.
-   */
-  const findReferencingTags = async (
-    scssPath: string,
-    server: ViteDevServer
-  ): Promise<string[]> => {
-    // Try to get the module node for the scss path
-    // The module id in the graph is often the absolute file path or '/@fs/abs/path'
-    let node = server.moduleGraph.getModuleById(scssPath) as
-      | ModuleNode
-      | null
-      | undefined;
-    if (!node) {
-      // try with /@fs/ prefix
-      node = server.moduleGraph.getModuleById(`/@fs/${scssPath}`) as
-        | ModuleNode
-        | null
-        | undefined;
-    }
-    if (!node) {
-      // try to search all modules and match file
-      for (const mod of server.moduleGraph.urlToModuleMap?.values() ?? []) {
-        const file = moduleNodeToFilePath(mod as ModuleNode);
-        if (file === scssPath) {
-          node = mod as ModuleNode;
-          break;
-        }
-      }
-    }
-
-    if (!node) {
-      return [];
-    }
-
-    const componentModulePaths = findReferencingComponentModules(
-      node,
-      componentFilePattern
-    );
-    const tags = new Set<string>();
-
-    for (const compPath of componentModulePaths) {
-      try {
-        const code = await readFile(compPath, "utf-8");
-        const tag = extractTagNameFromSource(code);
-        if (tag) {
-          tags.add(tag);
-        }
-      } catch (e) {
-        // ignore read errors
-        server.config.logger.warn(
-          `[lit-refresh] Could not read module ${compPath}: ${e}`
-        );
-      }
-    }
-
-    return Array.from(tags);
-  };
-
   return {
     name: "vite-plugin-lit-refresh",
 
@@ -255,26 +107,17 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
 
     /**
      * Resolve the virtual module ID.
+     *
      * Only applies in dev server.
      */
     resolveId(id: string) {
-      // Only works for dev server
-      if (!isDevServer) {
-        return null;
-      }
-
-      if (id === VIRTUAL_MODULE_ID) {
-        return RESOLVED_VIRTUAL_MODULE_ID;
-      }
-      if (id === "virtual:lit-refresh-handler") {
-        return "\0virtual:lit-refresh-handler";
-      }
-      return null;
+      return resolveId(id, isDevServer);
     },
 
     /**
-     * Load the virtual module with client-side HMR code
-     * Only applies in dev server
+     * Load the virtual module with client-side HMR code.
+     *
+     * Only applies in dev server.
      */
     load(id: string) {
       // Only works for dev server
@@ -292,49 +135,21 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
     },
 
     /**
-     * Transform the HTML to import our virtual module(s)
+     * Transform the HTML to import our virtual module(s).
+     *
      * Only applies in dev server.
      */
     transformIndexHtml() {
-      // Only works for dev server
-      if (!isDevServer) {
-        return undefined;
-      }
-
-      return [
-        {
-          tag: "script",
-          attrs: { type: "module", src: `/@id/__x00__${VIRTUAL_MODULE_ID}` },
-          injectTo: "head-prepend"
-        }
-      ];
+      return transformIndexHtml(isDevServer);
     },
 
     /**
-     * Transform source code to replace private fields with public fields in dev mode
+     * Transform source code to replace private fields with public fields in dev mode.
+     *
      * Only applies in dev server.
      */
     transform(code: string) {
-      // Only works for dev server
-      if (!hmrForComponent || !isDevServer) {
-        return null;
-      }
-
-      // Check if the code contains private fields
-      if (!/#[a-zA-Z_$][a-zA-Z0-9_$]*/.test(code)) {
-        return null;
-      }
-
-      const transformed = transformPrivateFieldsToPublic(code);
-
-      if (transformed === code) {
-        return null;
-      }
-
-      return {
-        code: transformed,
-        map: null
-      };
+      return transform({ code, hmrForComponent, isDevServer });
     },
 
     /**
@@ -409,52 +224,15 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
     /**
      * Handle HMR updates - prevent full page reload for matching files
      */
-    async handleHotUpdate(ctx: HmrContext) {
-      const { file, server } = ctx;
-
-      const hmrIsDisabled =
-        hmr === false || (!hmrForComponent && !hmrForStyles);
-      const fileType = getFileType(file);
-
-      if (hmrIsDisabled || fileType === "unknown") {
-        // Let Vite handle other files normally
-        return undefined;
-      }
-
-      if (
-        (fileType === "component" && !hmrForComponent) ||
-        (fileType === "scss" && !hmrForStyles)
-      ) {
-        // Let Vite handle other files normally
-        return undefined;
-      }
-
-      // Normalize the file path
-      const normalizedPath = posix.join(
-        "/",
-        relative(server.config.root, file)
-      );
-
-      // Compute tags when scss changed
-      let tags: string[] = [];
-      if (fileType === "scss") {
-        tags = await findReferencingTags(file, server);
-      }
-
-      server.ws.send({
-        type: "custom",
-        event: "lit-refresh:update",
-        data: {
-          file: normalizedPath,
-          fileType,
-          tags,
-          timestamp: Date.now(),
-          debug
-        }
+    handleHotUpdate(ctx: HmrContext) {
+      return handleHotUpdate({
+        ctx,
+        componentFilePattern,
+        debug,
+        getFileType,
+        hmrForComponent,
+        hmrForStyles
       });
-
-      // Return empty array to prevent default HMR behavior (full reload)
-      return [];
     }
   };
 }
