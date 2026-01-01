@@ -20,6 +20,10 @@ export interface KasstorPluginOptions {
    * transformed to public fields (__field), enabling proxy-based HMR for class
    * instances. Without this, HMR for class instances is not possible when they
    * use private fields.
+   *
+   * Known limitations for HMR in components:
+   *   - The state of the render is destroyed and reconstructed during HMR.
+   *   - The `willUpdate` method is not properly updated on components when HMR is enabled.
    */
   hmr?:
     | boolean
