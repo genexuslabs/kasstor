@@ -2,12 +2,12 @@ import type { ModuleNode } from "vite";
 import { moduleNodeToFilePath } from "./module-node-to-file-path.js";
 
 /**
- * Walk up the importer graph to find all modules that match componentFilePattern.
+ * Walk up the importer graph to find all modules that match includedComponentPaths.
  * Returns an array of module file paths (absolute) for component modules.
  */
 export const findReferencingComponentModules = (
   startNode: ModuleNode | null,
-  componentFilePattern: RegExp
+  includedComponentPaths: RegExp[]
 ): string[] => {
   if (!startNode) {
     return [];
@@ -25,7 +25,11 @@ export const findReferencingComponentModules = (
 
     // If this node represents a component module, record it
     const filePath = moduleNodeToFilePath(node);
-    if (filePath && componentFilePattern.test(filePath)) {
+
+    if (
+      filePath &&
+      includedComponentPaths.some(pattern => pattern.test(filePath))
+    ) {
       result.add(filePath);
       // do not need to traverse its importers further for this path
     } else {
@@ -41,3 +45,4 @@ export const findReferencingComponentModules = (
 
   return Array.from(result);
 };
+

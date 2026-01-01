@@ -3,15 +3,17 @@ import { join } from "path";
 import { normalizePath } from "./normalize-path.js";
 
 /**
- * Find Lit component files in the specified directory
+ * Find component files in the specified directory
  */
-export const findLitComponents = async (options: {
-  excludedPaths: string[];
+export const findComponents = async (options: {
+  excludedPaths: RegExp | RegExp[];
   includedPaths: RegExp | RegExp[];
   pattern: string;
 }): Promise<string[]> => {
   const { excludedPaths, includedPaths, pattern } = options;
-  const excludedNormalizedPaths = excludedPaths.map(normalizePath);
+  const excludedPathsArray = Array.isArray(excludedPaths)
+    ? excludedPaths
+    : [excludedPaths];
 
   const filesAndDirs = await readdir(pattern, {
     recursive: true,
@@ -35,9 +37,7 @@ export const findLitComponents = async (options: {
         // If it's included in some of the includedPaths patterns
         includedPathsArray.some(pattern => fullFilePath.match(pattern)) &&
         // And it's not excluded by any of the excludedPaths patterns
-        excludedNormalizedPaths.every(
-          substring => !fullFilePath.includes(substring)
-        )
+        excludedPathsArray.every(pattern => !fullFilePath.match(pattern))
       ) {
         files.push(fullFilePath);
       }

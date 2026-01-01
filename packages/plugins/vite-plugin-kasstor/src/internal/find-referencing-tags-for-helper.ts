@@ -19,11 +19,11 @@ export interface ComponentReference {
  * including transitive imports (e.g., helper -> utility -> component).
  */
 export const findReferencingTagsForHelper = async (options: {
-  componentFilePattern: RegExp;
+  includedComponentPaths: RegExp[];
   helperPath: string;
   server: ViteDevServer;
 }): Promise<ComponentReference[]> => {
-  const { componentFilePattern, helperPath, server } = options;
+  const { includedComponentPaths, helperPath, server } = options;
 
   // Try to get the module node for the helper path
   // The module id in the graph is often the absolute file path or '/@fs/abs/path'
@@ -55,7 +55,7 @@ export const findReferencingTagsForHelper = async (options: {
 
   const componentModulePaths = findReferencingComponentModules(
     node,
-    componentFilePattern
+    includedComponentPaths
   );
   const references: ComponentReference[] = [];
 

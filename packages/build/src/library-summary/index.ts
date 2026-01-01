@@ -1,7 +1,7 @@
 import { readFile } from "fs/promises";
 import { relative } from "path";
 import { extractComponentDefinition } from "./internal/extract-component-definition.js";
-import { findLitComponents } from "./internal/find-lit-components.js";
+import { findComponents } from "./internal/find-lit-components.js";
 import { ComponentValidator } from "./internal/validate-components.js";
 import type { ComponentDefinition, LibraryComponents } from "./types";
 
@@ -11,7 +11,7 @@ import type { ComponentDefinition, LibraryComponents } from "./types";
 export const getLibraryComponents = async (options: {
   customDecoratorNames: string[] | undefined;
   defaultComponentAccess: ComponentDefinition["access"];
-  excludedPaths: string[] | undefined;
+  excludedPaths: RegExp | RegExp[] | undefined;
   excludedPublicMethods: string[] | undefined;
   includedPaths: RegExp | RegExp[];
   relativeComponentsSrcPath: string;
@@ -26,7 +26,7 @@ export const getLibraryComponents = async (options: {
   } = options;
 
   // Find all component files
-  const litFiles = await findLitComponents({
+  const litFiles = await findComponents({
     excludedPaths: excludedPaths ?? [],
     includedPaths,
     pattern: relativeComponentsSrcPath

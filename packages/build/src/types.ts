@@ -13,7 +13,7 @@ export type KasstorBuildOptions = {
    *
    * Exclusions take precedence over inclusions.
    */
-  excludedPaths?: string[];
+  excludedPaths?: RegExp | RegExp[];
 
   excludedPublicMethods?: string[];
 

@@ -8,6 +8,7 @@ import {
 import { findReferencingTagsForScss } from "../internal/find-referencing-tags-for-scss.js";
 import { getStringForLogger } from "../internal/get-string-for-logger.js";
 import { checkIfShouldInvalidateNextUpdate } from "../internal/invalidate-next-hmr-for-component.js";
+import type { KasstorFileType } from "../typings/internal-types.js";
 
 /**
  * Map to track operation start times for performance metrics
@@ -52,19 +53,19 @@ const registerListenerForPerformanceMetrics = (server: ViteDevServer) => {
  */
 export const handleHotUpdate = async (options: {
   ctx: HmrContext;
-  componentFilePattern: RegExp;
   debug: boolean | undefined;
-  getFileType: (filePath: string) => "unknown" | "component" | "scss";
+  getFileType: (filePath: string) => KasstorFileType;
   hmrForComponent: boolean;
   hmrForStyles: boolean;
+  includedComponentPaths: RegExp[];
 }) => {
   const {
     ctx,
-    componentFilePattern,
     debug,
     getFileType,
     hmrForComponent,
-    hmrForStyles
+    hmrForStyles,
+    includedComponentPaths
   } = options;
   const { file, server } = ctx;
 
@@ -95,7 +96,7 @@ export const handleHotUpdate = async (options: {
   // Check if the file is being used by a component
   if (fileType === "unknown") {
     componentsThatUsedTheUtility = await findReferencingTagsForHelper({
-      componentFilePattern,
+      includedComponentPaths,
       helperPath: file,
       server
     });
@@ -146,7 +147,7 @@ export const handleHotUpdate = async (options: {
   const tags: string[] =
     fileType === "scss"
       ? await findReferencingTagsForScss({
-          componentFilePattern,
+          includedComponentPaths,
           scssPath: file,
           server
         })

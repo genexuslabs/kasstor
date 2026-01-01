@@ -11,11 +11,11 @@ import { moduleNodeToFilePath } from "./module-node-to-file-path.js";
  * and parsing component module sources to extract the tag name.
  */
 export const findReferencingTagsForScss = async (options: {
-  componentFilePattern: RegExp;
+  includedComponentPaths: RegExp[];
   scssPath: string;
   server: ViteDevServer;
 }): Promise<string[]> => {
-  const { componentFilePattern, scssPath, server } = options;
+  const { includedComponentPaths, scssPath, server } = options;
 
   // Try to get the module node for the scss path
   // The module id in the graph is often the absolute file path or '/@fs/abs/path'
@@ -47,7 +47,7 @@ export const findReferencingTagsForScss = async (options: {
 
   const componentModulePaths = findReferencingComponentModules(
     node,
-    componentFilePattern
+    includedComponentPaths
   );
   const tags = new Set<string>();
 

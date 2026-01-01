@@ -1,20 +1,22 @@
-import { buildLibrary } from "@genexus/kasstor-build";
+import { buildLibrary, type KasstorBuildOptions } from "@genexus/kasstor-build";
 import { readFile } from "fs/promises";
-import { dirname, relative, resolve } from "path";
+import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
-import { normalizePath, type HmrContext, type Plugin } from "vite";
+import { type HmrContext, type Plugin } from "vite";
 
 import {
-  RESOLVED_VIRTUAL_CLIENT_HANDLERS_MODULE_ID,
-  RESOLVED_VIRTUAL_CLIENT_MODULE_ID
+  DEFAULT_COMPONENT_FILE_PATTERN,
+  DEFAULT_SCSS_FILE_PATTERN
 } from "./constants.js";
+import { configureServer } from "./hooks/configure-server.js";
 import { handleHotUpdate } from "./hooks/handle-hot-update.js";
+import { load } from "./hooks/load.js";
 import { resolveId } from "./hooks/resolve-id.js";
 import { transformIndexHtml } from "./hooks/transform-index-html.js";
 import { transform } from "./hooks/transform.js";
 import { getStringForLogger } from "./internal/get-string-for-logger.js";
-import { invalidateNextUpdateForComponents } from "./internal/invalidate-next-hmr-for-component.js";
-import type { KasstorPluginOptions } from "./types";
+import type { KasstorFileType } from "./typings/internal-types.js";
+import type { KasstorPluginOptions } from "./typings/types.js";
 
 export type { KasstorPluginOptions };
 
@@ -55,11 +57,48 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
   let isDevServer = false;
 
   const {
-    componentFilePattern = /\.lit\.ts$/,
     debug,
+    defaultComponentAccess,
+    excludedPaths = [],
+    excludedPublicMethods,
+    fileGeneration,
     hmr,
-    scssFilePattern = /\.scss$/
+    includedPaths
+    // insights
   } = options ?? {};
+
+  const allExcludedPaths = Array.isArray(excludedPaths)
+    ? excludedPaths
+    : [excludedPaths];
+  let includedComponentPaths: RegExp[] = [DEFAULT_COMPONENT_FILE_PATTERN];
+  let includedStylePaths: RegExp[] = [DEFAULT_SCSS_FILE_PATTERN];
+
+  if (includedPaths?.component) {
+    includedComponentPaths = Array.isArray(includedPaths.component)
+      ? includedPaths.component
+      : [includedPaths.component];
+  }
+  if (includedPaths?.styles) {
+    includedStylePaths = Array.isArray(includedPaths.styles)
+      ? includedPaths.styles
+      : [includedPaths.styles];
+  }
+
+  const kasstorBuildOptions: KasstorBuildOptions = {
+    defaultComponentAccess,
+    excludedPaths,
+    excludedPublicMethods,
+    fileGeneration: {
+      ...fileGeneration,
+
+      // TODO: Add support for incremental librarySummary when running
+      // the dev server
+      // At the moment, we won't regenerate the librarySummary on file
+      // changes, because it will only contain the processed file
+      librarySummary: false
+    },
+    includedPaths: includedComponentPaths
+  };
 
   const hmrForComponent =
     typeof hmr === "object" ? hmr.component !== false : hmr !== false;
@@ -73,11 +112,14 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
   /**
    * Determines the type of file that changed
    */
-  const getFileType = (filePath: string): "component" | "scss" | "unknown" => {
-    if (componentFilePattern.test(filePath)) {
+  const getFileType = (filePath: string): KasstorFileType => {
+    if (allExcludedPaths.some(pattern => pattern.test(filePath))) {
+      return "excluded";
+    }
+    if (includedComponentPaths.some(pattern => pattern.test(filePath))) {
       return "component";
     }
-    if (scssFilePattern.test(filePath)) {
+    if (includedStylePaths.some(pattern => pattern.test(filePath))) {
       return "scss";
     }
     return "unknown";
@@ -107,7 +149,8 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
      * In this case, we build all the types for the library
      */
     async buildStart(this) {
-      const { elapsedTime, updatedComponentDocs } = await buildLibrary();
+      const { elapsedTime, updatedComponentDocs } =
+        await buildLibrary(kasstorBuildOptions);
 
       if (updatedComponentDocs && updatedComponentDocs.length !== 0) {
         this.info(
@@ -131,18 +174,12 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
      * Only applies in dev server.
      */
     load(id: string) {
-      // Only works for dev server
-      if (!isDevServer) {
-        return null;
-      }
-
-      if (id === RESOLVED_VIRTUAL_CLIENT_MODULE_ID) {
-        return getClientCode;
-      }
-      if (id === RESOLVED_VIRTUAL_CLIENT_HANDLERS_MODULE_ID) {
-        return getClientHandlerModule;
-      }
-      return null;
+      return load({
+        getClientCode,
+        getClientHandlerModule,
+        id,
+        isDevServer
+      });
     },
 
     /**
@@ -171,76 +208,12 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
      * content for the changed files.
      */
     configureServer(server) {
-      // Watch for file changes using Vite's watcher
-      // This is independent of HMR and will execute even if HMR is disabled
-      return () => {
-        server.watcher.add(
-          server.config.root +
-            "/**/*" +
-            componentFilePattern.source.replace(/\$/, "")
-        );
-        server.watcher.add(
-          server.config.root +
-            "/**/*" +
-            scssFilePattern.source.replace(/\$/, "")
-        );
-
-        server.watcher.on("change", async (filePath: string) => {
-          const fileType = getFileType(filePath);
-
-          if (fileType !== "component") {
-            return;
-          }
-
-          try {
-            // Read the current file content
-            const currentContent = await readFile(filePath, "utf-8");
-
-            // Check if the content has changed since last time
-            const cachedContent = fileContentCache.get(filePath);
-            if (cachedContent === currentContent) {
-              // Content hasn't changed, skip buildLibrary
-              return;
-            }
-
-            // Update the cache with the new content
-            fileContentCache.set(filePath, currentContent);
-
-            // Content has changed, run buildLibrary
-            const { elapsedTime, updatedComponentDocs } = await buildLibrary({
-              // TODO: Add support for incremental librarySummary when running
-              // the dev server
-              fileGeneration: {
-                // At the moment, we won't regenerate the librarySummary on file
-                // changes, because it will only contain the processed file
-                librarySummary: false
-              },
-
-              // Only process the changed component file
-              includedPaths: [
-                new RegExp(
-                  normalizePath(relative(server.config.root, filePath))
-                )
-              ]
-            });
-
-            if (updatedComponentDocs && updatedComponentDocs.length > 0) {
-              // This will prevent a common issue, where the docs update of the
-              // component triggers and extra HMR update, so at the end of the
-              // day, the component is updated twice.
-              invalidateNextUpdateForComponents(updatedComponentDocs);
-
-              server.config.logger.info(
-                getStringForLogger("docs", updatedComponentDocs, elapsedTime)
-              );
-            }
-          } catch (error) {
-            server.config.logger.error(
-              `[kasstor] Error processing file ${filePath}: ${error}`
-            );
-          }
-        });
-      };
+      return configureServer({
+        fileContentCache,
+        getFileType,
+        kasstorBuildOptions,
+        server
+      });
     },
 
     /**
@@ -249,11 +222,11 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
     handleHotUpdate(ctx: HmrContext) {
       return handleHotUpdate({
         ctx,
-        componentFilePattern,
         debug,
         getFileType,
         hmrForComponent,
-        hmrForStyles
+        hmrForStyles,
+        includedComponentPaths
       });
     }
   };
