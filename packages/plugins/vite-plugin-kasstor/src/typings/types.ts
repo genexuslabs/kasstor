@@ -76,8 +76,8 @@ export type KasstorPluginOptions = {
     | "dev-only"
     | "always"
     | {
-        accessibility: boolean | "dev-only" | "always";
-        performance: boolean | "dev-only" | "always";
+        accessibility?: boolean | "dev-only" | "always";
+        performance?: boolean | "dev-only" | "always";
       };
 } & Pick<
   KasstorBuildOptions,

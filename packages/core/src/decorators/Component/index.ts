@@ -57,6 +57,12 @@ export const Component = <
     }
 
     if (existing && (existing as any) !== target) {
+      // In dev mode with HMR, return the tag right away without prompting the
+      // warning, because it was provoked by HMR
+      // if (DEV_MODE && !IS_SERVER && globalThis.kasstorCoreHmrComponent) {
+      //   return existing as any;
+      // }
+
       console.warn(
         `The tag name "${tag}" is already defined by the class "${existing.name}". The current tag won't be redefined by the class "${target.name}" and the "Component" decorator implementation will be ignored.
 In some cases, this error can happen due to HMR (Hot Module Replacement) issues.`
@@ -166,6 +172,39 @@ export abstract class SSRLitElement extends LitElement {
       // Call the original implementation
       willUpdateOriginalImplementation.call(this, changedProperties);
     };
+
+    // Performance insights
+    if (DEV_MODE && !IS_SERVER && globalThis.kasstorCoreInsightsPerformance) {
+      const originalUpdate = this.update;
+
+      this.update = function (changedProperties: PropertyValues) {
+        const componentName = this.constructor.name;
+        const changes = [];
+
+        for (const [name, oldValue] of changedProperties) {
+          const newValue = (this as any)[name];
+          changes.push({
+            property: name,
+            oldValue: oldValue,
+            newValue: newValue,
+            changed: oldValue !== newValue
+          });
+        }
+
+        console.log(
+          {
+            anchorRef: this,
+            constructorName: componentName,
+            anchorTagName: this.tagName.toLowerCase(),
+            changes: changes,
+            timeStamp: new Date()
+          },
+          this
+        );
+
+        return originalUpdate.call(this, changedProperties);
+      };
+    }
 
     // TODO: Add an additional flag for checking when the vite server is on
     // HMR support for dev mode only

@@ -42,6 +42,16 @@ const getClientCode = await readFile(
   "utf-8"
 );
 
+const getInsightsValue = (insights: boolean | "dev-only" | "always") =>
+  insights === "always"
+    ? {
+        "DEV_MODE && !IS_SERVER && globalThis.kasstorCoreInsightsPerformance": true
+      }
+    : {
+        "globalThis.kasstorCoreInsightsPerformance":
+          insights === "dev-only" ? true : insights
+      };
+
 /**
  * Creates a Vite plugin that enables fast refresh for Lit components.
  *
@@ -63,8 +73,8 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
     excludedPublicMethods,
     fileGeneration,
     hmr,
-    includedPaths
-    // insights
+    includedPaths,
+    insights
   } = options ?? {};
 
   const allExcludedPaths = Array.isArray(excludedPaths)
@@ -72,6 +82,9 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
     : [excludedPaths];
   let includedComponentPaths: RegExp[] = [DEFAULT_COMPONENT_FILE_PATTERN];
   let includedStylePaths: RegExp[] = [DEFAULT_SCSS_FILE_PATTERN];
+
+  const insightsPerformance =
+    (typeof insights === "object" ? insights.performance : insights) ?? false;
 
   if (includedPaths?.component) {
     includedComponentPaths = Array.isArray(includedPaths.component)
@@ -138,7 +151,8 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
 
       return {
         define: {
-          "globalThis.kasstorCoreHmrComponent": hmrForComponent
+          "globalThis.kasstorCoreHmrComponent": hmrForComponent,
+          ...getInsightsValue(insightsPerformance)
         }
       };
     },

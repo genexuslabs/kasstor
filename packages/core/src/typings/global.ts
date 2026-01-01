@@ -87,6 +87,13 @@ declare global {
     | undefined;
 
   /**
+   * Indicates whether the insights module for performance in enabled.
+   *
+   * When enabled, re-renders for components are visually highlighted.
+   */
+  var kasstorCoreInsightsPerformance: boolean | undefined;
+
+  /**
    * Set of custom element tag names that have been loaded/registered.
    * This is used to avoid loading the same element multiple times.
    */
