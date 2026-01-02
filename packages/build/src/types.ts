@@ -60,3 +60,8 @@ export type KasstorBuildOptions = {
   relativeComponentsSrcPath?: string;
 };
 
+export type KasstorBuildComponentData = {
+  component: ComponentDefinition;
+  fileContent: string;
+  filePath: string;
+};

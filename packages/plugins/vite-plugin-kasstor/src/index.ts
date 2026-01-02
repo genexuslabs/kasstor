@@ -101,15 +101,7 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
     defaultComponentAccess,
     excludedPaths,
     excludedPublicMethods,
-    fileGeneration: {
-      ...fileGeneration,
-
-      // TODO: Add support for incremental librarySummary when running
-      // the dev server
-      // At the moment, we won't regenerate the librarySummary on file
-      // changes, because it will only contain the processed file
-      librarySummary: false
-    },
+    fileGeneration,
     includedPaths: includedComponentPaths
   };
 
@@ -163,8 +155,10 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
      * In this case, we build all the types for the library
      */
     async buildStart(this) {
-      const { elapsedTime, updatedComponentDocs } =
-        await buildLibrary(kasstorBuildOptions);
+      const { elapsedTime, updatedComponentDocs } = await buildLibrary(
+        kasstorBuildOptions,
+        true
+      );
 
       if (updatedComponentDocs && updatedComponentDocs.length !== 0) {
         this.info(

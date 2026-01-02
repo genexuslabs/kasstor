@@ -1,8 +1,8 @@
+import { buildLibrary, type KasstorBuildOptions } from "@genexus/kasstor-build";
 import { readFile } from "fs/promises";
 import { relative } from "path";
 import { normalizePath, type ViteDevServer } from "vite";
 
-import { buildLibrary, type KasstorBuildOptions } from "@genexus/kasstor-build";
 import { getStringForLogger } from "../internal/get-string-for-logger.js";
 import { invalidateNextUpdateForComponents } from "../internal/invalidate-next-hmr-for-component.js";
 import type { KasstorFileType } from "../typings/internal-types";
@@ -50,14 +50,17 @@ export const configureServer = (options: {
         fileContentCache.set(filePath, currentContent);
 
         // Content has changed, run buildLibrary
-        const { elapsedTime, updatedComponentDocs } = await buildLibrary({
-          ...kasstorBuildOptions,
+        const { elapsedTime, updatedComponentDocs } = await buildLibrary(
+          {
+            ...kasstorBuildOptions,
 
-          // Only process the changed component file
-          includedPaths: [
-            new RegExp(normalizePath(relative(server.config.root, filePath)))
-          ]
-        });
+            // Only process the changed component file
+            includedPaths: [
+              new RegExp(normalizePath(relative(server.config.root, filePath)))
+            ]
+          },
+          true
+        );
 
         if (updatedComponentDocs && updatedComponentDocs.length > 0) {
           // This will prevent a common issue, where the docs update of the

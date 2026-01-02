@@ -1,4 +1,6 @@
 import { relative } from "path";
+
+import type { KasstorBuildComponentData } from "../types";
 import { extractComponentDefinition } from "./internal/extract-component-definition.js";
 import { findComponents } from "./internal/find-lit-components.js";
 import { ComponentValidator } from "./internal/validate-components.js";
@@ -30,13 +32,7 @@ export const getLibraryComponents = async (options: {
   excludedPublicMethods: string[] | undefined;
   includedPaths: RegExp | RegExp[];
   relativeComponentsSrcPath: string;
-}): Promise<
-  {
-    component: ComponentDefinition;
-    fileContent: string;
-    filePath: string;
-  }[]
-> => {
+}): Promise<KasstorBuildComponentData[]> => {
   const {
     customDecoratorNames,
     defaultComponentAccess,
@@ -53,11 +49,7 @@ export const getLibraryComponents = async (options: {
     pattern: relativeComponentsSrcPath
   });
 
-  const componentsAndContents: {
-    component: ComponentDefinition;
-    fileContent: string;
-    filePath: string;
-  }[] = [];
+  const componentsAndContents: KasstorBuildComponentData[] = [];
   const validator = new ComponentValidator();
 
   // Process files sequentially to validate incrementally
