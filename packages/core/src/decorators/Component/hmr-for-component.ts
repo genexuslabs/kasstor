@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-import type { SSRLitElement } from "./index.js";
+import type { KasstorElement } from "./index.js";
 
 const initializeGlobalVariables = () => {
   globalThis.kasstorCoreHmrData ??= {
@@ -73,7 +73,7 @@ function replacePrototypesWithProxies(instance: HTMLElement) {
   }
 }
 
-export const replaceConstructorWithProxy = (classRef: SSRLitElement) => {
+export const replaceConstructorWithProxy = (classRef: KasstorElement) => {
   const { proxiesForTagNames, tagNameForClasses } = initializeGlobalVariables();
   const tagName = tagNameForClasses.get(classRef.constructor);
 
@@ -92,7 +92,7 @@ export const replaceConstructorWithProxy = (classRef: SSRLitElement) => {
  * Registers a web component class. Triggers a hot replacement if the
  * class was already registered before.
  */
-export function register(tagName: string, classRef: SSRLitElement) {
+export function register(tagName: string, classRef: KasstorElement) {
   const { proxiesForTagNames, tagNameForClasses } = initializeGlobalVariables();
   const existing = proxiesForTagNames.get(tagName);
 

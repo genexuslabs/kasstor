@@ -18,7 +18,7 @@ const sendPerformanceMetric = (
 };
 
 const replaceStyles = (css: string, tags: string[], operationId: string) => {
-  // Prefer the global registry provided by the library (populated by SSRLitElement)
+  // Prefer the global registry provided by the library (populated by KasstorElement)
   const kasstorCoreRegisteredInstances =
     typeof globalThis !== "undefined"
       ? globalThis.kasstorCoreRegisteredInstances

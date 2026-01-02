@@ -1,4 +1,4 @@
-export { Component, SSRLitElement } from "./decorators/Component/index.js";
+export { Component, KasstorElement } from "./decorators/Component/index.js";
 export type {
   ComponentOptions,
   ComponentShadowRootOptions

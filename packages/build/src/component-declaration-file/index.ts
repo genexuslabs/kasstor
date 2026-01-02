@@ -29,7 +29,7 @@ export const getComponentDeclaration = (components: LibraryComponents) =>
 //     styles,
 //     tag: "my-element"
 //   })
-//   export class MyElement extends SSRLitElement {}
+//   export class MyElement extends KasstorElement {}
 //`
     : `${getImportPaths(components)}
 

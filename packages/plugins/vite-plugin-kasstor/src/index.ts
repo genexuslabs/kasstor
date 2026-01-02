@@ -135,7 +135,7 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
     // Ensure this plugin runs before Vite's built-in HMR
     enforce: "pre",
 
-    // Define import.meta properties for HMR flags, so the SSRLitElement class
+    // Define import.meta properties for HMR flags, so the KasstorElement class
     // decides if adds supports for HMR
     config(_, env) {
       isDevServer = env.command === "serve";

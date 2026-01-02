@@ -13,7 +13,7 @@ import {
 import { registerCustomElementLoaders } from "../../../bootstrapping/register-custom-element-loaders/index.js";
 import {
   Component,
-  SSRLitElement
+  KasstorElement
 } from "../../../decorators/Component/index.js";
 import { lazyLoad } from "../index.js";
 
@@ -21,7 +21,7 @@ import { lazyLoad } from "../index.js";
  * @fires event1
  */
 @Component({ tag: "lazy-load-directive-component-test-1" })
-class LazyLoadDirectiveComponentTest extends SSRLitElement {
+class LazyLoadDirectiveComponentTest extends KasstorElement {
   @property() templateTagName = "test-custom-element-1";
 
   @property({ type: Boolean }) condition: boolean = false;
@@ -36,7 +36,7 @@ class LazyLoadDirectiveComponentTest extends SSRLitElement {
 }
 
 @Component({ tag: "lazy-load-directive-component-test-2" })
-class LazyLoadDirectiveComponentTest2 extends SSRLitElement {
+class LazyLoadDirectiveComponentTest2 extends KasstorElement {
   @property({ type: Boolean }) condition: boolean = false;
 
   override render() {
@@ -51,7 +51,7 @@ class LazyLoadDirectiveComponentTest2 extends SSRLitElement {
 }
 
 @Component({ tag: "lazy-load-directive-component-test-3" })
-class LazyLoadDirectiveComponentTest3 extends SSRLitElement {
+class LazyLoadDirectiveComponentTest3 extends KasstorElement {
   override render() {
     return html`<test-lazy-load-component-3
       ${lazyLoad()}
@@ -272,3 +272,4 @@ describe("[Directives]", () => {
     );
   });
 });
+

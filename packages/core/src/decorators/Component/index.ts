@@ -31,7 +31,7 @@ const DEFAULT_SHADOW_ROOT_DELEGATE_FOCUS =
  *   tag: "my-element",
  *   styles
  * })
- * class MyElement extends SSRLitElement {
+ * class MyElement extends KasstorElement {
  *   render() {
  *     return html`
  *     `;
@@ -41,7 +41,7 @@ const DEFAULT_SHADOW_ROOT_DELEGATE_FOCUS =
  */
 export const Component = <
   LibraryPrefix extends `${string}-`,
-  T extends typeof SSRLitElement
+  T extends typeof KasstorElement
 >(
   options: ComponentOptions<LibraryPrefix>
 ) =>
@@ -146,7 +146,7 @@ const componentWasServerSideRendered = (element: LitElement) =>
  * Base class for Chameleon components that extends the LitElement. This class
  * provides extra utilities to support SSR in the components.
  */
-export abstract class SSRLitElement extends LitElement {
+export abstract class KasstorElement extends LitElement {
   #serverSideRendered: boolean;
 
   protected globalStyles: CSSStyleSheet | undefined;

@@ -5,7 +5,7 @@ import type {
   RegisteredLibraries,
   RegisteredLoaderInfo
 } from "../bootstrapping/typings/types";
-import type { SSRLitElement } from "../decorators/Component/index";
+import type { KasstorElement } from "../decorators/Component/index";
 
 declare global {
   // TODO: Add support to this
@@ -77,12 +77,12 @@ declare global {
             originalProxy: Function;
             // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
             currentProxy: Function;
-            originalClass: SSRLitElement;
-            currentClass: SSRLitElement;
+            originalClass: KasstorElement;
+            currentClass: KasstorElement;
           }
         >;
 
-        tagNameForClasses: Map<SSRLitElement, string>;
+        tagNameForClasses: Map<KasstorElement, string>;
       }
     | undefined;
 
@@ -100,13 +100,13 @@ declare global {
   var kasstorCoreLoadedCustomElements: Set<CustomElementTagNames> | undefined;
 
   /**
-   * Set of registered instances of SSRLitElement components.
+   * Set of registered instances of KasstorElement components.
    * This is used for managing component instances globally.
    *
    * Only available in dev mode.
    */
   var kasstorCoreRegisteredInstances:
-    | Map<string, Set<SSRLitElement>>
+    | Map<string, Set<KasstorElement>>
     | undefined;
 }
 

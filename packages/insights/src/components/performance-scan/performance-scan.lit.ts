@@ -1,6 +1,6 @@
 import {
   Component,
-  SSRLitElement
+  KasstorElement
 } from "@genexus/kasstor-core/decorators/component.js";
 import { html } from "lit";
 import { property } from "lit/decorators/property.js";
@@ -31,7 +31,7 @@ const renderedItems: PerformanceScanRenderedItems = IS_SERVER
   styles,
   tag: "kst-performance-scan"
 })
-export class KstPerformanceScan extends SSRLitElement {
+export class KstPerformanceScan extends KasstorElement {
   /**
    * `true` to show the FPS
    */

@@ -1,6 +1,6 @@
 import {
   Component,
-  SSRLitElement
+  KasstorElement
 } from "@genexus/kasstor-core/decorators/component.js";
 import { html, LitElement, nothing } from "lit";
 import { property } from "lit/decorators/property.js";
@@ -14,7 +14,7 @@ import styles from "./performance-scan-item.scss?inline";
   styles,
   tag: "kst-performance-scan-item"
 })
-export class KstPerformanceScanItem extends SSRLitElement {
+export class KstPerformanceScanItem extends KasstorElement {
   /**
    * Specifies a reference for the scanned element.
    */

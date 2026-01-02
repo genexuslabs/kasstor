@@ -1,6 +1,6 @@
 import {
   Component,
-  SSRLitElement
+  KasstorElement
 } from "@genexus/kasstor-core/decorators/component.js";
 import { computed, signal } from "alien-signals";
 import { html } from "lit";
@@ -34,7 +34,7 @@ const checkSpanValues = (spans: HTMLSpanElement[], values: string[]) =>
   expect(spans.map(span => span.textContent)).toEqual(values);
 
 @Component({ tag: "watch-directive-component-test" })
-class WatchDirectiveComponentTest extends SSRLitElement {
+class WatchDirectiveComponentTest extends KasstorElement {
   @property({ type: Boolean }) useComputed = false;
 
   delayUpdateForSignal = false;

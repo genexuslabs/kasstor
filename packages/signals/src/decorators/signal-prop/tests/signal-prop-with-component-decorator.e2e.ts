@@ -1,6 +1,6 @@
 import {
   Component,
-  SSRLitElement
+  KasstorElement
 } from "@genexus/kasstor-core/decorators/component.js";
 import { html } from "lit";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
@@ -11,7 +11,7 @@ import { SignalProp } from "../index.js";
 let renderCount = 0;
 
 @Component({ tag: "signal-prop-component-test" })
-class SignalPropComponentTest extends SSRLitElement {
+class SignalPropComponentTest extends KasstorElement {
   declare $average: KasstorSignalState<SignalPropComponentTest["average"]>;
   declare $count: KasstorSignalState<SignalPropComponentTest["count"]>;
 
