@@ -1,5 +1,6 @@
 import { readdir, readFile } from "fs/promises";
 import { join } from "path";
+import { sortByFilePath } from "../../internal/sort-by-file-path.js";
 import { normalizePath } from "./normalize-path.js";
 
 /**
@@ -49,8 +50,6 @@ export const findComponents = async (options: {
     }
   }
 
-  return (await Promise.all(files)).sort((a, b) =>
-    a.filePath <= b.filePath ? -1 : 0
-  );
+  return sortByFilePath(await Promise.all(files));
 };
 
