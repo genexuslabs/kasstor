@@ -1,4 +1,4 @@
-import { readdir } from "fs/promises";
+import { readdir, readFile } from "fs/promises";
 import { join } from "path";
 import { normalizePath } from "./normalize-path.js";
 
@@ -9,7 +9,7 @@ export const findComponents = async (options: {
   excludedPaths: RegExp | RegExp[];
   includedPaths: RegExp | RegExp[];
   pattern: string;
-}): Promise<string[]> => {
+}): Promise<{ filePath: string; fileContent: string }[]> => {
   const { excludedPaths, includedPaths, pattern } = options;
   const excludedPathsArray = Array.isArray(excludedPaths)
     ? excludedPaths
@@ -20,7 +20,7 @@ export const findComponents = async (options: {
     withFileTypes: true
   });
 
-  const files: string[] = [];
+  const files: Promise<{ filePath: string; fileContent: string }>[] = [];
   const includedPathsArray = Array.isArray(includedPaths)
     ? includedPaths
     : [includedPaths];
@@ -39,11 +39,18 @@ export const findComponents = async (options: {
         // And it's not excluded by any of the excludedPaths patterns
         excludedPathsArray.every(pattern => !fullFilePath.match(pattern))
       ) {
-        files.push(fullFilePath);
+        files.push(
+          readFile(fullFilePath, "utf-8").then(fileContent => ({
+            filePath: fullFilePath,
+            fileContent
+          }))
+        );
       }
     }
   }
 
-  return files.sort((a, b) => (a <= b ? -1 : 0));
+  return (await Promise.all(files)).sort((a, b) =>
+    a.filePath <= b.filePath ? -1 : 0
+  );
 };
 

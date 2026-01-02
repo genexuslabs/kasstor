@@ -1,9 +1,24 @@
-import { readFile } from "fs/promises";
 import { relative } from "path";
 import { extractComponentDefinition } from "./internal/extract-component-definition.js";
 import { findComponents } from "./internal/find-lit-components.js";
 import { ComponentValidator } from "./internal/validate-components.js";
-import type { ComponentDefinition, LibraryComponents } from "./types";
+import type { ComponentDefinition } from "./types";
+
+const filterExcludedPublicMethods = (
+  component: ComponentDefinition,
+  excludedPublicMethods: string[] | undefined
+) => {
+  if (excludedPublicMethods && component.methods) {
+    component.methods = component.methods.filter(
+      method => !excludedPublicMethods.includes(method.name)
+    );
+
+    // Remove methods array if empty
+    if (component.methods.length === 0) {
+      component.methods = undefined;
+    }
+  }
+};
 
 /**
  * Generate a library summary by analyzing all components in a directory
@@ -15,7 +30,13 @@ export const getLibraryComponents = async (options: {
   excludedPublicMethods: string[] | undefined;
   includedPaths: RegExp | RegExp[];
   relativeComponentsSrcPath: string;
-}): Promise<LibraryComponents> => {
+}): Promise<
+  {
+    component: ComponentDefinition;
+    fileContent: string;
+    filePath: string;
+  }[]
+> => {
   const {
     customDecoratorNames,
     defaultComponentAccess,
@@ -26,21 +47,18 @@ export const getLibraryComponents = async (options: {
   } = options;
 
   // Find all component files
-  const litFiles = await findComponents({
+  const filePathAndContents = await findComponents({
     excludedPaths: excludedPaths ?? [],
     includedPaths,
     pattern: relativeComponentsSrcPath
   });
 
-  const components: LibraryComponents = [];
+  const componentsAndContents: {
+    component: ComponentDefinition;
+    fileContent: string;
+    filePath: string;
+  }[] = [];
   const validator = new ComponentValidator();
-
-  const filePathAndContents = await Promise.all(
-    litFiles.map(async filePath => ({
-      filePath,
-      fileContent: await readFile(filePath, "utf-8")
-    }))
-  );
 
   // Process files sequentially to validate incrementally
   for (const { filePath, fileContent } of filePathAndContents) {
@@ -59,21 +77,12 @@ export const getLibraryComponents = async (options: {
         const { component, sourceFile, classDeclaration } = result;
 
         // Filter out excluded public methods if specified
-        if (excludedPublicMethods && component.methods) {
-          component.methods = component.methods.filter(
-            method => !excludedPublicMethods.includes(method.name)
-          );
-
-          // Remove methods array if empty
-          if (component.methods.length === 0) {
-            component.methods = undefined;
-          }
-        }
+        filterExcludedPublicMethods(component, excludedPublicMethods);
 
         // Validate component incrementally (throws if errors found)
         validator.validateAndAdd(component, sourceFile, classDeclaration);
 
-        components.push(component);
+        componentsAndContents.push({ component, fileContent, filePath });
       }
     } catch (error) {
       // Re-throw validation errors, warn on other errors
@@ -83,10 +92,10 @@ export const getLibraryComponents = async (options: {
       ) {
         throw error;
       }
-      console.warn(`Failed to process file ${filePath}:`, error);
+      console.warn(`[kasstor] Failed to process file ${filePath}:`, error);
     }
   }
 
-  return components;
+  return componentsAndContents;
 };
 
