@@ -26,7 +26,7 @@ const filterExcludedPublicMethods = (
  * Generate a library summary by analyzing all components in a directory
  */
 export const getLibraryComponents = async (options: {
-  customDecoratorNames: string[] | undefined;
+  customComponentDecoratorNames: string[] | undefined;
   defaultComponentAccess: ComponentDefinition["access"];
   excludedPaths: RegExp | RegExp[] | undefined;
   excludedPublicMethods: string[] | undefined;
@@ -34,7 +34,7 @@ export const getLibraryComponents = async (options: {
   relativeComponentsSrcPath: string;
 }): Promise<KasstorBuildComponentData[]> => {
   const {
-    customDecoratorNames,
+    customComponentDecoratorNames,
     defaultComponentAccess,
     excludedPaths,
     excludedPublicMethods,
@@ -62,7 +62,7 @@ export const getLibraryComponents = async (options: {
         relativePath,
         relativeComponentsSrcPath,
         defaultComponentAccess,
-        customDecoratorNames
+        customComponentDecoratorNames
       );
 
       if (result) {

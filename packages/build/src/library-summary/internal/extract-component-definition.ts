@@ -20,7 +20,7 @@ export const extractComponentDefinition = async (
   srcPath: string,
   searchPath: string,
   defaultComponentAccess: ComponentDefinition["access"],
-  customDecoratorNames: string[] | undefined
+  customComponentDecoratorNames: string[] | undefined
 ): Promise<{
   component: ComponentDefinition;
   sourceFile: ts.SourceFile;
@@ -43,7 +43,7 @@ export const extractComponentDefinition = async (
   // Find the component class and its @Component decorator
   const findComponentClass = (node: ts.Node): void => {
     if (ts.isClassDeclaration(node) && node.modifiers) {
-      const decoratorNames = customDecoratorNames || ["Component"];
+      const decoratorNames = customComponentDecoratorNames || ["Component"];
       const decorator = node.modifiers.find((mod): mod is ts.Decorator => {
         if (!ts.isDecorator(mod)) {
           return false;

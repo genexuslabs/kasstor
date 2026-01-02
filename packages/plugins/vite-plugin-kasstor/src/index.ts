@@ -14,6 +14,7 @@ import { load } from "./hooks/load.js";
 import { resolveId } from "./hooks/resolve-id.js";
 import { transformIndexHtml } from "./hooks/transform-index-html.js";
 import { transform } from "./hooks/transform.js";
+import { getComponentDecoratorRegex } from "./internal/get-component-decorator-regex.js";
 import { getStringForLogger } from "./internal/get-string-for-logger.js";
 import type { KasstorFileType } from "./typings/internal-types.js";
 import type { KasstorPluginOptions } from "./typings/types.js";
@@ -42,16 +43,6 @@ const getClientCode = await readFile(
   "utf-8"
 );
 
-const getInsightsValue = (insights: boolean | "dev-only" | "always") =>
-  insights === "always"
-    ? {
-        "DEV_MODE && !IS_SERVER && globalThis.kasstorCoreInsightsPerformance": true
-      }
-    : {
-        "globalThis.kasstorCoreInsightsPerformance":
-          insights === "dev-only" ? true : insights
-      };
-
 /**
  * Creates a Vite plugin that enables fast refresh for Lit components.
  *
@@ -67,6 +58,7 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
   let isDevServer = false;
 
   const {
+    customComponentDecoratorNames,
     debug,
     defaultComponentAccess,
     excludedPaths = [],
@@ -104,6 +96,13 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
     fileGeneration,
     includedPaths: includedComponentPaths
   };
+
+  const componentDecoratorRegex = getComponentDecoratorRegex(
+    customComponentDecoratorNames === undefined ||
+      customComponentDecoratorNames.length === 0
+      ? ["Component"]
+      : customComponentDecoratorNames
+  );
 
   const hmrForComponent =
     typeof hmr === "object" ? hmr.component !== false : hmr !== false;
@@ -144,7 +143,7 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
       return {
         define: {
           "globalThis.kasstorCoreHmrComponent": hmrForComponent,
-          ...getInsightsValue(insightsPerformance)
+          "globalThis.kasstorCoreInsightsPerformance": insightsPerformance
         }
       };
     },
@@ -229,6 +228,7 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
      */
     handleHotUpdate(ctx: HmrContext) {
       return handleHotUpdate({
+        componentDecoratorRegex,
         ctx,
         debug,
         getFileType,

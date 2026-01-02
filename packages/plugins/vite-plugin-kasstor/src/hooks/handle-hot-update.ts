@@ -1,5 +1,5 @@
 import { posix, relative } from "path";
-import type { HmrContext, ModuleNode, ViteDevServer } from "vite";
+import { type HmrContext, type ModuleNode, type ViteDevServer } from "vite";
 import { findReferencingTagsForComponent } from "../internal/find-referencing-tags-for-component.js";
 import {
   findReferencingTagsForHelper,
@@ -52,6 +52,7 @@ const registerListenerForPerformanceMetrics = (server: ViteDevServer) => {
  * Handle HMR updates - prevent full page reload for matching files
  */
 export const handleHotUpdate = async (options: {
+  componentDecoratorRegex: RegExp;
   ctx: HmrContext;
   debug: boolean | undefined;
   getFileType: (filePath: string) => KasstorFileType;
@@ -60,6 +61,7 @@ export const handleHotUpdate = async (options: {
   includedComponentPaths: RegExp[];
 }) => {
   const {
+    componentDecoratorRegex,
     ctx,
     debug,
     getFileType,
@@ -96,6 +98,7 @@ export const handleHotUpdate = async (options: {
   // Check if the file is being used by a component
   if (fileType === "unknown") {
     componentsThatUsedTheUtility = await findReferencingTagsForHelper({
+      componentDecoratorRegex,
       includedComponentPaths,
       helperPath: file,
       server
@@ -141,17 +144,27 @@ export const handleHotUpdate = async (options: {
   }
 
   // Normalize the file path
-  const normalizedPath = posix.join("/", relative(server.config.root, file));
+  // Check if the file is within the project root
+  const relativePath = relative(server.config.root, file);
+  const isFileOutsideRoot = relativePath.startsWith("..");
+
+  // If the file is outside the project root (e.g., in node_modules),
+  // use the @fs/ prefix so Vite serves it from the filesystem
+  const normalizedPath = isFileOutsideRoot
+    ? `/@fs${file}`
+    : posix.join("/", relativePath);
 
   // Compute tags based on file type
   const tags: string[] =
     fileType === "scss"
       ? await findReferencingTagsForScss({
+          componentDecoratorRegex,
           includedComponentPaths,
           scssPath: file,
           server
         })
       : await findReferencingTagsForComponent({
+          componentDecoratorRegex,
           componentPath: file,
           server
         });

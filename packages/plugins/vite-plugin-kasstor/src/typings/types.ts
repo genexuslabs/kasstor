@@ -76,11 +76,14 @@ export type KasstorPluginOptions = {
     | "dev-only"
     | "always"
     | {
-        accessibility?: boolean | "dev-only" | "always";
-        performance?: boolean | "dev-only" | "always";
+        accessibility?: boolean;
+        performance?: boolean;
       };
 } & Pick<
   KasstorBuildOptions,
-  "defaultComponentAccess" | "excludedPublicMethods" | "fileGeneration"
+  | "customComponentDecoratorNames"
+  | "defaultComponentAccess"
+  | "excludedPublicMethods"
+  | "fileGeneration"
 >;
 
