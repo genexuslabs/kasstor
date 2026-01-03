@@ -1,10 +1,10 @@
-import { capitalize } from "../capitalize.js";
 import { getFormattedPropertyOrEventDescription } from "../get-formatted-property-or-event-description.js";
 import { getComponentEventTypeInterfaceName } from "../global-type-declarations/get-global-type-declaration.js";
+import { capitalize } from "../internal/capitalize.js";
 import type {
   ComponentDefinition,
   LibraryComponents
-} from "../library-summary/types";
+} from "../typings/library-components";
 
 export const eventTemplateName = {
   jsx: name => `on${capitalize(name)}` as const,

@@ -2,7 +2,7 @@ import { getFullJSDocWithFiresTags } from "../global-type-declarations/get-globa
 import type {
   ComponentDefinition,
   LibraryComponents
-} from "../library-summary/types";
+} from "../typings/library-components";
 import { COMPONENT_PROPERTIES_NAMESPACE_NAMES } from "./constants.js";
 import { getComponentEventsUnionType } from "./get-component-events-union-type.js";
 

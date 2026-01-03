@@ -1,7 +1,8 @@
 import * as ts from "typescript";
 import { describe, expect, it } from "vitest";
-import { ComponentValidator } from "../internal/validate-components";
-import type { ComponentDefinition } from "../types";
+
+import type { ComponentDefinition } from "../../typings/library-components";
+import { ComponentValidator } from "../internal/validate-components.js";
 
 /**
  * Helper to create a mock source file and class declaration for testing

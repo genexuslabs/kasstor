@@ -3,7 +3,7 @@ import type {
   ComponentDefinitionMethod,
   ComponentDefinitionProperty,
   ComponentImportTypes
-} from "../types";
+} from "../../typings/library-components";
 import type { ImportAnalysisCache } from "./extract-import-analysis";
 import { extractTypesFromTypeString } from "./extract-types-from-string.js";
 

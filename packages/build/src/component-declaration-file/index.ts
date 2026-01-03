@@ -1,4 +1,4 @@
-import type { LibraryComponents } from "../library-summary/types";
+import type { LibraryComponents } from "../typings/library-components";
 import { getComponentEvents } from "./get-component-events-union-type.js";
 import {
   getComponentBaseClass,

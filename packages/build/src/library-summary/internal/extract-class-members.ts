@@ -1,9 +1,10 @@
 import * as ts from "typescript";
+
 import type {
   ComponentDefinitionEvent,
   ComponentDefinitionMethod,
   ComponentDefinitionProperty
-} from "../types";
+} from "../../typings/library-components";
 import { extractDecoratorConfig } from "./extract-decorator-config.js";
 import {
   extractMemberJSDoc,

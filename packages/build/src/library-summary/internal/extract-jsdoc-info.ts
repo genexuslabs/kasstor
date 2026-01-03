@@ -1,10 +1,11 @@
 import * as ts from "typescript";
+
 import type {
   ComponentDefinition,
   ComponentDefinitionCssVariable,
   ComponentDefinitionPart,
   ComponentDefinitionSlot
-} from "../types";
+} from "../../typings/library-components";
 
 const ALL_KIND_OF_ACCESS = [
   "package",

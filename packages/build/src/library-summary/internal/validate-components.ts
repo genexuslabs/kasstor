@@ -1,5 +1,6 @@
 import * as ts from "typescript";
-import type { ComponentDefinition } from "../types";
+
+import type { ComponentDefinition } from "../../typings/library-components";
 
 /**
  * Error information with location details

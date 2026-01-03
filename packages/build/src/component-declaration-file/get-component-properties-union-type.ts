@@ -2,7 +2,7 @@ import { getFormattedPropertyOrEventDescription } from "../get-formatted-propert
 import type {
   ComponentDefinition,
   LibraryComponents
-} from "../library-summary/types.js";
+} from "../typings/library-components";
 import { COMPONENT_PROPERTIES_NAMESPACE_NAMES } from "./constants.js";
 import { getImportClassName } from "./get-import-class-name.js";
 

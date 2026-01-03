@@ -1,10 +1,10 @@
 import { relative } from "path";
 
-import type { KasstorBuildComponentData } from "../types";
+import type { KasstorBuildComponentData } from "../typings/build-options";
+import type { ComponentDefinition } from "../typings/library-components";
 import { extractComponentDefinition } from "./internal/extract-component-definition.js";
 import { findComponents } from "./internal/find-lit-components.js";
 import { ComponentValidator } from "./internal/validate-components.js";
-import type { ComponentDefinition } from "./types";
 
 const filterExcludedPublicMethods = (
   component: ComponentDefinition,

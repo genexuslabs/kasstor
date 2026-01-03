@@ -1,5 +1,6 @@
 import * as ts from "typescript";
-import type { ComponentDefinition } from "../types";
+
+import type { ComponentDefinition } from "../../typings/library-components";
 import { extractClassMembers } from "./extract-class-members.js";
 import { extractDecoratorConfig } from "./extract-decorator-config.js";
 import { extractImportAnalysis } from "./extract-import-analysis.js";

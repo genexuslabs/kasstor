@@ -2,7 +2,7 @@ import type {
   ComponentDefinition,
   ComponentImportTypes,
   LibraryComponents
-} from "../library-summary/types";
+} from "../typings/library-components";
 import { getImportClassName } from "./get-import-class-name.js";
 
 export const sortImports = (modulePathA: string, modulePathB: string) => {
