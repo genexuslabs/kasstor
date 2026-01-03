@@ -155,7 +155,7 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
  *   - Improved initial rendering performance by reducing the Total Blocking
  *     Time (TBT) in scenarios where many components are initially rendered.
  *
- * Example:
+ * @example
  * ```ts
  * import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
  * import styles from "./my-element.scss?inline"; // Only available with Vite
