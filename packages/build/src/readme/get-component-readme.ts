@@ -118,7 +118,7 @@ const getComponentCssPart = (part: ComponentDefinitionPart) => {
   let result = `### \`${part.name}\``;
 
   if (part.description) {
-    result += `\n${micromark(part.description)}`;
+    result += `\n\n${micromark(part.description)}`;
   }
 
   return result;
