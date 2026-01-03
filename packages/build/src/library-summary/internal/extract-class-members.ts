@@ -22,6 +22,7 @@ const LIT_LIFECYCLE_METHODS = new Set([
   "requestUpdate",
   "performUpdate",
   "shouldUpdate",
+  "firstWillUpdate",
   "willUpdate",
   "update",
   "render",

@@ -61,12 +61,12 @@ const writeLibrarySummary = async (
 const writeReadmes = (
   libraryComponentAndContents: KasstorBuildComponentData[]
 ): Promise<void>[] =>
-  libraryComponentAndContents.map(({ component, filePath }) =>
+  libraryComponentAndContents.map(async ({ component, filePath }) =>
     writeFile(
       // Save the readme in the same location as the component, but with the
       // name "readme.md"
       filePath.replace(filePath.split("/").at(-1)!, "readme.md"),
-      getComponentReadme(component),
+      await getComponentReadme(component),
       "utf-8"
     )
   );

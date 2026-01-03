@@ -47,10 +47,10 @@ export const getComponentCustomEventExtend = ({
 }: ComponentDefinition) =>
   !events || events.length === 0
     ? ""
-    : events
+    : "\n" +
+      events
         .map(
           event => `
-
   /** Type of the \`${tagName}\`'s \`${event.name}\` event. */
   // prettier-ignore
   type ${getComponentEventTypeInterfaceName(className, event.name)} = ${getComponentCustomEventInterfaceName(className)}<

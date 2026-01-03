@@ -1,12 +1,34 @@
 import { micromark } from "micromark";
+import { format } from "prettier";
 
-import type { ComponentDefinition } from "../typings/library-components";
+import type {
+  ComponentDefinition,
+  ComponentDefinitionCssVariable,
+  ComponentDefinitionEvent,
+  ComponentDefinitionMethod,
+  ComponentDefinitionPart,
+  ComponentDefinitionProperty,
+  ComponentDefinitionSlot
+} from "../typings/library-components";
 
 const QUOTES_REGEX = /(^"|"$)/g;
 const DECORATIVE_IMAGE_DEFAULT_SCSS_VAR = "#{$default-decorative-image-size}";
 const DECORATIVE_IMAGE_DEFAULT_VALUE = "0.875em";
 const LESS_THAN_HTML = "&lt;";
 const GREATER_THAN_HTML = "&gt;";
+
+const formatMultilineTypes = async (type: string) =>
+  type.split("\n").length > 1
+    ? (
+        await format("const " + type, {
+          parser: "typescript",
+          printWidth: 300,
+          trailingComma: "none"
+        })
+      )
+        .replace(/const |\n/g, "")
+        .replace(/;$/g, "")
+    : type;
 
 const getCssPropertyDefault = (defaultValue: string) =>
   replaceLessAndGreaterThanWithHTML(
@@ -36,136 +58,106 @@ const addDetailsSummary = (title: string, content: string) =>
 ${content}
 </details>`;
 
-const getComponentProperties = ({ properties }: ComponentDefinition) =>
-  properties && properties.length !== 0
-    ? `  <table>
-    <thead>
-      <tr>
-        <th scope="col">Property</th>
-        <th scope="col">Attribute</th>
-        <th scope="col">Description</th>
-        <th scope="col">Type</th>
-        <th scope="col">Default</th>
-      </tr>
-    </thead>
-    <tbody>
-${properties
-  .map(
-    property => `      <tr>
-        <td><code>${property.name}</code></td>
-        <td>${property.attribute ? `<code>${property.attribute}</code>` : "-"}</td>
-        <td>${property.description ? micromark(property.description) : "-"}</td>
-        <td><code>${replaceLessAndGreaterThanWithHTML(property.type)}</code></td>
-        <td><code>${property.default ? replaceLessAndGreaterThanWithHTML(property.default) : "undefined"}</code></td>
-      </tr>`
-  )
-  .join("\n")}
-    </tbody>
-  </table>`
+const joinResults = async <T>(
+  array: T[] | undefined,
+  fn: (item: T) => string | Promise<string>
+) =>
+  array && array.length !== 0
+    ? (await Promise.all(array.map(fn))).join("\n\n---\n\n")
     : "";
 
-const getComponentEvents = ({ events }: ComponentDefinition) =>
-  events && events.length !== 0
-    ? `  <table>
-    <thead>
-      <tr>
-        <th scope="col">Event</th>
-        <th scope="col">Description</th>
-        <th scope="col">Detail Type</th>
-      </tr>
-    </thead>
-    <tbody>
-${events
-  .map(
-    event => `      <tr>
-        <td><code>${event.name}</code></td>
-        <td>${event.description ? micromark(event.description) : "-"}</td>
-        <td>${event.detailType ? `<code>${replaceLessAndGreaterThanWithHTML(event.detailType)}</code>` : "-"}</td>
-      </tr>`
-  )
-  .join("\n")}
-    </tbody>
-  </table>`
-    : "";
+const getComponentProperty = async (property: ComponentDefinitionProperty) => {
+  let result = `### \`${await formatMultilineTypes(property.name + ": " + property.type)}\``;
 
-export const getComponentSlots = ({ slots }: ComponentDefinition) =>
-  slots && slots.length !== 0
-    ? `  <table>
-    <thead>
-      <tr>
-        <th scope="col">Part</th>
-        <th scope="col">Description</th>
-      </tr>
-    </thead>
-    <tbody>
-${slots
-  .map(
-    slot => `      <tr>
-        <td><code>${slot.name}</code></td>
-        <td>${slot.description ? micromark(slot.description) : "-"}</td>
-      </tr>`
-  )
-  .join("\n")}
-    </tbody>
-  </table>`
-    : "";
+  if (property.description) {
+    result += `\n\n${micromark(property.description)}`;
+  }
 
-export const getComponentCssParts = ({ parts }: ComponentDefinition) =>
-  parts && parts.length !== 0
-    ? `  <table>
-    <thead>
-      <tr>
-        <th scope="col">Part</th>
-        <th scope="col">Description</th>
-      </tr>
-    </thead>
-    <tbody>
-${parts
-  .map(
-    part => `      <tr>
-        <td><code>${part.name}</code></td>
-        <td>${part.description ? micromark(part.description) : "-"}</td>
-      </tr>`
-  )
-  .join("\n")}
-    </tbody>
-  </table>`
-    : "";
+  if (property.attribute) {
+    result += `\n\n**Attribute**: <code>${property.attribute}</code>`;
+  }
 
-export const getComponentCssProperties = ({
-  cssVariables
-}: ComponentDefinition) =>
-  cssVariables && cssVariables.length !== 0
-    ? `  <table>
-    <thead>
-      <tr>
-        <th scope="col">Custom Var</th>
-        <th scope="col">Description</th>
-        <th scope="col">Default</th>
-      </tr>
-    </thead>
-    <tbody>
-${cssVariables
-  .map(
-    cssProperty => `      <tr>
-        <td><code>${cssProperty.name.trim()}</code></td>
-        <td>${cssProperty.description ? micromark(cssProperty.description.trim()) : "-"}</td>
-        <td>${cssProperty.default ? `<code>${getCssPropertyDefault(cssProperty.default)}</code>` : "-"}</td>
-      </tr>`
-  )
-  .join("\n")}
-    </tbody>
-  </table>`
-    : "";
+  if (property.default) {
+    result += `\n\n**Default**: <code>${property.default ? replaceLessAndGreaterThanWithHTML(property.default) : "undefined"}</code>`;
+  }
 
-export const getComponentReadme = (component: ComponentDefinition) => {
-  const propertiesReadme = getComponentProperties(component);
-  const eventsReadme = getComponentEvents(component);
-  const slotsReadme = getComponentSlots(component);
-  const cssPartsReadme = getComponentCssParts(component);
-  const cssPropertiesReadme = getComponentCssProperties(component);
+  return result;
+};
 
-  let readme = `# ${component.tagName}`;
+const getComponentEvent = (event: ComponentDefinitionEvent) => {
+  let result = `### \`${event.name}: ${replaceLessAndGreaterThanWithHTML(event.detailType)}\``;
+
+  if (event.description) {
+    result += `\n\n${micromark(event.description)}`;
+  }
+
+  return result;
+};
+
+const getComponentMethod = async (property: ComponentDefinitionMethod) => {
+  let result = `### \`${await formatMultilineTypes(property.name + ": " + `(${property.paramTypes.map(param => param.name + ": " + param.type).join(", ")}) => ` + property.returnType)}\``;
+
+  if (property.description) {
+    result += `\n\n${micromark(property.description)}`;
+  }
+
+  return result;
+};
+
+const getComponentSlot = (slot: ComponentDefinitionSlot) => {
+  let result = `### \`${slot.name}\``;
+
+  if (slot.description) {
+    result += `\n\n${micromark(slot.description)}`;
+  }
+
+  return result;
+};
+
+const getComponentCssPart = (part: ComponentDefinitionPart) => {
+  let result = `### \`${part.name}\``;
+
+  if (part.description) {
+    result += `\n${micromark(part.description)}`;
+  }
+
+  return result;
+};
+
+const getComponentCssProperty = (
+  cssVariable: ComponentDefinitionCssVariable
+) => {
+  let result = `### \`${cssVariable.name}\``;
+
+  if (cssVariable.description) {
+    result += `\n\n${micromark(cssVariable.description)}`;
+  }
+
+  if (cssVariable.default) {
+    result += `\n\n**Default**: <code>${getCssPropertyDefault(cssVariable.default)}</code>`;
+  }
+
+  return result;
+};
+
+export const getComponentReadme = async (component: ComponentDefinition) => {
+  const [
+    propertiesReadme,
+    eventsReadme,
+    methodsReadme,
+    slotsReadme,
+    cssPartsReadme,
+    cssPropertiesReadme
+  ] = await Promise.all([
+    joinResults(component.properties, getComponentProperty),
+    joinResults(component.events, getComponentEvent),
+    joinResults(component.methods, getComponentMethod),
+    joinResults(component.slots, getComponentSlot),
+    joinResults(component.parts, getComponentCssPart),
+    joinResults(component.cssVariables, getComponentCssProperty)
+  ]);
+
+  let readme = `# \`${component.tagName}\``;
 
   if (component.description) {
     readme += "\n\n" + micromark(component.description);
@@ -174,6 +166,8 @@ export const getComponentReadme = (component: ComponentDefinition) => {
   readme += addDetailsSummary("Properties", propertiesReadme);
 
   readme += addDetailsSummary("Events", eventsReadme);
+
+  readme += addDetailsSummary("Methods", methodsReadme);
 
   readme += addDetailsSummary("Slots", slotsReadme);
 
