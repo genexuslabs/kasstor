@@ -2,6 +2,7 @@
 import { LitElement, unsafeCSS, type PropertyValues } from "lit";
 
 import { DEV_MODE, IS_SERVER } from "../../development-flags.js";
+import { componentWasServerSideRendered } from "./component-was-server-side-rendered.js";
 import {
   addGlobalStyleSheet,
   removeGlobalStyleSheet
@@ -134,17 +135,39 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
   };
 
 /**
- * Implements a basic check to decide if the component was server side rendered.
+ * Base class for Kasstor components that extends the LitElement. This class
+ * provides extra utilities as follows:
+ *   - Better support for SSR in the components.
  *
- * This function must be used before the first render!
- */
-const componentWasServerSideRendered = (element: LitElement) =>
-  IS_SERVER ||
-  (!!element.shadowRoot && element.shadowRoot.children.length !== 0);
-
-/**
- * Base class for Chameleon components that extends the LitElement. This class
- * provides extra utilities to support SSR in the components.
+ *   - Support for styling components with SCSS/SASS.
+ *
+ *   - Support for styling components without Shadow DOM.
+ *
+ *   - Adds the `firstWillUpdate` life cycle method which works with SSR.
+ *
+ *   - Adds support for the `Watch` decorator.
+ *
+ *   - Support to define global styles outside of the component that work with
+ *     and without Shadow DOM.
+ *
+ *   - Support for HMR by using the `@genexus/vite-plugin-kasstor` package.
+ *
+ *   - Improved initial rendering performance by reducing the Total Blocking
+ *     Time (TBT) in scenarios where many components are initially rendered.
+ *
+ * Example:
+ * ```ts
+ * import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
+ * import styles from "./my-element.scss?inline"; // Only available with Vite
+ *
+ * \@Component({
+ *   tag: "my-element",
+ *   styles
+ * })
+ * export class MyElement extends KasstorElement {
+ *   // Component implementation
+ * }
+ * ```
  */
 export abstract class KasstorElement extends LitElement {
   #serverSideRendered: boolean;
@@ -165,6 +188,20 @@ export abstract class KasstorElement extends LitElement {
     // Implement the beforeFirstUpdate hook by monkey-patching the willUpdate
     // method of the LitElement
     this.willUpdate = function (changedProperties: PropertyValues) {
+      /**
+       * A reserved callback to implement the Watch decorator.
+       *
+       * This callback is defined when there is a Watch decorator applied to the
+       * component.
+       *
+       * When defined, it will be called before the `willUpdate` life cycle method.
+       * It will also be called before the `firstWillUpdate` life cycle method.
+       */
+      // TODO: Find a better way of doing this without proving a waterfall in the
+      // initial load, by using an external symbol that is referenced here and in
+      // the KasstorElement
+      (this as any).kasstorWatchCallback?.(changedProperties);
+
       if (!this.hasUpdated) {
         this.firstWillUpdate(changedProperties);
       }

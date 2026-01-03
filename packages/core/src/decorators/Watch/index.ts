@@ -1,26 +1,15 @@
-import type { LitElement } from "lit";
-
-import { DEV_MODE } from "../../development-flags";
-import type { WatchOptions } from "./types";
-
-export type { WatchOptions } from "./types";
+import type { PropertyValues } from "lit";
+import { DEV_MODE } from "../../development-flags.js";
+import type { KasstorElement } from "../Component/index.js";
 
 type WatchDecoratorUpdateHandler<T> = (newValue?: T, oldValue?: T) => void;
-
-/**
- * Symbol to mark classes that have already had their update method overridden
- */
-const WATCH_UPDATE_OVERRIDDEN = Symbol("watch-update-overridden");
 
 /**
  * Map to store watch configurations for each class
  */
 const watchersForEachClass = new WeakMap<
-  typeof LitElement,
-  Map<
-    string | symbol,
-    { handler: WatchDecoratorUpdateHandler<unknown>; options: WatchOptions }
-  >
+  typeof KasstorElement,
+  Map<string | symbol, WatchDecoratorUpdateHandler<unknown>>
 >();
 
 /**
@@ -31,24 +20,19 @@ const watchersForEachClass = new WeakMap<
  *
  * Usage with accessor:
  * ```ts
- *   @Watch("propName")
- *   protected propNameChanged(newValue?: unknown, oldValue?: unknown) {
- *     ...
- *   }
+ * \@Watch("propName")
+ * protected propNameChanged(newValue?: unknown, oldValue?: unknown) {
+ *   ...
+ * }
  *
- *   @Watch(["propName1", "propName2", ...])
- *   protected propNameChanged(newValue?: unknown, oldValue?: unknown) {
- *     ...
- *   }
+ * \@Watch(["propName1", "propName2", ...])
+ * protected propNameChanged(newValue?: unknown, oldValue?: unknown) {
+ *   ...
+ * }
  * ```
  */
-export function Watch(
-  propertyOrProperties: string | string[],
-  options?: WatchOptions
-) {
-  const waitUntilFirstUpdate = options?.waitUntilFirstUpdate ?? true;
-
-  return function <ElementClass extends LitElement>(
+export function Watch(propertyOrProperties: string | string[]) {
+  return function <ElementClass extends KasstorElement>(
     target: ElementClass,
     _: unknown,
     descriptor: PropertyDescriptor
@@ -77,70 +61,57 @@ export function Watch(
       }
     }
 
-    const ctor = target.constructor as typeof LitElement;
-    const { prototype } = ctor;
+    const ctor = target.constructor as typeof KasstorElement;
+    const watchCallbackIsAlreadyDefined = watchersForEachClass.has(ctor);
 
-    if (!watchersForEachClass.has(ctor)) {
+    if (!watchCallbackIsAlreadyDefined) {
       watchersForEachClass.set(ctor, new Map());
     }
 
     // TODO: Test if we can define multiple watches for the same property
+    // TODO: Test SSR support
     // TODO: Test if we can define an array of properties in a Watch
     const watchersForTheCurrentClass = watchersForEachClass.get(ctor)!;
 
     // Add new properties to watch for the target class
     for (const prop of watchedProperties) {
-      watchersForTheCurrentClass.set(prop, {
-        handler: watchHandler,
-        options: { waitUntilFirstUpdate }
-      });
+      watchersForTheCurrentClass.set(prop, watchHandler);
     }
 
-    // Override the update method only once per class, even if multiple Watch
-    // decorators are used for the same class
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((prototype as any)[WATCH_UPDATE_OVERRIDDEN]) {
+    // Override the `watchCallback` method only once per class, even if
+    // multiple `@Watch` decorators are used for the same class
+    if (watchCallbackIsAlreadyDefined) {
       return descriptor;
     }
-    // Mark as overridden using Symbol
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (prototype as any)[WATCH_UPDATE_OVERRIDDEN] = true;
 
-    // @ts-expect-error - update is a protected property
-    const originalUpdate = prototype.update;
-
-    // We add some behavior to the update implementation in order to implement
-    // the decorator
-    // @ts-expect-error - update is a protected property
-    prototype.update = function (
+    // @ts-expect-error - `kasstorWatchCallback` is not defined in the interface
+    // but it is used internally by the KasstorElement class
+    // TODO: Find a better way of doing this without proving a waterfall in the
+    // initial load, by using an external symbol that is referenced here and in
+    // the KasstorElement
+    ctor.prototype.kasstorWatchCallback = function (
       this: ElementClass,
-      changedProps: Map<keyof ElementClass, ElementClass[keyof ElementClass]>
+      changedProps: PropertyValues<keyof ElementClass>
     ) {
       // It's defined, because we verify that at the beginning
       const watchers = watchersForEachClass.get(ctor)!;
 
-      for (const [watchedProp, config] of watchers) {
+      for (const [watchedProp, handler] of watchers) {
         const key = watchedProp as keyof ElementClass;
 
         if (changedProps.has(key)) {
           const oldValue = changedProps.get(key);
           const newValue = this[key];
 
-          if (
-            oldValue !== newValue &&
-            (!config.options.waitUntilFirstUpdate || this.hasUpdated)
-          ) {
+          if (oldValue !== newValue) {
             // TODO: Add a test to validate that this handler is only called
-            //       once even if watching an array of properties that are
-            //       changed at the same time.
+            // once even if watching an array of properties that are changed
+            // at the same time.
             // Call the handler function directly with the correct context
-            config.handler.call(this, newValue, oldValue);
+            handler.call(this, newValue, oldValue);
           }
         }
       }
-
-      // Call the original update method
-      originalUpdate.call(this, changedProps);
     };
 
     return descriptor;
