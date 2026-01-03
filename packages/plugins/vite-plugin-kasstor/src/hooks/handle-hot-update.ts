@@ -6,7 +6,7 @@ import {
   type ComponentReference
 } from "../internal/find-referencing-tags-for-helper.js";
 import { findReferencingTagsForScss } from "../internal/find-referencing-tags-for-scss.js";
-import { getStringForLogger } from "../internal/get-string-for-logger.js";
+import { getUpdatedCommandForLogger } from "../internal/get-string-for-logger.js";
 import { checkIfShouldInvalidateNextUpdate } from "../internal/invalidate-next-hmr-for-component.js";
 import type { KasstorFileType } from "../typings/internal-types.js";
 
@@ -27,7 +27,7 @@ const registerListenerForPerformanceMetrics = (server: ViteDevServer) => {
   server.ws.on("custom:kasstor:performance", (data: unknown) => {
     const message = data as {
       operationId: string;
-      operationType: string;
+      operationType: "global types" | "readme" | "component" | "style";
       components: string[];
     };
     const { components, operationId, operationType } = message;
@@ -39,7 +39,7 @@ const registerListenerForPerformanceMetrics = (server: ViteDevServer) => {
       const elapsedTime = performance.now() - startTime;
 
       server.config.logger.info(
-        getStringForLogger(operationType, components, elapsedTime)
+        getUpdatedCommandForLogger(operationType, components, elapsedTime)
       );
 
       // Clean up the timing entry

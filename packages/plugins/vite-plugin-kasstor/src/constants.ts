@@ -17,3 +17,8 @@ export const DEFINE_CUSTOM_ELEMENT_REGEX =
 export const COMPONENT_TAG_NAME_FOR_TRANSPILED_JS_REGEX =
   /Component\s*\(\s*\{[\s\S]*?tag\s*:\s*["']([^"']+)["']/m;
 
+export const LIBRARY_ANALYSIS_MESSAGES = {
+  START: "library analysis started",
+  FINISH: "library analysis finished"
+} as const;
+

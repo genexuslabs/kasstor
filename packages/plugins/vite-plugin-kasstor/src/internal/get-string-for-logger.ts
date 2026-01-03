@@ -5,8 +5,30 @@ let lastUpdateTime = performance.now();
 
 const ADD_END_LINE_DEBOUNCE = 1500;
 
-export const getStringForLogger = (
-  operationType: string,
+const kasstorPrefix = styleText("dim", "[kasstor] ");
+const threeDots = styleText("dim", " ...");
+
+let buildingLibrary = false;
+
+const printElapsedTime = (elapsedTime: number) =>
+  styleText("dim", ` in ${prettyTimeMark(elapsedTime)}`);
+
+export const setBuildingLibraryState = (type: "start" | "end") => {
+  buildingLibrary = type === "start";
+};
+
+export const getNormalCommandForLogger = (
+  type: "start" | "end",
+  message: string,
+  elapsedTime = 0
+) =>
+  (type === "start" ? "\n" : "") +
+  kasstorPrefix +
+  message +
+  (type === "end" ? printElapsedTime(elapsedTime) : threeDots);
+
+export const getUpdatedCommandForLogger = (
+  operationType: "global types" | "readme" | "component" | "style",
   components: string[],
   elapsedTime: number
 ) => {
@@ -15,11 +37,13 @@ export const getStringForLogger = (
   lastUpdateTime = now;
 
   return (
-    (timeSinceLastUpdate > ADD_END_LINE_DEBOUNCE ? "\n" : "") +
-    styleText("dim", "[kasstor] ") +
+    (!buildingLibrary && timeSinceLastUpdate > ADD_END_LINE_DEBOUNCE
+      ? "\n"
+      : "") +
+    kasstorPrefix +
     `updated ${operationType}: ` +
     styleText("cyan", components.join(", ")) +
-    styleText("dim", ` in ${prettyTimeMark(elapsedTime)}`)
+    printElapsedTime(elapsedTime)
   );
 };
 
