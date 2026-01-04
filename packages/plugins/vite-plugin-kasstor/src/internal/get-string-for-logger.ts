@@ -17,6 +17,8 @@ export const setBuildingLibraryState = (type: "start" | "end") => {
   buildingLibrary = type === "start";
 };
 
+export const isBuildingLibrary = () => buildingLibrary;
+
 export const getNormalCommandForLogger = (
   type: "start" | "end",
   message: string,

@@ -19,6 +19,7 @@ export const COMPONENT_TAG_NAME_FOR_TRANSPILED_JS_REGEX =
 
 export const LIBRARY_ANALYSIS_MESSAGES = {
   START: "library analysis started",
-  FINISH: "library analysis finished"
+  FINISH: "library analysis finished",
+  EXPORTED_TYPES: "updated exported types"
 } as const;
 
