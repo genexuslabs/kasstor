@@ -60,8 +60,10 @@ declare global {
   /**
    * Indicates whether the Hot Module Replacement (HMR) feature for components
    * is enabled.
+   *
+   * Only available in dev mode and when serving a library with Vite.
    */
-  var kasstorCoreHmrComponent: boolean | undefined;
+  var kasstorCoreHmrEnabled: boolean | undefined;
 
   /**
    * HMR (Hot Module Replacement) data that tracks the current state of HMR.
@@ -87,11 +89,12 @@ declare global {
     | undefined;
 
   /**
-   * Indicates whether the insights module for performance in enabled.
+   * Data that tracks which components have been Hot Module Replaced, in order
+   * to prevent unnecessary warnings.
    *
-   * When enabled, re-renders for components are visually highlighted.
+   * Only available in dev mode and when serving a library with Vite.
    */
-  var kasstorCoreInsightsPerformance: boolean | undefined;
+  var kasstorCoreHotModuleReplacedComponents: Set<string> | undefined;
 
   /**
    * Set of custom element tag names that have been loaded/registered.
@@ -112,4 +115,3 @@ declare global {
 
 // Necessary to auto-detect this module in the project
 export type {};
-

@@ -1,5 +1,7 @@
 import { posix, relative } from "path";
 import { type HmrContext, type ModuleNode, type ViteDevServer } from "vite";
+
+import { HMR_WS_EVENT_NAME } from "../constants.js";
 import { findReferencingTagsForComponent } from "../internal/find-referencing-tags-for-component.js";
 import {
   findReferencingTagsForHelper,
@@ -8,7 +10,10 @@ import {
 import { findReferencingTagsForScss } from "../internal/find-referencing-tags-for-scss.js";
 import { getUpdatedCommandForLogger } from "../internal/get-string-for-logger.js";
 import { checkIfShouldInvalidateNextUpdate } from "../internal/invalidate-next-hmr-for-component.js";
-import type { KasstorFileType } from "../typings/internal-types.js";
+import type {
+  KasstorFileType,
+  KasstorHmrPayloadData
+} from "../typings/internal-types.js";
 
 /**
  * Map to track operation start times for performance metrics
@@ -24,28 +29,30 @@ const registerListenerForPerformanceMetrics = (server: ViteDevServer) => {
   }
   listenerRegistered = true;
 
-  server.ws.on("custom:kasstor:performance", (data: unknown) => {
-    const message = data as {
+  server.ws.on(
+    "custom:kasstor:performance",
+    (data: {
       operationId: string;
       operationType: "global types" | "readme" | "component" | "style";
       components: string[];
-    };
-    const { components, operationId, operationType } = message;
+    }) => {
+      const { components, operationId, operationType } = data;
 
-    // Calculate elapsed time from when the operation started
-    const startTime = operationTimings.get(operationId);
+      // Calculate elapsed time from when the operation started
+      const startTime = operationTimings.get(operationId);
 
-    if (startTime) {
-      const elapsedTime = performance.now() - startTime;
+      if (startTime) {
+        const elapsedTime = performance.now() - startTime;
 
-      server.config.logger.info(
-        getUpdatedCommandForLogger(operationType, components, elapsedTime)
-      );
+        server.config.logger.info(
+          getUpdatedCommandForLogger(operationType, components, elapsedTime)
+        );
 
-      // Clean up the timing entry
-      operationTimings.delete(operationId);
+        // Clean up the timing entry
+        operationTimings.delete(operationId);
+      }
     }
-  });
+  );
 };
 
 /**
@@ -130,14 +137,14 @@ export const handleHotUpdate = async (options: {
 
     server.ws.send({
       type: "custom",
-      event: "kasstor:update",
+      event: HMR_WS_EVENT_NAME,
       data: {
         componentPaths: componentsThatUsedTheUtility.map(c => c.path),
         fileType,
         tags: componentsThatUsedTheUtility.map(c => c.tag),
         operationId,
         debug
-      }
+      } satisfies KasstorHmrPayloadData
     });
 
     return [];
@@ -183,7 +190,7 @@ export const handleHotUpdate = async (options: {
 
   server.ws.send({
     type: "custom",
-    event: "kasstor:update",
+    event: HMR_WS_EVENT_NAME,
     data: {
       componentPaths: [normalizedPath],
       scssPath: normalizedPath,
@@ -191,10 +198,9 @@ export const handleHotUpdate = async (options: {
       tags,
       operationId,
       debug
-    }
+    } satisfies KasstorHmrPayloadData
   });
 
   // Return empty array to prevent default HMR behavior (full reload)
   return [];
 };
-

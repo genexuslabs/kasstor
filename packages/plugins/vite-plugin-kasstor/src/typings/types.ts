@@ -73,8 +73,6 @@ export type KasstorPluginOptions = {
 
   insights?:
     | boolean
-    | "dev-only"
-    | "always"
     | {
         accessibility?: boolean;
         performance?: boolean;
@@ -86,4 +84,3 @@ export type KasstorPluginOptions = {
   | "excludedPublicMethods"
   | "fileGeneration"
 >;
-

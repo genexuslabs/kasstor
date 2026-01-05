@@ -6,22 +6,21 @@ import { html } from "lit";
 import { property } from "lit/decorators/property.js";
 import { repeat } from "lit/directives/repeat.js";
 
-import {
-  patchLitRenders,
-  PERFORMANCE_SCAN_RE_RENDER_EVENT_NAME
-} from "../../analysis/performance";
+import { patchLitUpdates } from "../../analysis/performance.js";
 import { IS_SERVER } from "../../development-flags";
-import type { PerformanceScanRenderedItems } from "./types";
 
 // Side-effect to define the performance scan item
 import "./internals/performance-scan-item/performance-scan-item.lit";
 
 import styles from "./performance-scan.scss?inline";
 
-// On the server we don't check anything
-const renderedItems: PerformanceScanRenderedItems = IS_SERVER
-  ? new Map()
-  : patchLitRenders();
+// Alias to improve the minified size
+const global = globalThis;
+
+// On the server we don't check anything, as the update lifecycle doesn't exists
+if (!IS_SERVER) {
+  patchLitUpdates();
+}
 
 /**
  * A component to visualize re-renders on Lit components.
@@ -37,27 +36,25 @@ export class KstPerformanceScan extends KasstorElement {
    */
   @property({ type: Boolean }) showFps: boolean = false;
 
-  #updateRenderedItems = () => this.requestUpdate();
-
   override connectedCallback(): void {
     super.connectedCallback();
-    document.addEventListener(
-      PERFORMANCE_SCAN_RE_RENDER_EVENT_NAME,
-      this.#updateRenderedItems
-    );
+    global.kasstorInsightsUpdateCallback = () => this.requestUpdate();
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
-    document.removeEventListener(
-      PERFORMANCE_SCAN_RE_RENDER_EVENT_NAME,
-      this.#updateRenderedItems
-    );
+    global.kasstorInsightsUpdateCallback = undefined;
   }
 
   override render() {
+    const updatedCustomElements = global.kasstorInsightsUpdatedCustomElements;
+
+    if (IS_SERVER || updatedCustomElements === undefined) {
+      return;
+    }
+
     return html`${repeat(
-      renderedItems.values(),
+      updatedCustomElements.values(),
       item => item.id,
       item =>
         html`<kst-performance-scan-item
@@ -76,4 +73,3 @@ declare global {
     "kst-performance-scan": KstPerformanceScan;
   }
 }
-

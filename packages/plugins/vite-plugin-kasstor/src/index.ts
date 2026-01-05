@@ -30,21 +30,21 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 /**
- * Virtual module that contains logic to fetch transpiled CSS and replace styles
- * This module is also served as a virtual module so we can import it from the
- * client HMR listener above.
+ * Generates the client-side code that listens for HMR events.
+ * The client module uses import.meta.hot and will be served by Vite.
  */
-const getClientHandlerModule = await readFile(
-  resolve(__dirname, "./get-client-handler-module.js"),
+const hmrManagerCode = await readFile(
+  resolve(__dirname, "./get-client-code.js"),
   "utf-8"
 );
 
 /**
- * Generates the client-side code that listens for HMR events.
- * The client module uses import.meta.hot and will be served by Vite.
+ * Virtual module that contains logic to fetch transpiled CSS and replace styles
+ * This module is also served as a virtual module so we can import it from the
+ * client HMR listener above.
  */
-const getClientCode = await readFile(
-  resolve(__dirname, "./get-client-code.js"),
+const hmrHandlersCode = await readFile(
+  resolve(__dirname, "./get-client-handler-module.js"),
   "utf-8"
 );
 
@@ -59,7 +59,7 @@ const getClientCode = await readFile(
  * modules actually import (directly or indirectly) a given SCSS file, so
  * we can accurately determine which tag names must have their styles replaced.
  */
-export function kasstor(options?: KasstorPluginOptions): Plugin {
+export async function kasstor(options?: KasstorPluginOptions): Promise<Plugin> {
   let isDevServer = false;
 
   const {
@@ -80,7 +80,7 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
   let includedComponentPaths: RegExp[] = [DEFAULT_COMPONENT_FILE_PATTERN];
   let includedStylePaths: RegExp[] = [DEFAULT_SCSS_FILE_PATTERN];
 
-  const insightsPerformance =
+  const performanceInsights =
     (typeof insights === "object" ? insights.performance : insights) ?? false;
 
   if (includedPaths?.component) {
@@ -143,8 +143,7 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
 
       return {
         define: {
-          "globalThis.kasstorCoreHmrComponent": hmrForComponent,
-          "globalThis.kasstorCoreInsightsPerformance": insightsPerformance
+          "globalThis.kasstorCoreHmrEnabled": hmrForComponent
         }
       };
     },
@@ -220,8 +219,8 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
      */
     load(id: string) {
       return load({
-        getClientCode,
-        getClientHandlerModule,
+        hmrManagerCode,
+        hmrHandlersCode,
         id,
         isDevServer
       });
@@ -233,7 +232,7 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
      * Only applies in dev server.
      */
     transformIndexHtml() {
-      return transformIndexHtml(isDevServer);
+      return transformIndexHtml({ isDevServer, performanceInsights });
     },
 
     /**
@@ -278,4 +277,3 @@ export function kasstor(options?: KasstorPluginOptions): Plugin {
 }
 
 export default kasstor;
-

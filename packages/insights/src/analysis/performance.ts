@@ -1,27 +1,28 @@
 import { LitElement, type PropertyValues } from "lit";
-import type {
-  PerformanceScanItem,
-  PerformanceScanRenderedItems
-} from "../../components/performance-scan/types";
-
-let autoId = 0;
-const renderedItems: PerformanceScanRenderedItems = new Map();
+import type { PerformanceScanItem } from "../components/performance-scan/types";
 
 const REMOVE_OVERLAY_TIMEOUT = 600; // 600ms
-export const PERFORMANCE_SCAN_RE_RENDER_EVENT_NAME =
-  "ch-performance-scan__lit-rerender";
 
-const updateRenderedItems = (model: PerformanceScanItem, elem: LitElement) => {
-  // Skip overlay on the performance scan components
-  if (
-    model.anchorTagName === "ch-performance-scan" ||
-    model.anchorTagName === "ch-performance-scan-item" ||
-    model.anchorTagName === "ch-performance-scan-fps"
-  ) {
+// Skip overlay on the performance scan components
+const COMPONENT_WITHOUT_OVERLAY = new Set([
+  "kst-performance-scan",
+  "kst-performance-scan-item",
+  "kst-performance-scan-fps"
+]);
+
+let autoId = 0;
+
+const global = globalThis;
+
+const updateRenderedItems = (
+  model: PerformanceScanItem,
+  componentRef: LitElement
+) => {
+  if (COMPONENT_WITHOUT_OVERLAY.has(model.anchorTagName)) {
     return;
   }
 
-  let item = renderedItems.get(elem);
+  let item = global.kasstorInsightsUpdatedCustomElements!.get(componentRef);
 
   // Create the item the first time
   if (!item) {
@@ -32,9 +33,9 @@ const updateRenderedItems = (model: PerformanceScanItem, elem: LitElement) => {
     };
     // For some reason, we have to do this. Otherwise, the reference is
     // undefined
-    item.model.anchorRef = elem;
+    item.model.anchorRef = componentRef;
 
-    renderedItems.set(elem, item);
+    global.kasstorInsightsUpdatedCustomElements!.set(componentRef, item);
   }
 
   item.renderCount++;
@@ -44,35 +45,21 @@ const updateRenderedItems = (model: PerformanceScanItem, elem: LitElement) => {
     clearTimeout(item.removeTimeout);
   }
 
+  // Remove overlay on timeout
   item.removeTimeout = setTimeout(() => {
-    renderedItems.delete(elem);
-    document.dispatchEvent(
-      new CustomEvent(PERFORMANCE_SCAN_RE_RENDER_EVENT_NAME)
-    );
+    global.kasstorInsightsUpdatedCustomElements!.delete(componentRef);
+    global.kasstorInsightsUpdateCallback?.();
   }, REMOVE_OVERLAY_TIMEOUT);
 
-  document.dispatchEvent(
-    new CustomEvent(PERFORMANCE_SCAN_RE_RENDER_EVENT_NAME)
-  );
+  // Add overlay for the incoming update of the component
+  global.kasstorInsightsUpdateCallback?.();
 };
 
 /**
  * Applies a monkey patch to log re-renders on Lit components.
  */
-export function patchLitRenders(): PerformanceScanRenderedItems {
-  // Avoid multiple monkey patches
-  if (globalThis.chameleonControlsLibrary?.reports?.performance) {
-    return renderedItems;
-  }
-
-  globalThis.chameleonControlsLibrary ??= {
-    reports: { accessibility: false, performance: true }
-  };
-  globalThis.chameleonControlsLibrary.reports ??= {
-    accessibility: false,
-    performance: true
-  };
-  globalThis.chameleonControlsLibrary.reports.performance = true;
+export function patchLitUpdates() {
+  global.kasstorInsightsUpdatedCustomElements ??= new Map();
 
   // @ts-expect-error - update is a protected property
   const originalUpdate = LitElement.prototype.update;
@@ -109,6 +96,4 @@ export function patchLitRenders(): PerformanceScanRenderedItems {
 
     return originalUpdate.call(this, changedProperties);
   };
-
-  return renderedItems;
 }
