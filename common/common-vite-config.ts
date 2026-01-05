@@ -9,17 +9,24 @@ const loggerInfo = logger.info;
 
 const packagePathToPackageName = {
   "packages/core/": "@genexus/kasstor-core",
+  "packages/insights/": "@genexus/kasstor-insights",
   "packages/signals/": "@genexus/kasstor-signals",
   "packages/webkit/": "@genexus/kasstor-webkit"
 } as const;
 
 export const defineDistributionConfiguration = (options: {
+  entry?: string | string[];
   isNode: boolean;
   isProduction: boolean;
   peerDependencies: string[];
-  packagePath: "packages/core/" | "packages/signals/" | "packages/webkit/";
+  packagePath:
+    | "packages/core/"
+    | "packages/insights/"
+    | "packages/signals/"
+    | "packages/webkit/";
 }): UserConfig => {
-  const { isNode, isProduction, packagePath, peerDependencies } = options;
+  const { entry, isNode, isProduction, packagePath, peerDependencies } =
+    options;
   const PACKAGE_PATH_LENGTH = packagePath.length;
 
   const envFolder = isProduction ? "production" : "development";
@@ -54,12 +61,13 @@ export const defineDistributionConfiguration = (options: {
 
     build: {
       lib: {
-        entry: "./src/index.ts",
+        entry: entry ?? "./src/index.ts",
         name: packagePathToPackageName[packagePath],
         formats: ["es"],
         fileName: () => `[name].js`
       },
-      minify: isProduction ? "oxc" : false,
+      minify: isProduction ? "terser" : false,
+      // minify: isProduction ? "oxc" : false,
 
       // We must not empty the outDir, otherwise watch mode won't work at all,
       // because types are not regenerated
@@ -134,4 +142,3 @@ export const defineDistributionConfiguration = (options: {
     ]
   };
 };
-

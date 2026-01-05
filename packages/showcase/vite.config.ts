@@ -1,7 +1,8 @@
 import { kasstor } from "@genexus/vite-plugin-kasstor";
-import { mercury } from "@genexus/vite-plugin-mercury";
+// import { mercury } from "@genexus/vite-plugin-mercury";
 import {
   defaultMinifyOptions,
+  DefaultOptions,
   minifyHTMLLiterals as minifyLiterals
 } from "minify-html-literals";
 import pkgMinifyHTML from "rollup-plugin-minify-html-literals";
@@ -14,43 +15,45 @@ const minifyHTML: typeof pkgMinifyHTML = pkgMinifyHTML.default;
 export default defineConfig({
   build: {
     cssMinify: "lightningcss",
-    minify: "oxc",
+    minify: "terser", // "oxc"
     sourcemap: true,
-    emptyOutDir: true,
+    emptyOutDir: true
 
-    rolldownOptions: {
-      experimental: {
-        nativeMagicString: true
-      },
+    // rolldownOptions: {
+    //   experimental: {
+    //     nativeMagicString: true
+    //   },
 
-      optimization: {
-        inlineConst: { mode: "all", pass: 2 }
-      },
+    //   optimization: {
+    //     inlineConst: { mode: "all", pass: 2 }
+    //   },
 
-      output: {
-        format: "esm",
-        minifyInternalExports: true,
-        legalComments: "inline"
-      }
-    }
+    //   output: {
+    //     format: "esm",
+    //     minifyInternalExports: true,
+    //     legalComments: "inline"
+    //   }
+    // }
   },
 
-  oxc: {
-    target: "esnext"
-  },
+  // oxc: {
+  //   target: "esnext"
+  // },
 
   plugins: [
-    mercury(),
+    // mercury(),
 
-    // Lit Fast Refresh Plugin - captures .lit.ts and .scss file changes
-    // and replaces adoptedStyleSheets when SCSS files change
     kasstor({
-      componentFilePattern: /\.lit\.ts$/,
-      scssFilePattern: /\.scss$/
+      insights: {
+        performance: true
+      }
     }),
 
     minifyHTML({
-      minifyHTMLLiterals: (source, options) =>
+      minifyHTMLLiterals: (
+        source: string,
+        options: DefaultOptions | undefined
+      ) =>
         minifyLiterals(source, {
           ...options,
           minifyOptions: {
@@ -80,4 +83,3 @@ export default defineConfig({
     })
   ] as PluginOption[]
 });
-
