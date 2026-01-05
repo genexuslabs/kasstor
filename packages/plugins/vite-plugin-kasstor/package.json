@@ -24,6 +24,7 @@
   "scripts": {
     "dev": "tsgo",
     "build": "tsc",
+    "watch": "tsgo --watch",
     "test": "playwright install && vitest",
     "test.ci": "bun run test --watch=false --browser.headless",
     "test:unit": "vitest --project unit",

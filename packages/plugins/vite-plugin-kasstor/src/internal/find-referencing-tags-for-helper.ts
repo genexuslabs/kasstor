@@ -4,6 +4,7 @@ import type { ModuleNode, ViteDevServer } from "vite";
 import { extractTagNameFromSource } from "./extract-tag-name-from-source.js";
 import { findReferencingComponentModules } from "./find-referencing-component-modules.js";
 import { moduleNodeToFilePath } from "./module-node-to-file-path.js";
+import { normalizeExternalFilePaths } from "./normalize-external-file-paths.js";
 
 export interface ComponentReference {
   tag: string;
@@ -70,7 +71,10 @@ export const findReferencingTagsForHelper = async (options: {
       const code = await readFile(compPath, "utf-8");
       const tag = extractTagNameFromSource(code, componentDecoratorRegex);
       if (tag) {
-        references.push({ tag, path: compPath });
+        references.push({
+          tag,
+          path: normalizeExternalFilePaths(compPath, server)
+        });
       }
     } catch (e) {
       // ignore read errors
@@ -82,4 +86,3 @@ export const findReferencingTagsForHelper = async (options: {
 
   return references;
 };
-

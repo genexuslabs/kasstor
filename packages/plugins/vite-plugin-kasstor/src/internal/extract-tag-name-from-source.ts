@@ -1,4 +1,5 @@
 import {
+  COMPONENT_TAG_NAME_FOR_MINIFIED_JS_REGEX,
   COMPONENT_TAG_NAME_FOR_TRANSPILED_JS_REGEX,
   DEFINE_CUSTOM_ELEMENT_REGEX
 } from "../constants.js";
@@ -23,13 +24,20 @@ export const extractTagNameFromSource = (
     return defineMatch[1];
   }
 
-  const compiledJSMtach = source.match(
+  const compiledJSMatch = source.match(
     COMPONENT_TAG_NAME_FOR_TRANSPILED_JS_REGEX
   );
-  if (compiledJSMtach) {
-    return compiledJSMtach[1];
+  if (compiledJSMatch) {
+    return compiledJSMatch[1];
+  }
+
+  // Minified code, for example: e({ tag: "my-tag" })
+  const minifiedJSMatch = source.match(
+    COMPONENT_TAG_NAME_FOR_MINIFIED_JS_REGEX
+  );
+  if (minifiedJSMatch) {
+    return minifiedJSMatch[1];
   }
 
   return null;
 };
-

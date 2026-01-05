@@ -1,4 +1,3 @@
-import { posix, relative } from "path";
 import { type HmrContext, type ModuleNode, type ViteDevServer } from "vite";
 
 import { HMR_WS_EVENT_NAME } from "../constants.js";
@@ -10,6 +9,7 @@ import {
 import { findReferencingTagsForScss } from "../internal/find-referencing-tags-for-scss.js";
 import { getUpdatedCommandForLogger } from "../internal/get-string-for-logger.js";
 import { checkIfShouldInvalidateNextUpdate } from "../internal/invalidate-next-hmr-for-component.js";
+import { normalizeExternalFilePaths } from "../internal/normalize-external-file-paths.js";
 import type {
   KasstorFileType,
   KasstorHmrPayloadData
@@ -150,16 +150,9 @@ export const handleHotUpdate = async (options: {
     return [];
   }
 
-  // Normalize the file path
-  // Check if the file is within the project root
-  const relativePath = relative(server.config.root, file);
-  const isFileOutsideRoot = relativePath.startsWith("..");
-
   // If the file is outside the project root (e.g., in node_modules),
   // use the @fs/ prefix so Vite serves it from the filesystem
-  const normalizedPath = isFileOutsideRoot
-    ? `/@fs${file}`
-    : posix.join("/", relativePath);
+  const normalizedPath = normalizeExternalFilePaths(file, server);
 
   // Compute tags based on file type
   const tags: string[] =
