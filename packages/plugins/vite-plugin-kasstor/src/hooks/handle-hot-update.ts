@@ -1,6 +1,9 @@
 import { type HmrContext, type ModuleNode, type ViteDevServer } from "vite";
 
-import { HMR_WS_EVENT_NAME } from "../constants.js";
+import {
+  HMR_WS_EVENT_NAME,
+  PERFORMANCE_METRIC_WS_EVENT_NAME
+} from "../constants.js";
 import { findReferencingTagsForComponent } from "../internal/find-referencing-tags-for-component.js";
 import {
   findReferencingTagsForHelper,
@@ -30,7 +33,7 @@ const registerListenerForPerformanceMetrics = (server: ViteDevServer) => {
   listenerRegistered = true;
 
   server.ws.on(
-    "custom:kasstor:performance",
+    PERFORMANCE_METRIC_WS_EVENT_NAME,
     (data: {
       operationId: string;
       operationType: "global types" | "readme" | "component" | "style";
