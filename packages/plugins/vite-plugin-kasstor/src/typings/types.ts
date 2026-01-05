@@ -74,7 +74,7 @@ export type KasstorPluginOptions = {
   insights?:
     | boolean
     | {
-        accessibility?: boolean;
+        // accessibility?: boolean;
         performance?: boolean;
       };
 } & Pick<
