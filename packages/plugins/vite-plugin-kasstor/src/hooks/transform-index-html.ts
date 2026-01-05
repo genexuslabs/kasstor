@@ -23,6 +23,8 @@ const getPerformanceInsightsSpecifierPath = () => {
     return performanceInsightsSpecifierPath;
   }
 
+  // TODO: We should try to use the built in utilities of Vite to find the
+  // module specifier
   // First, resolve the path where @genexus/kasstor-insights/components/performance-scan.js is installed
   const resolution = sync(
     process.cwd(),
