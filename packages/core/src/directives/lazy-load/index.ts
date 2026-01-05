@@ -40,7 +40,6 @@ class LazyLoadDirective extends AsyncDirective {
   }
 
   override update(part: ElementPart) {
-    console.log("LazyLoadDirective: update");
     this.#checkElementRegistered(part);
     return nothing;
   }
