@@ -19,15 +19,17 @@
   ],
   "scripts": {
     "start": "cd packages/showcase && bun start",
-    "dev": "concurrently 'bun dev:build' 'bun dev:core' 'bun dev:signals' 'bun dev:vite-plugin' 'bun dev:webkit'",
+    "dev": "concurrently 'bun dev:build' 'bun dev:core' 'bun dev:insights' 'bun dev:signals' 'bun dev:vite-plugin' 'bun dev:webkit'",
     "dev:build": "cd packages/build && bun dev",
     "dev:core": "cd packages/core && bun dev",
+    "dev:insights": "cd packages/insights && bun dev",
     "dev:signals": "cd packages/signals && bun dev",
     "dev:vite-plugin": "cd packages/plugins/vite-plugin-kasstor && bun dev",
     "dev:webkit": "cd packages/webkit && bun dev",
-    "build": "bun build:build && bun build:core && bun build:signals && bun build:vite-plugin && bun build:webkit",
+    "build": "bun build:build && bun build:core && bun build:insights && bun build:signals && bun build:vite-plugin && bun build:webkit",
     "build:build": "cd packages/build && bun run build",
     "build:core": "cd packages/core && bun run build",
+    "build:insights": "cd packages/insights && bun run build",
     "build:signals": "cd packages/signals && bun run build",
     "build:vite-plugin": "cd packages/plugins/vite-plugin-kasstor && bun run build",
     "build:webkit": "cd packages/webkit && bun run build",
@@ -59,15 +61,15 @@
     "rollup-plugin-minify-html-literals": "^1.2.6",
     "typescript": "~5.9.2",
     "typescript-eslint": "~8.32.0",
-    "vite": "8.0.0-beta.5",
+    "vite": "7.3.0",
     "vitest": "~3.2.4",
     "vitest-browser-lit": "~0.1.0"
   },
   "overrides": {
     "@genexus/kasstor-build": "workspace:*",
     "@genexus/kasstor-core": "workspace:*",
+    "@genexus/kasstor-insights": "workspace:*",
     "@genexus/kasstor-webkit": "workspace:*",
-    "vite": "8.0.0-beta.5"
+    "vite": "7.3.0"
   }
 }
-
