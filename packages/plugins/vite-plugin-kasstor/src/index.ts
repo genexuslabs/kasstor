@@ -34,7 +34,7 @@ const __dirname = dirname(__filename);
  * The client module uses import.meta.hot and will be served by Vite.
  */
 const hmrManagerCode = await readFile(
-  resolve(__dirname, "./get-client-code.js"),
+  resolve(__dirname, "./hmr-manager-code.js"),
   "utf-8"
 );
 
@@ -44,7 +44,7 @@ const hmrManagerCode = await readFile(
  * client HMR listener above.
  */
 const hmrHandlersCode = await readFile(
-  resolve(__dirname, "./get-client-handler-module.js"),
+  resolve(__dirname, "./hmr-handler-code.js"),
   "utf-8"
 );
 

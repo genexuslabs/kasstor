@@ -7,15 +7,12 @@ const sendPerformanceMetric = (
   operationId: string,
   operationType: "global types" | "readme" | "component" | "style",
   components: string[]
-) => {
-  if (typeof import.meta !== "undefined" && import.meta.hot) {
-    import.meta.hot.send("kasstor:performance-metric", {
-      operationId,
-      operationType,
-      components
-    });
-  }
-};
+) =>
+  import.meta.hot?.send("kasstor:performance-metric", {
+    operationId,
+    operationType,
+    components
+  });
 
 const replaceStyles = (css: string, tags: string[], operationId: string) => {
   // Prefer the global registry provided by the library (populated by KasstorElement)
@@ -75,6 +72,8 @@ export async function handleScssUpdate(
 
     let css = moduleText;
     try {
+      console.log("moduleText", moduleText);
+
       const blob = new Blob([moduleText], { type: "application/javascript" });
 
       const blobUrl = URL.createObjectURL(blob);
