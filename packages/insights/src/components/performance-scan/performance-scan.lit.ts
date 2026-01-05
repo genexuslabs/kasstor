@@ -6,11 +6,11 @@ import { html } from "lit";
 import { property } from "lit/decorators/property.js";
 import { repeat } from "lit/directives/repeat.js";
 
-import { patchLitUpdates } from "../../analysis/performance.js";
-import { IS_SERVER } from "../../development-flags";
+import { patchLitUpdatesToTrackPerformance } from "../../analysis/patch-lit-updates-to-track-performance.js";
+import { IS_SERVER } from "../../development-flags.js";
 
 // Side-effect to define the performance scan item
-import "./internals/performance-scan-item/performance-scan-item.lit";
+import "./internals/performance-scan-item/performance-scan-item.lit.js";
 
 import styles from "./performance-scan.scss?inline";
 
@@ -19,7 +19,7 @@ const global = globalThis;
 
 // On the server we don't check anything, as the update lifecycle doesn't exists
 if (!IS_SERVER) {
-  patchLitUpdates();
+  patchLitUpdatesToTrackPerformance();
 }
 
 /**
@@ -53,16 +53,16 @@ export class KstPerformanceScan extends KasstorElement {
       return;
     }
 
-    return html`${repeat(
+    return repeat(
       updatedCustomElements.values(),
       item => item.id,
       item =>
         html`<kst-performance-scan-item
-          .anchorRef=${item.model.anchorRef}
-          .anchorTagName=${item.model.anchorTagName}
+          .anchorRef=${item.anchorRef}
+          .anchorTagName=${item.anchorTagName}
           .renderCount=${item.renderCount}
         ></kst-performance-scan-item>`
-    )}`;
+    );
   }
 }
 

@@ -1,5 +1,5 @@
 import { LitElement, type PropertyValues } from "lit";
-import type { PerformanceScanItem } from "../components/performance-scan/types";
+import type { PerformanceScanItemModel } from "../components/performance-scan/types";
 
 const REMOVE_OVERLAY_TIMEOUT = 600; // 600ms
 
@@ -15,7 +15,7 @@ let autoId = 0;
 const global = globalThis;
 
 const updateRenderedItems = (
-  model: PerformanceScanItem,
+  model: Omit<PerformanceScanItemModel, "id" | "renderCount" | "removeTimeout">,
   componentRef: LitElement
 ) => {
   if (COMPONENT_WITHOUT_OVERLAY.has(model.anchorTagName)) {
@@ -27,13 +27,13 @@ const updateRenderedItems = (
   // Create the item the first time
   if (!item) {
     item = {
+      ...model,
       id: autoId++,
-      renderCount: 0,
-      model
+      renderCount: 0
     };
     // For some reason, we have to do this. Otherwise, the reference is
     // undefined
-    item.model.anchorRef = componentRef;
+    item.anchorRef = componentRef;
 
     global.kasstorInsightsUpdatedCustomElements!.set(componentRef, item);
   }
@@ -58,23 +58,25 @@ const updateRenderedItems = (
 /**
  * Applies a monkey patch to log re-renders on Lit components.
  */
-export function patchLitUpdates() {
-  global.kasstorInsightsUpdatedCustomElements ??= new Map();
+export const patchLitUpdatesToTrackPerformance = () => {
+  // Only apply the monkey patch one time
+  if (global.kasstorInsightsUpdatedCustomElements !== undefined) {
+    return;
+  }
+  global.kasstorInsightsUpdatedCustomElements = new Map();
 
   // @ts-expect-error - update is a protected property
   const originalUpdate = LitElement.prototype.update;
 
   // @ts-expect-error - update is a protected property
-  LitElement.prototype.update = function (
-    this: LitElement,
-    changedProperties: PropertyValues
+  LitElement.prototype.update = function <T extends LitElement>(
+    this: T,
+    changedProperties: PropertyValues<T>
   ) {
-    const componentName = this.constructor.name;
-    const changes: PerformanceScanItem["changes"] = [];
+    const changes: PerformanceScanItemModel["changes"] = [];
 
     for (const [name, oldValue] of changedProperties) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const newValue = (this as any)[name];
+      const newValue = this[name as keyof typeof this];
       changes.push({
         property: name,
         oldValue: oldValue,
@@ -86,7 +88,6 @@ export function patchLitUpdates() {
     updateRenderedItems(
       {
         anchorRef: this,
-        constructorName: componentName,
         anchorTagName: this.tagName.toLowerCase(),
         changes: changes,
         timeStamp: new Date()
@@ -96,4 +97,4 @@ export function patchLitUpdates() {
 
     return originalUpdate.call(this, changedProperties);
   };
-}
+};
