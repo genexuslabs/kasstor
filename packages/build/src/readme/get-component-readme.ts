@@ -187,28 +187,3 @@ export const getComponentReadme = async (component: ComponentDefinition) => {
   // );
   return readme;
 };
-
-// console.log(files);
-
-// const command = `wca analyze "src/**/*.lit.ts" --format json2 --features method --outFile readme.json`;
-
-// exec(command, (error, stdout, stderr) => {
-//   if (error) {
-//     console.error(`❌ Error: ${error.message}`);
-//     return;
-//   }
-
-//   if (stderr) {
-//     console.error(`⚠️ Warning: ${stderr}`);
-//   }
-
-//   // console.log(
-//   //   fs.readFileSync("readme.json", {
-//   //     encoding: "utf-8"
-//   //   })
-//   // );
-//   rmSync("readme.json");
-
-//   // All good
-// });
-
