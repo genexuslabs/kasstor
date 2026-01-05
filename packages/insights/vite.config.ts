@@ -7,8 +7,7 @@ export default defineConfig(({ mode }) =>
   defineDistributionConfiguration({
     isNode: mode.startsWith("node"),
     isProduction: mode.endsWith("production"),
-    packagePath: "packages/core/",
+    packagePath: "packages/insights/",
     peerDependencies: Object.keys(packageJson.peerDependencies)
   })
 );
-
