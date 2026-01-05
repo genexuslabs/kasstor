@@ -5,11 +5,11 @@
  */
 const sendPerformanceMetric = (
   operationId: string,
-  operationType: string,
+  operationType: "global types" | "readme" | "component" | "style",
   components: string[]
 ) => {
   if (typeof import.meta !== "undefined" && import.meta.hot) {
-    import.meta.hot.send("custom:kasstor:performance", {
+    import.meta.hot.send("kasstor:performance-metric", {
       operationId,
       operationType,
       components
@@ -108,6 +108,11 @@ export async function handleComponentUpdate(
   tags: string[],
   operationId: string
 ) {
+  globalThis.kasstorCoreHotModuleReplacedComponents ??= new Set();
+  tags.forEach(tagName =>
+    globalThis.kasstorCoreHotModuleReplacedComponents!.add(tagName)
+  );
+
   try {
     // Download all new files in parallel to improve the HMR performance
     await Promise.all(
@@ -124,6 +129,9 @@ export async function handleComponentUpdate(
     sendPerformanceMetric(operationId, "component", tags);
   } catch (e) {
     console.error("[kasstor] Error while hot updating components", e);
+  } finally {
+    tags.forEach(tagName =>
+      globalThis.kasstorCoreHotModuleReplacedComponents!.delete(tagName)
+    );
   }
 }
-
