@@ -18,14 +18,14 @@ import { invalidateNextUpdateForComponents } from "../internal/invalidate-next-h
 import type { KasstorFileType } from "../typings/internal-types";
 
 /**
- * Debounce each library build by 10ms to ensure no excessive builds occur in
+ * Debounce each library build by 4ms to ensure no excessive builds occur in
  * quick succession. For example, when multiple files are being saved at the
  * same time, only one build will be triggered.
  *
  * Without this debounce, saving multiple files simultaneously could trigger
  * multiple builds in quick succession, leading to performance issues.
  */
-const LIBRARY_BUILD_DEBOUNCE = 10;
+const LIBRARY_BUILD_DEBOUNCE = 4;
 
 const pathsToProcess: Set<string> = new Set();
 

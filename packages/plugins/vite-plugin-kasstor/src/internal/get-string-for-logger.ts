@@ -1,3 +1,4 @@
+import { platform } from "os";
 import { styleText } from "util";
 import { prettyTimeMark } from "./pretty-time-mark.js";
 
@@ -5,13 +6,16 @@ let lastUpdateTime = performance.now();
 
 const ADD_END_LINE_DEBOUNCE = 1500;
 
-const kasstorPrefix = styleText("dim", "[kasstor] ");
-const threeDots = styleText("dim", " ...");
+const isWindowsOs = platform() === "win32";
+const dimColor = isWindowsOs ? "gray" : "dim";
+
+const kasstorPrefix = styleText(dimColor, "[kasstor] ");
+const threeDots = styleText(dimColor, " ...");
 
 let buildingLibrary = false;
 
 const printElapsedTime = (elapsedTime: number) =>
-  styleText("dim", ` in ${prettyTimeMark(elapsedTime)}`);
+  styleText(dimColor, ` in ${prettyTimeMark(elapsedTime)}`);
 
 export const setBuildingLibraryState = (type: "start" | "end") => {
   buildingLibrary = type === "start";
@@ -23,11 +27,16 @@ export const getNormalCommandForLogger = (
   type: "start" | "end",
   message: string,
   elapsedTime = 0
-) =>
-  (type === "start" ? "\n" : "") +
-  kasstorPrefix +
-  message +
-  (type === "end" ? printElapsedTime(elapsedTime) : threeDots);
+) => {
+  lastUpdateTime = performance.now();
+
+  return (
+    (type === "start" ? "\n" : "") +
+    kasstorPrefix +
+    message +
+    (type === "end" ? printElapsedTime(elapsedTime) : threeDots)
+  );
+};
 
 export const getUpdatedCommandForLogger = (
   operationType: "global types" | "readme" | "component" | "style",
@@ -48,4 +57,3 @@ export const getUpdatedCommandForLogger = (
     printElapsedTime(elapsedTime)
   );
 };
-
