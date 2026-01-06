@@ -63,32 +63,19 @@ export async function handleScssUpdate(
   operationId: string
 ) {
   try {
+    // We add the t parameter to avoid cache issues. We could also invalidate
+    // the cache of this file
     const cssUrl = scssPath + "?inline&t=" + Date.now();
-    const res = await fetch(cssUrl);
-    if (!res.ok) {
-      throw new Error("Failed to fetch CSS: " + res.status);
+
+    const res = await import(/* @vite-ignore */ cssUrl);
+
+    if (res?.default) {
+      replaceStyles(res.default as string, tags, operationId);
+    } else {
+      throw new Error(
+        `[kasstor] Failed to import the CSS for the tags ${tags.join(",")}. Ensure it has an default export.`
+      );
     }
-    const moduleText = await res.text();
-
-    let css = moduleText;
-    try {
-      console.log("moduleText", moduleText);
-
-      const blob = new Blob([moduleText], { type: "application/javascript" });
-
-      const blobUrl = URL.createObjectURL(blob);
-      const mod = await import(/* @vite-ignore */ blobUrl);
-      URL.revokeObjectURL(blobUrl); // Free the memory
-
-      if (mod && mod.default) {
-        css = mod.default;
-      }
-    } catch (e) {
-      console.error(e);
-      // Fallback to raw text as CSS
-    }
-
-    replaceStyles(css, tags, operationId);
   } catch (e) {
     console.error("[kasstor] Error while hot updating styles", e);
   }
