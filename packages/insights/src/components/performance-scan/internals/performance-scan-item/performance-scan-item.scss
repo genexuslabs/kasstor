@@ -12,13 +12,13 @@
   inline-size: var(--ch-performance-scan-item-inline-size);
 
   border: 2px solid var(--ch-performance-scan-component-update-accent-color);
-  background-color: #834ed820;
+  background-color: #834ed840;
   pointer-events: none;
   z-index: 1000;
   box-sizing: border-box;
 
-  animation: lit-flash 0.5s ease-out forwards;
-  opacity: 0.75;
+  animation: flash 0.5s ease-out forwards;
+  opacity: 0.875;
 }
 
 span {
@@ -34,21 +34,22 @@ span {
   margin-block-start: -15px;
 }
 
-@keyframes lit-flash {
-  20% {
+@keyframes flash {
+  25% {
     opacity: 1;
     filter: brightness(1.2);
   }
 
   50% {
-    opacity: 0.875;
+    opacity: 1;
   }
 
   75% {
-    opacity: 0.25;
+    opacity: 0.75;
   }
 
   100% {
     opacity: 0;
   }
 }
+
