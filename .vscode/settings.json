@@ -5,9 +5,7 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "always"
   },
-  "cSpell.words": [
-    "genexus",
-    "Kasstor"
-  ],
+  "cSpell.words": ["genexus", "Kasstor", "subtag", "SUBTAGS"],
   "editor.tabSize": 2
 }
+
