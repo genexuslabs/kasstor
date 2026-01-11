@@ -238,7 +238,7 @@ export const extractClassMembers = (
     const modifiers = (member as ts.PropertyDeclaration | ts.MethodDeclaration)
       .modifiers;
 
-    // Check for @property decorator
+    // Check for @property or @prop decorators
     const propertyDecorator = modifiers?.find(
       (mod): mod is ts.Decorator =>
         ts.isDecorator(mod) &&
@@ -257,13 +257,14 @@ export const extractClassMembers = (
         mod.expression.expression.text === "Event"
     );
 
-    // Check for @Watch decorator
+    // Check for @Observe or @Watch decorators
     const watchDecorator = modifiers?.find(
       (mod): mod is ts.Decorator =>
         ts.isDecorator(mod) &&
         ts.isCallExpression(mod.expression) &&
         ts.isIdentifier(mod.expression.expression) &&
-        mod.expression.expression.text === "Watch"
+        (mod.expression.expression.text === "Observe" ||
+          mod.expression.expression.text === "Watch")
     );
 
     if (
@@ -289,7 +290,7 @@ export const extractClassMembers = (
       ts.isIdentifier(member.name) &&
       !propertyDecorator &&
       !eventDecorator &&
-      !watchDecorator && // Exclude @Watch decorated methods
+      !watchDecorator && // Exclude @Observe decorated methods
       isPublicMethod(member)
     ) {
       const method = extractMethod(member, sourceFile);
@@ -301,4 +302,3 @@ export const extractClassMembers = (
 
   return [properties, events, methods];
 };
-

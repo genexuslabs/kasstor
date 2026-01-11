@@ -3,7 +3,7 @@ import { property } from "lit/decorators/property.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-lit";
 import { Component, KasstorElement } from "../../Component/index.js";
-import { Watch } from "../index.js";
+import { Observe } from "../index.js";
 
 const propUndefinedCallbackMock = vi.fn();
 const propStringCallbackMock = vi.fn();
@@ -15,68 +15,91 @@ const propArrayCallbackMock = vi.fn();
 const propFunctionCallbackMock = vi.fn();
 const propSymbolCallbackMock = vi.fn();
 
-const TEST_SYMBOL = Symbol("watch-test-1");
+const TEST_SYMBOL = Symbol("observe-test-1");
 const TEST_DUMMY_FUNCTION = () => {};
 
-@Component({ tag: "watch-test-1" })
-class WatchCallbackTest1 extends KasstorElement {
-  @property() propUndefined: string | undefined;
-  @Watch("propUndefined")
+@Component({ tag: "observe-test-1" })
+class ObserveCallbackTest1 extends KasstorElement {
+  @property({ attribute: false }) propUndefined: unknown | undefined;
+  @Observe("propUndefined")
   protected propUndefinedChanged(
-    newValue: string | undefined,
-    oldValue: string | undefined
+    newValue: unknown | undefined,
+    oldValue: unknown | undefined
   ) {
     propUndefinedCallbackMock(newValue, oldValue);
   }
 
-  @property() propString: string = "Default value for propString";
-  @Watch("propString")
-  protected propStringChanged(newValue: string, oldValue: string) {
+  @property() propString: string | undefined = "Default value for propString";
+  @Observe("propString")
+  protected propStringChanged(
+    newValue: string | undefined,
+    oldValue: string | undefined
+  ) {
     propStringCallbackMock(newValue, oldValue);
   }
 
-  @property({ type: Number }) propNumber: number = 5;
-  @Watch("propNumber")
-  protected propNumberChanged(newValue: number, oldValue: number) {
+  @property({ type: Number }) propNumber: number | undefined = 5;
+  @Observe("propNumber")
+  protected propNumberChanged(
+    newValue: number | undefined,
+    oldValue: number | undefined
+  ) {
     propNumberCallbackMock(newValue, oldValue);
   }
 
-  @property({ type: Boolean }) propBoolean: boolean = false;
-  @Watch("propBoolean")
-  protected propBooleanChanged(newValue: boolean, oldValue: boolean) {
+  @property({ type: Boolean }) propBoolean: boolean | undefined = false;
+  @Observe("propBoolean")
+  protected propBooleanChanged(
+    newValue: boolean | undefined,
+    oldValue: boolean | undefined
+  ) {
     propBooleanCallbackMock(newValue, oldValue);
   }
 
-  @property({ attribute: false }) propNull: null = null;
-  @Watch("propNull")
-  protected propNullChanged(newValue: null, oldValue: null) {
+  @property({ attribute: false }) propNull: null | undefined = null;
+  @Observe("propNull")
+  protected propNullChanged(
+    newValue: null | undefined,
+    oldValue: null | undefined
+  ) {
     propNullCallbackMock(newValue, oldValue);
   }
 
-  @property({ attribute: false }) propObject: Record<string, string> = {};
-  @Watch("propObject")
+  @property({ attribute: false }) propObject:
+    | Record<string, string>
+    | undefined = {};
+  @Observe("propObject")
   protected propObjectChanged(
-    newValue: Record<string, string>,
-    oldValue: Record<string, string>
+    newValue: Record<string, string> | undefined,
+    oldValue: Record<string, string> | undefined
   ) {
     propObjectCallbackMock(newValue, oldValue);
   }
 
-  @property({ attribute: false }) propArray: unknown[] = [];
-  @Watch("propArray")
-  protected propArrayChanged(newValue: unknown[], oldValue: unknown[]) {
+  @property({ attribute: false }) propArray: unknown[] | undefined = [];
+  @Observe("propArray")
+  protected propArrayChanged(
+    newValue: unknown[] | undefined,
+    oldValue: unknown[] | undefined
+  ) {
     propArrayCallbackMock(newValue, oldValue);
   }
 
-  @property() propFunction: () => void = TEST_DUMMY_FUNCTION;
-  @Watch("propFunction")
-  protected propFunctionChanged(newValue: () => void, oldValue: () => void) {
+  @property() propFunction: (() => void) | undefined = TEST_DUMMY_FUNCTION;
+  @Observe("propFunction")
+  protected propFunctionChanged(
+    newValue: (() => void) | undefined,
+    oldValue: (() => void) | undefined
+  ) {
     propFunctionCallbackMock(newValue, oldValue);
   }
 
-  @property({ attribute: false }) propSymbol: symbol = TEST_SYMBOL;
-  @Watch("propSymbol")
-  protected propSymbolChanged(newValue: symbol, oldValue: symbol) {
+  @property({ attribute: false }) propSymbol: symbol | undefined = TEST_SYMBOL;
+  @Observe("propSymbol")
+  protected propSymbolChanged(
+    newValue: symbol | undefined,
+    oldValue: symbol | undefined
+  ) {
     propSymbolCallbackMock(newValue, oldValue);
   }
 
@@ -86,28 +109,28 @@ class WatchCallbackTest1 extends KasstorElement {
 }
 declare global {
   interface HTMLElementTagNameMap {
-    "watch-test-1": WatchCallbackTest1;
+    "observe-test-1": ObserveCallbackTest1;
   }
 }
 
 const renderElement1 = async () => {
-  render(html`<watch-test-1></watch-test-1>`);
-  const watchTest1Ref = document.querySelector("watch-test-1")!;
+  render(html`<observe-test-1></observe-test-1>`);
+  const watchTest1Ref = document.querySelector("observe-test-1")!;
   await watchTest1Ref.updateComplete;
 
   return watchTest1Ref;
 };
 
 const renderElement1WithProperty = async (properties: {
-  propUndefined: string | undefined;
-  propString: string;
-  propNumber: number;
-  propBoolean: boolean;
-  propNull: null;
-  propObject: Record<string, string>;
-  propArray: unknown[];
-  propFunction: () => void;
-  propSymbol: symbol;
+  propUndefined: unknown | undefined;
+  propString: string | undefined;
+  propNumber: number | undefined;
+  propBoolean: boolean | undefined;
+  propNull: null | undefined;
+  propObject: Record<string, string> | undefined;
+  propArray: unknown[] | undefined;
+  propFunction: (() => void) | undefined;
+  propSymbol: symbol | undefined;
 }) => {
   const {
     propUndefined,
@@ -122,7 +145,7 @@ const renderElement1WithProperty = async (properties: {
   } = properties;
 
   render(
-    html`<watch-test-1
+    html`<observe-test-1
       .propUndefined=${propUndefined}
       .propString=${propString}
       .propNumber=${propNumber}
@@ -132,16 +155,16 @@ const renderElement1WithProperty = async (properties: {
       .propArray=${propArray}
       .propFunction=${propFunction}
       .propSymbol=${propSymbol}
-    ></watch-test-1>`
+    ></observe-test-1>`
   );
-  const watchTest1Ref = document.querySelector("watch-test-1")!;
-  await watchTest1Ref.updateComplete;
+  const observeTest1Ref = document.querySelector("observe-test-1")!;
+  await observeTest1Ref.updateComplete;
 
-  return watchTest1Ref;
+  return observeTest1Ref;
 };
 
 describe("[Decorator]", () => {
-  describe("[Watch]", () => {
+  describe("[Observe]", () => {
     beforeEach(() => {
       propUndefinedCallbackMock.mockReset();
       propStringCallbackMock.mockReset();
@@ -156,13 +179,37 @@ describe("[Decorator]", () => {
 
     afterEach(() => cleanup());
 
-    test("should not fire the Watch callback when the property has undefined as the default value on the initial load", async () => {
+    test("should not fire the Observe callback when the property has undefined as the default value on the initial load", async () => {
       await renderElement1();
 
       expect(propUndefinedCallbackMock).toHaveBeenCalledTimes(0);
     });
 
-    test("should fire the Watch callback on the initial load when the property has a string as the default value", async () => {
+    test("should not fire the Observe callback when the property has undefined as the initial value on the initial load", async () => {
+      await renderElement1WithProperty({
+        propUndefined: undefined,
+        propString: undefined,
+        propNumber: undefined,
+        propBoolean: undefined,
+        propNull: undefined,
+        propObject: undefined,
+        propArray: undefined,
+        propFunction: undefined,
+        propSymbol: undefined
+      });
+
+      expect(propUndefinedCallbackMock).toHaveBeenCalledTimes(0);
+      expect(propStringCallbackMock).toHaveBeenCalledTimes(0);
+      expect(propNumberCallbackMock).toHaveBeenCalledTimes(0);
+      expect(propBooleanCallbackMock).toHaveBeenCalledTimes(0);
+      expect(propNullCallbackMock).toHaveBeenCalledTimes(0);
+      expect(propObjectCallbackMock).toHaveBeenCalledTimes(0);
+      expect(propArrayCallbackMock).toHaveBeenCalledTimes(0);
+      expect(propFunctionCallbackMock).toHaveBeenCalledTimes(0);
+      expect(propSymbolCallbackMock).toHaveBeenCalledTimes(0);
+    });
+
+    test("should fire the Observe callback on the initial load when the property has a string as the default value", async () => {
       await renderElement1();
 
       expect(propStringCallbackMock).toHaveBeenCalledTimes(1);
@@ -172,42 +219,42 @@ describe("[Decorator]", () => {
       );
     });
 
-    test("should fire the Watch callback on the initial load when the property has a number as the default value", async () => {
+    test("should fire the Observe callback on the initial load when the property has a number as the default value", async () => {
       await renderElement1();
 
       expect(propNumberCallbackMock).toHaveBeenCalledTimes(1);
       expect(propNumberCallbackMock).toHaveBeenCalledWith(5, undefined);
     });
 
-    test("should fire the Watch callback on the initial load when the property has a boolean as the default value", async () => {
+    test("should fire the Observe callback on the initial load when the property has a boolean as the default value", async () => {
       await renderElement1();
 
       expect(propBooleanCallbackMock).toHaveBeenCalledTimes(1);
       expect(propBooleanCallbackMock).toHaveBeenCalledWith(false, undefined);
     });
 
-    test("should fire the Watch callback on the initial load when the property has null as the default value", async () => {
+    test("should fire the Observe callback on the initial load when the property has null as the default value", async () => {
       await renderElement1();
 
       expect(propNullCallbackMock).toHaveBeenCalledTimes(1);
       expect(propNullCallbackMock).toHaveBeenCalledWith(null, undefined);
     });
 
-    test("should fire the Watch callback on the initial load when the property has an object as the default value", async () => {
+    test("should fire the Observe callback on the initial load when the property has an object as the default value", async () => {
       await renderElement1();
 
       expect(propObjectCallbackMock).toHaveBeenCalledTimes(1);
       expect(propObjectCallbackMock).toHaveBeenCalledWith({}, undefined);
     });
 
-    test("should fire the Watch callback on the initial load when the property has an array as the default value", async () => {
+    test("should fire the Observe callback on the initial load when the property has an array as the default value", async () => {
       await renderElement1();
 
       expect(propArrayCallbackMock).toHaveBeenCalledTimes(1);
       expect(propArrayCallbackMock).toHaveBeenCalledWith([], undefined);
     });
 
-    test("should fire the Watch callback on the initial load when the property has an function as the default value", async () => {
+    test("should fire the Observe callback on the initial load when the property has an function as the default value", async () => {
       await renderElement1();
 
       expect(propFunctionCallbackMock).toHaveBeenCalledTimes(1);
@@ -217,7 +264,7 @@ describe("[Decorator]", () => {
       );
     });
 
-    test("should fire the Watch callback on the initial load when the property has an symbol as the default value", async () => {
+    test("should fire the Observe callback on the initial load when the property has an symbol as the default value", async () => {
       await renderElement1();
 
       expect(propSymbolCallbackMock).toHaveBeenCalledTimes(1);
@@ -227,7 +274,7 @@ describe("[Decorator]", () => {
       );
     });
 
-    test("even if the initial value matches the default property value, the Watch callback should be fired unless the value is undefined", async () => {
+    test("even if the initial value matches the default property value, the Observe callback should be fired unless the value is undefined", async () => {
       await renderElement1WithProperty({
         propUndefined: undefined,
         propString: "Default value for propString",
@@ -269,7 +316,7 @@ describe("[Decorator]", () => {
       );
     });
 
-    test("the Watch callback should be fired on the initial load when the initial value differs the default value", async () => {
+    test("the Observe callback should be fired on the initial load when the initial value differs the default value", async () => {
       // await renderElement1WithProperty({
       //   propUndefined: undefined,
       //   propString: "Default value for propString",
@@ -355,5 +402,12 @@ describe("[Decorator]", () => {
         // expect(prop1CallbackMock).toHaveBeenCalledWith("Hello runtime", "Hello");
       }
     );
+
+    test.todo(
+      "changing a property or state inside the Observe callback should not trigger an extra update",
+      () => {}
+    );
+
+    test.todo("should work with SSR", () => {});
   });
 });

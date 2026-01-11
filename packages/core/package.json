@@ -72,15 +72,14 @@
       "development": "./dist/browser/development/decorators/Event/index.js",
       "default": "./dist/browser/production/decorators/Event/index.js"
     },
-    "./decorators/watch.js": {
+    "./decorators/observe.js": {
       "node": {
-        "development": "./dist/node/development/decorators/Watch/index.js",
-        "default": "./dist/node/production/decorators/Watch/index.js"
+        "development": "./dist/node/development/decorators/Observe/index.js",
+        "default": "./dist/node/production/decorators/Observe/index.js"
       },
-      "types": "./dist/browser/development/decorators/Watch/index.d.ts",
-      "development": "./dist/browser/development/decorators/Watch/index.js",
-      "default": "./dist/browser/production/decorators/Watch/index.js"
+      "types": "./dist/browser/development/decorators/Observe/index.d.ts",
+      "development": "./dist/browser/development/decorators/Observe/index.js",
+      "default": "./dist/browser/production/decorators/Observe/index.js"
     }
   }
 }
-

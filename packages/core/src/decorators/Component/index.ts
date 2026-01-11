@@ -205,7 +205,7 @@ export abstract class KasstorElement extends LitElement {
       // TODO: Find a better way of doing this without proving a waterfall in the
       // initial load, by using an external symbol that is referenced here and in
       // the KasstorElement
-      (this as any).kasstorWatchCallback?.(changedProperties);
+      (this as any).kasstorObserveCallback?.(changedProperties);
 
       if (!this.hasUpdated) {
         this.firstWillUpdate(changedProperties);
