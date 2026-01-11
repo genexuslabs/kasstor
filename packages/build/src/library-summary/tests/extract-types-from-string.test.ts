@@ -1,57 +1,74 @@
+import { readFile } from "fs/promises";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 import { describe, expect, it } from "vitest";
-import { extractTypesFromTypeString } from "../internal/extract-types-from-string";
+import { extractClassMembers } from "../internal/extract-class-members.js";
+import {
+  getComponentClassAndDecorator,
+  getTsSourceFile
+} from "../internal/extract-component-definition.js";
 
-describe("extractTypesFromTypeString", () => {
-  it("should extract simple type names", () => {
-    const result = extractTypesFromTypeString("MyType");
-    expect(result).toEqual(new Set(["MyType"]));
-  });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-  it("should extract multiple type names", () => {
-    const result = extractTypesFromTypeString("MyType | OtherType");
-    expect(result).toEqual(new Set(["MyType", "OtherType"]));
-  });
+const TEST_COMPONENT_FILE_PATH = join(__dirname, "test-component.ts");
+const TEST_COMPONENT_CONTENT = await readFile(
+  TEST_COMPONENT_FILE_PATH,
+  "utf-8"
+);
+const TS_SOURCE_FILE = getTsSourceFile(
+  TEST_COMPONENT_FILE_PATH,
+  TEST_COMPONENT_CONTENT
+);
 
-  it("should extract types from generic types", () => {
-    const result = extractTypesFromTypeString("Promise<MyType>");
-    expect(result).toEqual(new Set(["MyType"]));
-  });
+const { componentClass, componentDecorator } = getComponentClassAndDecorator(
+  TS_SOURCE_FILE,
+  undefined
+);
 
-  it("should extract types from union types", () => {
-    const result = extractTypesFromTypeString("MyType | OtherType | ThirdType");
-    expect(result).toEqual(new Set(["MyType", "OtherType", "ThirdType"]));
-  });
-
-  it("should exclude built-in types", () => {
-    const result = extractTypesFromTypeString("string | number | MyType");
-    expect(result).toEqual(new Set(["MyType"]));
-  });
-
-  it.todo("should handle namespaced types", () => {
-    const result = extractTypesFromTypeString("Namespace.MyType");
-    expect(result).toEqual(new Set(["Namespace"]));
-  });
-
-  it("should handle complex generic types", () => {
-    const result = extractTypesFromTypeString(
-      "Record<string, MyType> | Array<OtherType>"
-    );
-    expect(result).toEqual(new Set(["MyType", "OtherType"]));
-  });
-
-  it("should return empty set for built-in types only", () => {
-    const result = extractTypesFromTypeString("string | number | boolean");
-    expect(result).toEqual(new Set());
-  });
-
-  it("should handle void type", () => {
-    const result = extractTypesFromTypeString("void");
-    expect(result).toEqual(new Set());
-  });
-
-  it("should extract types from intersection types", () => {
-    const result = extractTypesFromTypeString("MyType & OtherType");
-    expect(result).toEqual(new Set(["MyType", "OtherType"]));
+describe("[getComponentClassAndDecorator]", () => {
+  it("the componentClass and componentDecorator should be defined", () => {
+    expect(componentClass).toBeTruthy();
+    expect(componentDecorator).toBeTruthy();
   });
 });
 
+describe("[extractClassMembers]", () => {
+  it("should extract simple type names", () => {
+    const result = extractClassMembers(componentClass!, TS_SOURCE_FILE);
+    expect(result).toEqual([
+      [
+        {
+          attribute: "value",
+          default: '"test"',
+          description: "Property value description.",
+          name: "value",
+          reflect: undefined,
+          required: undefined,
+          type: " string"
+        }
+      ],
+      [
+        {
+          description: "event1 description.",
+          detailType: "string",
+          name: "event1"
+        }
+      ],
+      [
+        {
+          description: "Description for method1.",
+          name: "method1",
+          paramTypes: [
+            {
+              description: undefined,
+              name: "param1",
+              type: "number"
+            }
+          ],
+          returnType: "string"
+        }
+      ]
+    ]);
+  });
+});

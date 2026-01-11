@@ -12,6 +12,94 @@ import {
 import { extractJSDocInfo } from "./extract-jsdoc-info.js";
 import { normalizeRelativePath } from "./normalize-path.js";
 
+const getComponentAndClassDecoratorFromNode = (
+  node: ts.Node,
+  decoratorNames: string[]
+) => {
+  if (ts.isClassDeclaration(node) && node.modifiers) {
+    const decorator = node.modifiers.find((mod): mod is ts.Decorator => {
+      if (!ts.isDecorator(mod) || !ts.isCallExpression(mod.expression)) {
+        return false;
+      }
+      const callExpr = mod.expression as ts.CallExpression;
+      if (!ts.isIdentifier(callExpr.expression)) {
+        return false;
+      }
+      const identExpr = callExpr.expression as ts.Identifier;
+      return decoratorNames.some(name => identExpr.text.endsWith(name));
+    });
+
+    if (decorator) {
+      return {
+        componentClass: node,
+        componentDecorator: decorator
+      };
+    }
+  }
+
+  return null;
+};
+
+const findComponentClass = (
+  node: ts.Node,
+  decoratorNames: string[]
+): {
+  componentClass: ts.ClassDeclaration;
+  componentDecorator: ts.Decorator;
+} | null => {
+  let result = getComponentAndClassDecoratorFromNode(node, decoratorNames);
+
+  if (result) {
+    return result;
+  }
+
+  node.forEachChild(node => {
+    if (result) {
+      return result;
+    }
+
+    result = findComponentClass(node, decoratorNames);
+  });
+
+  return result;
+};
+
+export const getComponentClassAndDecorator = (
+  sourceFile: ts.SourceFile,
+  customComponentDecoratorNames: string[] | undefined
+): {
+  componentClass: ts.ClassDeclaration | null;
+  componentDecorator: ts.Decorator | null;
+} => {
+  const decoratorNames =
+    !customComponentDecoratorNames || customComponentDecoratorNames.length === 0
+      ? ["Component"]
+      : customComponentDecoratorNames;
+
+  // Find the component class and its @Component decorator
+  const result = findComponentClass(sourceFile, decoratorNames);
+
+  if (result) {
+    return {
+      componentClass: result.componentClass,
+      componentDecorator: result.componentDecorator
+    };
+  }
+  return {
+    componentClass: null,
+    componentDecorator: null
+  };
+};
+
+export const getTsSourceFile = (srcPath: string, fileContent: string) =>
+  ts.createSourceFile(
+    srcPath,
+    fileContent,
+    ts.ScriptTarget.ES2022,
+    true,
+    ts.ScriptKind.TS
+  );
+
 /**
  * Extract component definition from file content
  * Returns both the component definition and the source file/class for validation
@@ -27,56 +115,21 @@ export const extractComponentDefinition = async (
   sourceFile: ts.SourceFile;
   classDeclaration: ts.ClassDeclaration;
 } | null> => {
-  const sourceFile = ts.createSourceFile(
-    srcPath,
-    fileContent,
-    ts.ScriptTarget.ES2022,
-    true,
-    ts.ScriptKind.TS
-  );
+  const sourceFile = getTsSourceFile(srcPath, fileContent);
 
   // Extract import information
   const importAnalysis = extractImportAnalysis(sourceFile, searchPath, srcPath);
 
-  let componentClass: ts.ClassDeclaration | null = null;
-  let componentDecorator: ts.Decorator | null = null;
-
-  // Find the component class and its @Component decorator
-  const findComponentClass = (node: ts.Node): void => {
-    if (ts.isClassDeclaration(node) && node.modifiers) {
-      const decoratorNames = customComponentDecoratorNames || ["Component"];
-      const decorator = node.modifiers.find((mod): mod is ts.Decorator => {
-        if (!ts.isDecorator(mod)) {
-          return false;
-        }
-        if (!ts.isCallExpression(mod.expression)) {
-          return false;
-        }
-        const callExpr = mod.expression as ts.CallExpression;
-        if (!ts.isIdentifier(callExpr.expression)) {
-          return false;
-        }
-        const identExpr = callExpr.expression as ts.Identifier;
-        return decoratorNames.some(name => identExpr.text.endsWith(name));
-      });
-
-      if (decorator) {
-        componentClass = node;
-        componentDecorator = decorator;
-        return;
-      }
-    }
-
-    ts.forEachChild(node, findComponentClass);
-  };
-
-  findComponentClass(sourceFile);
+  const { componentClass, componentDecorator } = getComponentClassAndDecorator(
+    sourceFile,
+    customComponentDecoratorNames
+  );
 
   if (!componentClass || !componentDecorator) {
     return null;
   }
 
-  const classNameNode = (componentClass as ts.ClassDeclaration).name;
+  const classNameNode = componentClass.name;
   if (!classNameNode || !ts.isIdentifier(classNameNode)) {
     return null;
   }
@@ -150,4 +203,3 @@ export const extractComponentDefinition = async (
     classDeclaration: componentClass
   };
 };
-
