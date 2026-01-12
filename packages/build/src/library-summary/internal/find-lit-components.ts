@@ -1,7 +1,6 @@
-import { readdir, readFile } from "fs/promises";
-import { join } from "path";
+import { readFile } from "fs/promises";
 import { sortByFilePath } from "../../internal/sort-by-file-path.js";
-import { normalizePath } from "./normalize-path.js";
+import { readAllFiles } from "./read-all-paths.js";
 
 /**
  * Find component files in the specified directory
@@ -16,37 +15,28 @@ export const findComponents = async (options: {
     ? excludedPaths
     : [excludedPaths];
 
-  const filesAndDirs = await readdir(pattern, {
-    recursive: true,
-    withFileTypes: true
-  });
+  const filesWithoutContent = await readAllFiles(pattern);
 
   const files: Promise<{ filePath: string; fileContent: string }>[] = [];
   const includedPathsArray = Array.isArray(includedPaths)
     ? includedPaths
     : [includedPaths];
 
-  for (let index = 0; index < filesAndDirs.length; index++) {
-    const filesOrDir = filesAndDirs[index];
+  for (let index = 0; index < filesWithoutContent.length; index++) {
+    const filePath = filesWithoutContent[index].path;
 
-    if (filesOrDir.isFile()) {
-      const fullFilePath = normalizePath(
-        join(filesOrDir.parentPath, filesOrDir.name)
+    if (
+      // If it's included in some of the includedPaths patterns
+      includedPathsArray.some(pattern => filePath.match(pattern)) &&
+      // And it's not excluded by any of the excludedPaths patterns
+      excludedPathsArray.every(pattern => !filePath.match(pattern))
+    ) {
+      files.push(
+        readFile(filePath, "utf-8").then(fileContent => ({
+          filePath,
+          fileContent
+        }))
       );
-
-      if (
-        // If it's included in some of the includedPaths patterns
-        includedPathsArray.some(pattern => fullFilePath.match(pattern)) &&
-        // And it's not excluded by any of the excludedPaths patterns
-        excludedPathsArray.every(pattern => !fullFilePath.match(pattern))
-      ) {
-        files.push(
-          readFile(fullFilePath, "utf-8").then(fileContent => ({
-            filePath: fullFilePath,
-            fileContent
-          }))
-        );
-      }
     }
   }
 
