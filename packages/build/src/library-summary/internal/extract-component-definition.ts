@@ -54,11 +54,9 @@ const findComponentClass = (
   }
 
   node.forEachChild(node => {
-    if (result) {
-      return result;
+    if (result === null) {
+      result = findComponentClass(node, decoratorNames);
     }
-
-    result = findComponentClass(node, decoratorNames);
   });
 
   return result;
@@ -203,3 +201,4 @@ export const extractComponentDefinition = async (
     classDeclaration: componentClass
   };
 };
+
