@@ -9,6 +9,13 @@ on:
     branches: [main]
 
 jobs:
+  build:
+    uses: ./.github/workflows/common-ci-checks.yml
+    with:
+      cache: true
+      publish: false
+      package: "packages/build"
+
   core:
     uses: ./.github/workflows/common-ci-checks.yml
     with:
