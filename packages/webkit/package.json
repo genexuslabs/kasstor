@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
-  "description": "",
+  "description": "A set of utilities to resolve common problems of web applications.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/genexuslabs/kasstor.git"
@@ -61,6 +61,132 @@
       "types": "./dist/browser/development/array/index.d.ts",
       "development": "./dist/browser/development/array/index.js",
       "default": "./dist/browser/production/array/index.js"
+    },
+    "./internationalization/all-supported-languages.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/all-supported-languages.js",
+        "default": "./dist/node/production/internationalization/all-supported-languages.js"
+      },
+      "types": "./dist/browser/development/internationalization/all-supported-languages.d.ts",
+      "development": "./dist/browser/development/internationalization/all-supported-languages.js",
+      "default": "./dist/browser/production/internationalization/all-supported-languages.js"
+    },
+    "./internationalization/from-language-fullname-to-subtag.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/from-language-fullname-to-subtag.js",
+        "default": "./dist/node/production/internationalization/from-language-fullname-to-subtag.js"
+      },
+      "types": "./dist/browser/development/internationalization/from-language-fullname-to-subtag.d.ts",
+      "development": "./dist/browser/development/internationalization/from-language-fullname-to-subtag.js",
+      "default": "./dist/browser/production/internationalization/from-language-fullname-to-subtag.js"
+    },
+    "./internationalization/from-language-to-fullname-and-subtag.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/from-language-to-fullname-and-subtag.js",
+        "default": "./dist/node/production/internationalization/from-language-to-fullname-and-subtag.js"
+      },
+      "types": "./dist/browser/development/internationalization/from-language-to-fullname-and-subtag.d.ts",
+      "development": "./dist/browser/development/internationalization/from-language-to-fullname-and-subtag.js",
+      "default": "./dist/browser/production/internationalization/from-language-to-fullname-and-subtag.js"
+    },
+    "./internationalization/get-client-language.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/get-client-language.js",
+        "default": "./dist/node/production/internationalization/get-client-language.js"
+      },
+      "types": "./dist/browser/development/internationalization/get-client-language.d.ts",
+      "development": "./dist/browser/development/internationalization/get-client-language.js",
+      "default": "./dist/browser/production/internationalization/get-client-language.js"
+    },
+    "./internationalization/get-current-language.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/get-current-language.js",
+        "default": "./dist/node/production/internationalization/get-current-language.js"
+      },
+      "types": "./dist/browser/development/internationalization/get-current-language.d.ts",
+      "development": "./dist/browser/development/internationalization/get-current-language.js",
+      "default": "./dist/browser/production/internationalization/get-current-language.js"
+    },
+    "./internationalization/get-current-translations.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/get-current-translations.js",
+        "default": "./dist/node/production/internationalization/get-current-translations.js"
+      },
+      "types": "./dist/browser/development/internationalization/get-current-translations.d.ts",
+      "development": "./dist/browser/development/internationalization/get-current-translations.js",
+      "default": "./dist/browser/production/internationalization/get-current-translations.js"
+    },
+    "./internationalization/get-language-from-url.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/get-language-from-url.js",
+        "default": "./dist/node/production/internationalization/get-language-from-url.js"
+      },
+      "types": "./dist/browser/development/internationalization/get-language-from-url.d.ts",
+      "development": "./dist/browser/development/internationalization/get-language-from-url.js",
+      "default": "./dist/browser/production/internationalization/get-language-from-url.js"
+    },
+    "./internationalization/language-has-been-initialized.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/language-has-been-initialized.js",
+        "default": "./dist/node/production/internationalization/language-has-been-initialized.js"
+      },
+      "types": "./dist/browser/development/internationalization/language-has-been-initialized.d.ts",
+      "development": "./dist/browser/development/internationalization/language-has-been-initialized.js",
+      "default": "./dist/browser/production/internationalization/language-has-been-initialized.js"
+    },
+    "./internationalization/register-translations.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/register-translations.js",
+        "default": "./dist/node/production/internationalization/register-translations.js"
+      },
+      "types": "./dist/browser/development/internationalization/register-translations.d.ts",
+      "development": "./dist/browser/development/internationalization/register-translations.js",
+      "default": "./dist/browser/production/internationalization/register-translations.js"
+    },
+    "./internationalization/set-initial-application-language.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/set-initial-application-language.js",
+        "default": "./dist/node/production/internationalization/set-initial-application-language.js"
+      },
+      "types": "./dist/browser/development/internationalization/set-initial-application-language.d.ts",
+      "development": "./dist/browser/development/internationalization/set-initial-application-language.js",
+      "default": "./dist/browser/production/internationalization/set-initial-application-language.js"
+    },
+    "./internationalization/set-language.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/set-language.js",
+        "default": "./dist/node/production/internationalization/set-language.js"
+      },
+      "types": "./dist/browser/development/internationalization/set-language.d.ts",
+      "development": "./dist/browser/development/internationalization/set-language.js",
+      "default": "./dist/browser/production/internationalization/set-language.js"
+    },
+    "./internationalization/subscriber.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/subscriber.js",
+        "default": "./dist/node/production/internationalization/subscriber.js"
+      },
+      "types": "./dist/browser/development/internationalization/subscriber.d.ts",
+      "development": "./dist/browser/development/internationalization/subscriber.js",
+      "default": "./dist/browser/production/internationalization/subscriber.js"
+    },
+    "./internationalization.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/index.js",
+        "default": "./dist/node/production/internationalization/index.js"
+      },
+      "types": "./dist/browser/development/internationalization/index.d.ts",
+      "development": "./dist/browser/development/internationalization/index.js",
+      "default": "./dist/browser/production/internationalization/index.js"
+    },
+    "./shared-local-storage-keys.js": {
+      "node": {
+        "development": "./dist/node/development/shared-local-storage-keys.js",
+        "default": "./dist/node/production/shared-local-storage-keys.js"
+      },
+      "types": "./dist/browser/development/shared-local-storage-keys.d.ts",
+      "development": "./dist/browser/development/shared-local-storage-keys.js",
+      "default": "./dist/browser/production/shared-local-storage-keys.js"
     },
     "./sync-with-frames.js": {
       "node": {

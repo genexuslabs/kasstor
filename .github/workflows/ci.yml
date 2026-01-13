@@ -16,6 +16,13 @@ jobs:
       publish: false
       package: "packages/core"
 
+  insights:
+    uses: ./.github/workflows/common-ci-checks.yml
+    with:
+      cache: true
+      publish: false
+      package: "packages/insights"
+
   signals:
     uses: ./.github/workflows/common-ci-checks.yml
     with:
@@ -23,9 +30,17 @@ jobs:
       publish: false
       package: "packages/signals"
 
+  vite-plugin:
+    uses: ./.github/workflows/common-ci-checks.yml
+    with:
+      cache: true
+      publish: false
+      package: "packages/plugins/vite-plugin-kasstor"
+
   webkit:
     uses: ./.github/workflows/common-ci-checks.yml
     with:
       cache: true
       publish: false
       package: "packages/webkit"
+

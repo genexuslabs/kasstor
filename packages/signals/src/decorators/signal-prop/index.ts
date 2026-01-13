@@ -40,13 +40,13 @@ const getSignalRefAndCreateItIfNecessary = (
  *
  * @example
  * ```typescript
- * import { Component, SSRLitElement } from "@genexus/kasstor-core/decorators/component.js";
+ * import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
  * import { SignalProp } from "@genexus/kasstor-signals/decorators/signal-prop.js";
  * import { watch } from "@genexus/kasstor-signals/directives/watch.js";
  * import { html } from "lit";
  *
  * \@Component({ tag: "my-component" })
- * class MyComponent extends SSRLitElement {
+ * class MyComponent extends KasstorElement {
  *  \@SignalProp count: number = 0;
  *
  * override render() {

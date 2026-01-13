@@ -26,7 +26,7 @@
 
 - `Component`: Define a Lit custom element with support for setting Shadow Root Options, global styles and more.
 - `Event`: An easier way to define and dispatch Custom DOM Events.
-- `Watch`: Define a callback to execute when observed properties change, e.g. `@property` or `@state`, but before the component updates.
+- `Observe`: Define a callback to execute when observed properties change, e.g. `@property` or `@state`, but before the component updates.
 
 ## Install
 
@@ -88,4 +88,3 @@ bun run build
   ```
 
 - To create a tests that runs both in the browser and NodeJS, use the `.shared-test.ts` extension.
-

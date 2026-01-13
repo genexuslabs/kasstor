@@ -1,0 +1,318 @@
+import { readFile, writeFile } from "fs/promises";
+import { dirname, join } from "path";
+import { format } from "prettier";
+import { fileURLToPath } from "url";
+
+import { getComponentDeclaration } from "./component-declaration-file/index.js";
+import { getComponentGlobalTypeDeclaration } from "./global-type-declarations/get-global-type-declaration.js";
+import { writeGlobalTypesForComponent } from "./global-type-declarations/replace-auto-generated-content.js";
+import { sortByFilePath } from "./internal/sort-by-file-path.js";
+import { getLibraryComponents } from "./library-summary/index.js";
+import { getComponentReadme } from "./readme/get-component-readme.js";
+import type {
+  KasstorBuildComponentData,
+  KasstorBuildOptions
+} from "./typings/build-options.js";
+import type {
+  ComponentDefinition,
+  LibraryComponents
+} from "./typings/library-components";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const librarySummaryTypes = await readFile(
+  join(__dirname, "./typings/library-components.d.ts"),
+  "utf-8"
+);
+
+const DEFAULT_DECLARATION_FILE_NAME = "components.ts";
+// const DEFAULT_DECLARATION_FOR_ALL_COPIED_TYPES = "component-copied-types.ts";
+const DEFAULT_LIBRARY_SUMMARY_FILE_NAME = "library-summary.ts";
+const DEFAULT_COMPONENT_ACCESS =
+  "public" satisfies ComponentDefinition["access"];
+const DEFAULT_INCLUDED_PATHS = /\.lit\.ts$/;
+const DEFAULT_RELATIVE_COMPONENTS_SRC_PATH = "src/";
+
+type BuildCacheTagName = string;
+
+/**
+ * Cache to implement incremental build.
+ *
+ * When running the buildLibrary function in a dev server, it is important to
+ * incrementally build the library to improve performance and reduce build times.
+ *
+ * With this cache, only new or changed components are processed.
+ */
+let buildCache: Map<BuildCacheTagName, KasstorBuildComponentData> | undefined;
+
+const writeLibrarySummary = async (
+  libraryComponents: LibraryComponents,
+  relativeComponentsSrcPath: string,
+  fileName: string
+) =>
+  format(
+    `export const librarySummary = ${JSON.stringify(libraryComponents, undefined, 2)} as const satisfies LibraryComponents;\n\n${librarySummaryTypes}`,
+    { parser: "typescript", trailingComma: "none" }
+  ).then(formattedLibrarySummary =>
+    writeFile(
+      join(process.cwd(), relativeComponentsSrcPath, fileName),
+      formattedLibrarySummary
+    )
+  );
+
+const writeReadmes = (
+  libraryComponentAndContents: KasstorBuildComponentData[]
+): Promise<void[]> =>
+  Promise.all(
+    libraryComponentAndContents.map(({ component, filePath }) =>
+      getComponentReadme(component).then(readme =>
+        writeFile(
+          // Save the readme in the same location as the component, but with the
+          // name "readme.md"
+          filePath.replace(filePath.split("/").at(-1)!, "readme.md"),
+          readme,
+          "utf-8"
+        )
+      )
+    )
+  );
+
+const writeExportTypes = (
+  libraryComponents: LibraryComponents,
+  filePath: string
+): Promise<void> =>
+  writeFile(filePath, getComponentDeclaration(libraryComponents), "utf-8");
+
+/**
+ * Build the library types, documentation, and summary of the components.
+ *
+ * This function supports incremental builds using a cache.
+ *
+ * @param options
+ * @param incrementalBuild - Whether to use the cache for incremental builds. With this options, you can skip building the whole library when a single file changes. Make sure to only include the path for the changed file in the `options.includedPaths` option.
+ * @returns
+ */
+export const buildLibrary = async (
+  options?: KasstorBuildOptions,
+  incrementalBuild?:
+    | boolean
+    | {
+        initialBuild?: Map<string, KasstorBuildComponentData>;
+
+        /**
+         * Tag names of components to remove from the cache during incremental builds.
+         */
+        tagNamesToRemove?: string[];
+      }
+): Promise<{
+  /**
+   * Indexed by the component tag name it contains the information about the
+   * builded component.
+   */
+  componentsBuilded: Map<string, KasstorBuildComponentData>;
+
+  elapsedTimes: typeof elapsedTimes;
+
+  updatedReadmesForComponents: string[];
+  updatedTypesForComponents: string[];
+}> => {
+  const startTimeAnalysis = performance.now();
+  const elapsedTimes = {
+    analysis: 0,
+    librarySummary: 0,
+    exportTypesForTheLibrary: 0,
+    typesForComponents: 0,
+    readmesForComponents: 0
+  };
+
+  const {
+    customComponentDecoratorNames,
+    defaultComponentAccess,
+    excludedPaths,
+    excludedPublicMethods,
+    fileGeneration,
+    includedPaths,
+    relativeComponentsSrcPath = DEFAULT_RELATIVE_COMPONENTS_SRC_PATH
+  } = options ?? {};
+
+  const promises: Promise<void | unknown>[] = [];
+  let updatedReadmesForComponents: KasstorBuildComponentData[] = [];
+  let updatedTypesForComponents: KasstorBuildComponentData[] = [];
+
+  const libraryComponentAndContents = await getLibraryComponents({
+    customComponentDecoratorNames,
+    defaultComponentAccess: defaultComponentAccess ?? DEFAULT_COMPONENT_ACCESS,
+    excludedPaths,
+    excludedPublicMethods,
+    includedPaths: includedPaths ?? DEFAULT_INCLUDED_PATHS,
+    relativeComponentsSrcPath
+  });
+
+  // Filter components that didn't changed its analysis, so we don't
+  // re-generate the same readme file
+  if (buildCache) {
+    libraryComponentAndContents.forEach(componentData => {
+      const { component } = componentData;
+      const cachedComponentData = buildCache!.get(component.tagName);
+
+      // Generate the readme and global types if the component isn't cached,
+      // its events changed or its full description changed
+      if (
+        cachedComponentData === undefined ||
+        JSON.stringify(component.events) !==
+          JSON.stringify(cachedComponentData.component.events) ||
+        component.fullClassJSDoc !==
+          cachedComponentData.component.fullClassJSDoc
+      ) {
+        updatedTypesForComponents.push(componentData);
+        updatedReadmesForComponents.push(componentData);
+      }
+      // Otherwise, if anything besides events or full description changed
+      // we only generate the readme
+      else if (
+        JSON.stringify(component) !==
+        JSON.stringify(cachedComponentData.component)
+      ) {
+        updatedReadmesForComponents.push(componentData);
+      }
+    });
+  } else {
+    updatedReadmesForComponents = libraryComponentAndContents;
+    updatedTypesForComponents = libraryComponentAndContents;
+  }
+
+  // Update the incremental build cache with the new values
+  if (incrementalBuild) {
+    const { initialBuild, tagNamesToRemove } =
+      typeof incrementalBuild === "object" ? incrementalBuild : {};
+
+    // Only use the initial cache when the buildCache it is not initialized.
+    // This covers the case where an initial analysis is performed for the
+    // whole library, and then the dev server takes over with incremental builds.
+    buildCache ??= initialBuild ?? new Map();
+
+    // During the dev server some files might be deleted, so we need to delete
+    // those components from the cache
+    tagNamesToRemove?.forEach(tagName => buildCache!.delete(tagName));
+
+    libraryComponentAndContents.forEach(componentAndContent =>
+      buildCache!.set(
+        componentAndContent.component.tagName,
+        componentAndContent
+      )
+    );
+  }
+
+  const allLibraryComponents = incrementalBuild
+    ? sortByFilePath(Array.from(buildCache!.values())).map(
+        ({ component }) => component
+      )
+    : libraryComponentAndContents.map(({ component }) => component);
+
+  // END of analysis
+  elapsedTimes.analysis = performance.now() - startTimeAnalysis;
+
+  // Library Summary file
+  if (fileGeneration !== false && fileGeneration?.librarySummary !== false) {
+    const startTimeLibrarySummary = performance.now();
+
+    promises.push(
+      writeLibrarySummary(
+        allLibraryComponents,
+        relativeComponentsSrcPath,
+        fileGeneration?.librarySummary ?? DEFAULT_LIBRARY_SUMMARY_FILE_NAME
+      ).then(() => {
+        // END of librarySummary
+        elapsedTimes.librarySummary =
+          performance.now() - startTimeLibrarySummary;
+      })
+    );
+  }
+
+  // Auto-generated types for each component
+  if (
+    fileGeneration !== false &&
+    fileGeneration?.typesForComponents !== false &&
+    updatedTypesForComponents.length !== 0
+  ) {
+    const startTimeAutoGeneratedTypesForComponents = performance.now();
+
+    const autoGeneratedTypesPromise = Promise.all(
+      updatedTypesForComponents.map(({ component, fileContent }) =>
+        writeGlobalTypesForComponent(
+          join(process.cwd(), relativeComponentsSrcPath, component.srcPath),
+          fileContent,
+          getComponentGlobalTypeDeclaration(component)
+        )
+      )
+    );
+
+    promises.push(
+      autoGeneratedTypesPromise.then(() => {
+        // END of autoGeneratedTypesForComponents
+        elapsedTimes.typesForComponents =
+          performance.now() - startTimeAutoGeneratedTypesForComponents;
+      })
+    );
+  }
+
+  // Readme for components
+  if (
+    fileGeneration !== false &&
+    fileGeneration?.readmesForComponents !== false &&
+    updatedReadmesForComponents.length !== 0
+  ) {
+    const startTimeAutoGeneratedReadmesForComponents = performance.now();
+
+    promises.push(
+      writeReadmes(updatedReadmesForComponents).then(() => {
+        // END of autoGeneratedReadmesForComponents
+        elapsedTimes.readmesForComponents =
+          performance.now() - startTimeAutoGeneratedReadmesForComponents;
+      })
+    );
+  }
+
+  // component.ts file declaration
+  if (
+    fileGeneration !== false &&
+    fileGeneration?.exportTypesForTheLibrary !== false
+  ) {
+    const startTimeAutoGeneratedExportTypesForComponents = performance.now();
+
+    const declarationFilePath = join(
+      process.cwd(),
+      relativeComponentsSrcPath,
+      fileGeneration?.exportTypesForTheLibrary ?? DEFAULT_DECLARATION_FILE_NAME
+    );
+
+    promises.push(
+      writeExportTypes(allLibraryComponents, declarationFilePath).then(() => {
+        // END of autoGeneratedExportTypesForComponents
+        elapsedTimes.exportTypesForTheLibrary =
+          performance.now() - startTimeAutoGeneratedExportTypesForComponents;
+      })
+    );
+  }
+
+  await Promise.all(promises);
+
+  return {
+    componentsBuilded: new Map(
+      libraryComponentAndContents.map(componentAndContent => [
+        componentAndContent.component.tagName,
+        componentAndContent
+      ])
+    ),
+
+    elapsedTimes,
+
+    updatedReadmesForComponents: updatedReadmesForComponents.map(
+      ({ component }) => component.tagName
+    ),
+    updatedTypesForComponents: updatedTypesForComponents.map(
+      ({ component }) => component.tagName
+    )
+  };
+};

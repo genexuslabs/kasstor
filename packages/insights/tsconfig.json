@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "module": "es2022",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+
+    // Bundler mode
+    "moduleResolution": "bundler",
+    // "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "outDir": "dist/",
+    "sourceMap": true,
+    // "inlineSources": true,
+
+    // Linting
+    "allowUnreachableCode": false,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitOverride": true,
+    "noUncheckedSideEffectImports": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strict": true,
+    "verbatimModuleSyntax": true,
+
+    "types": ["@vitest/browser/providers/playwright"]
+  },
+  "include": ["src/**/*.ts"],
+  // "exclude": ["node_modules", "vite.config.ts", "**/**.e2e.ts"]
+  // "exclude": ["node_modules", "vite.config.ts"]
+
+  // TODO: Exclude test files expect when running tests
+  "exclude": ["node_modules", "vite.config.ts"]
+}

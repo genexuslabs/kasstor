@@ -1,7 +1,7 @@
 import { html } from "lit/html.js";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { cleanup, render } from "vitest-browser-lit";
-import { Component, SSRLitElement } from "../index.js";
+import { Component, KasstorElement } from "../index.js";
 import {
   getLastFrameBatchUpdateFinalization,
   updatesInEachBatch
@@ -16,7 +16,7 @@ const renderFinalization = () =>
   new Promise<void>(resolve => queueMicrotask(resolve));
 
 @Component({ tag: "scheduler-component-test" })
-class SchedulerComponentTest extends SSRLitElement {
+class SchedulerComponentTest extends KasstorElement {
   override render() {
     renderCount++;
     return html`<p>Hello World</p>`;

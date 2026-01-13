@@ -1,0 +1,188 @@
+import {
+  AUTO_GENERATED_MARKER,
+  buildLibrary,
+  type KasstorBuildOptions
+} from "@genexus/kasstor-build";
+import { readFile } from "fs/promises";
+import { relative } from "path";
+import { normalizePath, type ViteDevServer } from "vite";
+
+import { LIBRARY_ANALYSIS_MESSAGES } from "../constants.js";
+import {
+  getNormalCommandForLogger,
+  getUpdatedCommandForLogger,
+  isBuildingLibrary,
+  setBuildingLibraryState
+} from "../internal/get-string-for-logger.js";
+import { invalidateNextUpdateForComponents } from "../internal/invalidate-next-hmr-for-component.js";
+import type { KasstorFileType } from "../typings/internal-types";
+
+/**
+ * Debounce each library build by 4ms to ensure no excessive builds occur in
+ * quick succession. For example, when multiple files are being saved at the
+ * same time, only one build will be triggered.
+ *
+ * Without this debounce, saving multiple files simultaneously could trigger
+ * multiple builds in quick succession, leading to performance issues.
+ */
+const LIBRARY_BUILD_DEBOUNCE = 4;
+
+const pathsToProcess: Set<string> = new Set();
+
+/**
+ * Global cache for the file contents.
+ *
+ * This cache is global to avoid running the library build the first time each
+ * file is changed, since the library build is already done before the dev
+ * server starts (configureServer hook).
+ */
+const fileContentCache: Map<string, string> = new Map();
+
+let libraryBuildTimeoutId: NodeJS.Timeout | undefined;
+
+const runLibraryBuild = async (options: {
+  server: ViteDevServer;
+  kasstorBuildOptions: KasstorBuildOptions;
+}) => {
+  const { server, kasstorBuildOptions } = options;
+
+  setBuildingLibraryState("start");
+  server.config.logger.info(
+    getNormalCommandForLogger("start", LIBRARY_ANALYSIS_MESSAGES.START)
+  );
+
+  // Only process the changed component files
+  const includedPaths = new RegExp(
+    [...pathsToProcess.values()]
+      .map(filePath => normalizePath(relative(server.config.root, filePath)))
+      .join("|")
+  );
+
+  // The current paths to process have been included, so mark them as processed
+  // by clearing the Set
+  pathsToProcess.clear();
+
+  const {
+    elapsedTimes,
+    updatedReadmesForComponents,
+    updatedTypesForComponents
+  } = await buildLibrary({ ...kasstorBuildOptions, includedPaths }, true);
+
+  server.config.logger.info(
+    getNormalCommandForLogger(
+      "end",
+      LIBRARY_ANALYSIS_MESSAGES.FINISH,
+      elapsedTimes.analysis
+    )
+  );
+
+  if (updatedTypesForComponents.length !== 0) {
+    // This will prevent a common issue, where the docs update of the
+    // component triggers and extra HMR update, so at the end of the
+    // day, the component is updated twice.
+    invalidateNextUpdateForComponents(updatedTypesForComponents);
+    server.config.logger.info(
+      getUpdatedCommandForLogger(
+        "global types",
+        updatedTypesForComponents,
+        elapsedTimes.typesForComponents
+      )
+    );
+  }
+  if (updatedReadmesForComponents.length !== 0) {
+    server.config.logger.info(
+      getUpdatedCommandForLogger(
+        "readme",
+        updatedReadmesForComponents,
+        elapsedTimes.readmesForComponents
+      )
+    );
+  }
+  if (elapsedTimes.exportTypesForTheLibrary !== 0) {
+    server.config.logger.info(
+      getNormalCommandForLogger(
+        "end",
+        LIBRARY_ANALYSIS_MESSAGES.EXPORTED_TYPES,
+        elapsedTimes.exportTypesForTheLibrary
+      )
+    );
+  }
+  setBuildingLibraryState("end");
+
+  // While the library was building, some files might have changed again,
+  // so we trigger another build if necessary
+  runLibraryWithDebounceIfNecessary(options);
+};
+
+const runLibraryWithDebounceIfNecessary = (options: {
+  server: ViteDevServer;
+  kasstorBuildOptions: KasstorBuildOptions;
+}) => {
+  // Avoid triggering a build if one is already in progress or if there are no
+  // paths to process
+  if (isBuildingLibrary() || pathsToProcess.size === 0) {
+    return;
+  }
+  clearTimeout(libraryBuildTimeoutId);
+
+  libraryBuildTimeoutId = setTimeout(
+    () => runLibraryBuild(options),
+    LIBRARY_BUILD_DEBOUNCE
+  );
+};
+
+/**
+ * Configure the dev server to watch for file changes and execute custom logic
+ * This runs independently of HMR, so it works even if HMR is disabled.
+ *
+ * In this case, when a file is changed, we update the auto-generated
+ * content for the changed files.
+ */
+export const configureServer = (options: {
+  getFileType: (filePath: string) => KasstorFileType;
+  kasstorBuildOptions: KasstorBuildOptions;
+  server: ViteDevServer;
+}) => {
+  const { getFileType, kasstorBuildOptions, server } = options;
+  // Watch for file changes using Vite's watcher
+  // This is independent of HMR and will execute even if HMR is disabled
+  return () => {
+    // Watch any JS file
+    server.watcher.add(server.config.root + "/**/*.{ts|js}");
+
+    server.watcher.on("change", async (filePath: string) => {
+      const fileType = getFileType(filePath);
+
+      if (fileType !== "component") {
+        return;
+      }
+
+      try {
+        // Read the current file content without the auto generated content, as
+        // this content is sensitive to the prettier formatting, which provokes
+        // false-positive change detections
+        const currentContent = (await readFile(filePath, "utf-8")).split(
+          AUTO_GENERATED_MARKER
+        )[0];
+
+        // Check if the content has changed since last time
+        const cachedContent = fileContentCache.get(filePath);
+        if (cachedContent === currentContent) {
+          // Content hasn't changed, skip buildLibrary
+          return;
+        }
+
+        // Update the cache with the new content
+        fileContentCache.set(filePath, currentContent);
+
+        pathsToProcess.add(filePath);
+
+        runLibraryWithDebounceIfNecessary({ server, kasstorBuildOptions });
+      } catch (error) {
+        server.config.logger.error(
+          `[kasstor] Error processing file ${filePath}: ${error}`
+        );
+      }
+    });
+  };
+};

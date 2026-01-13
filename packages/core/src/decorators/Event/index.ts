@@ -18,6 +18,7 @@ export class EventEmitter<T> {
    * a reference for the CustomEvent emitted. This reference can be used to
    * know if the event was prevented, for example:
    *
+   * @example
    * ```ts
    * const eventInfo = this.myEvent.emit(detail);
    *

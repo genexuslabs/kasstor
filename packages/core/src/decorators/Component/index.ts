@@ -2,10 +2,12 @@
 import { LitElement, unsafeCSS, type PropertyValues } from "lit";
 
 import { DEV_MODE, IS_SERVER } from "../../development-flags.js";
+import { componentWasServerSideRendered } from "./component-was-server-side-rendered.js";
 import {
   addGlobalStyleSheet,
   removeGlobalStyleSheet
 } from "./global-stylesheets.js";
+import { register, replaceConstructorWithProxy } from "./hmr-for-component.js";
 import type { ComponentOptions } from "./types";
 import { getDelayForUpdate } from "./update-scheduler.js";
 
@@ -30,7 +32,7 @@ const DEFAULT_SHADOW_ROOT_DELEGATE_FOCUS =
  *   tag: "my-element",
  *   styles
  * })
- * class MyElement extends SSRLitElement {
+ * class MyElement extends KasstorElement {
  *   render() {
  *     return html`
  *     `;
@@ -40,7 +42,7 @@ const DEFAULT_SHADOW_ROOT_DELEGATE_FOCUS =
  */
 export const Component = <
   LibraryPrefix extends `${string}-`,
-  T extends typeof SSRLitElement
+  T extends typeof KasstorElement
 >(
   options: ComponentOptions<LibraryPrefix>
 ) =>
@@ -51,7 +53,22 @@ export const Component = <
     // Check if the element is already defined
     const existing = customElements.get(tag);
 
+    if (DEV_MODE && !IS_SERVER && globalThis.kasstorCoreHmrEnabled) {
+      register(tag, target as any);
+    }
+
     if (existing && (existing as any) !== target) {
+      // In dev mode with HMR, return the tag right away without prompting the
+      // warning, because it was provoked by HMR
+      if (
+        DEV_MODE &&
+        !IS_SERVER &&
+        globalThis.kasstorCoreHmrEnabled &&
+        globalThis.kasstorCoreHotModuleReplacedComponents?.has(tag)
+      ) {
+        return existing as any;
+      }
+
       console.warn(
         `The tag name "${tag}" is already defined by the class "${existing.name}". The current tag won't be redefined by the class "${target.name}" and the "Component" decorator implementation will be ignored.
 In some cases, this error can happen due to HMR (Hot Module Replacement) issues.`
@@ -123,19 +140,41 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
   };
 
 /**
- * Implements a basic check to decide if the component was server side rendered.
+ * Base class for Kasstor components that extends the LitElement. This class
+ * provides extra utilities as follows:
+ *   - Better support for SSR in the components.
  *
- * This function must be used before the first render!
+ *   - Support for styling components with SCSS/SASS.
+ *
+ *   - Support for styling components without Shadow DOM.
+ *
+ *   - Adds the `firstWillUpdate` life cycle method which works with SSR.
+ *
+ *   - Adds support for the `Observe` decorator.
+ *
+ *   - Support to define global styles outside of the component that work with
+ *     and without Shadow DOM.
+ *
+ *   - Support for HMR by using the `@genexus/vite-plugin-kasstor` package.
+ *
+ *   - Improved initial rendering performance by reducing the Total Blocking
+ *     Time (TBT) in scenarios where many components are initially rendered.
+ *
+ * @example
+ * ```ts
+ * import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
+ * import styles from "./my-element.scss?inline"; // Only available with Vite
+ *
+ * \@Component({
+ *   tag: "my-element",
+ *   styles
+ * })
+ * export class MyElement extends KasstorElement {
+ *   // Component implementation
+ * }
+ * ```
  */
-const componentWasServerSideRendered = (element: LitElement) =>
-  IS_SERVER ||
-  (!!element.shadowRoot && element.shadowRoot.children.length !== 0);
-
-/**
- * Base class for Chameleon components that extends the LitElement. This class
- * provides extra utilities to support SSR in the components.
- */
-export abstract class SSRLitElement extends LitElement {
+export abstract class KasstorElement extends LitElement {
   #serverSideRendered: boolean;
 
   protected globalStyles: CSSStyleSheet | undefined;
@@ -154,6 +193,20 @@ export abstract class SSRLitElement extends LitElement {
     // Implement the beforeFirstUpdate hook by monkey-patching the willUpdate
     // method of the LitElement
     this.willUpdate = function (changedProperties: PropertyValues) {
+      /**
+       * A reserved callback to implement the Watch decorator.
+       *
+       * This callback is defined when there is a Watch decorator applied to the
+       * component.
+       *
+       * When defined, it will be called before the `willUpdate` life cycle method.
+       * It will also be called before the `firstWillUpdate` life cycle method.
+       */
+      // TODO: Find a better way of doing this without proving a waterfall in the
+      // initial load, by using an external symbol that is referenced here and in
+      // the KasstorElement
+      (this as any).kasstorObserveCallback?.(changedProperties);
+
       if (!this.hasUpdated) {
         this.firstWillUpdate(changedProperties);
       }
@@ -161,6 +214,12 @@ export abstract class SSRLitElement extends LitElement {
       // Call the original implementation
       willUpdateOriginalImplementation.call(this, changedProperties);
     };
+
+    // TODO: Add an additional flag for checking when the vite server is on
+    // HMR support for dev mode only
+    if (DEV_MODE && !IS_SERVER && globalThis.kasstorCoreHmrEnabled) {
+      replaceConstructorWithProxy(this);
+    }
   }
 
   /**
@@ -180,10 +239,46 @@ export abstract class SSRLitElement extends LitElement {
     if (this.globalStyles) {
       addGlobalStyleSheet(this, this.globalStyles);
     }
+
+    // Register instance globally for dev-time tooling (HMR, style replacement)
+    // Only in dev mode
+    if (DEV_MODE) {
+      const tagName =
+        (this.constructor as any).is || this.tagName.toLowerCase();
+      globalThis.kasstorCoreRegisteredInstances ??= new Map();
+
+      const { kasstorCoreRegisteredInstances } = globalThis;
+      if (!kasstorCoreRegisteredInstances.has(tagName)) {
+        kasstorCoreRegisteredInstances.set(tagName, new Set());
+      }
+      kasstorCoreRegisteredInstances.get(tagName)!.add(this);
+    }
   }
 
   // Throttle updates when there are too many at the same time. This mechanism
   // is based on the event loop and the ideas of https://lit.dev/docs/components/lifecycle/#reactive-update-cycle-customizing
+  /**
+   * Schedules an element update. You can override this method to change the
+   * timing of updates by returning a Promise. The update will await the
+   * returned Promise, and you should resolve the Promise to allow the update
+   * to proceed. If this method is overridden, `await super.scheduleUpdate()`
+   * must be called.
+   *
+   * For instance, to schedule updates to occur just before the next frame:
+   * ```ts
+   * override protected async scheduleUpdate(): Promise<void> {
+   *   await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+   *   await super.scheduleUpdate();
+   * }
+   * ```
+   *
+   * In general, you shouldn't need to override this method, as the
+   * `KasstorElement` class already performs optimizations when
+   * rendering/updating a large number of components at the same time to reduce
+   * the Total Blocking Time (TBT).
+   *
+   * @category — updates
+   */
   protected override async scheduleUpdate(): Promise<void> {
     const delayForUpdate = getDelayForUpdate(this.hasUpdated);
 
@@ -230,9 +325,20 @@ export abstract class SSRLitElement extends LitElement {
   protected firstWillUpdate(_changedProperties: PropertyValues): void {}
 
   override disconnectedCallback(): void {
+    super.disconnectedCallback();
+
     if (this.globalStyles) {
       removeGlobalStyleSheet(this, this.globalStyles);
     }
-    super.disconnectedCallback();
+
+    // Unregister instance globally for dev-time tooling (HMR, style replacement)
+    // Only in dev mode
+    if (DEV_MODE) {
+      const tagName =
+        (this.constructor as any).is || this.tagName.toLowerCase();
+
+      globalThis.kasstorCoreRegisteredInstances!.get(tagName)!.delete(this);
+    }
   }
 }
+

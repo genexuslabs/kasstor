@@ -31,7 +31,7 @@ class DummyComponent extends LitElement {
   }
 }
 
-customElements.define("geai-event-dummy-component", DummyComponent);
+customElements.define("event-dummy-component-test", DummyComponent);
 
 describe(`[Decorator]`, () => {
   describe(`[Event]`, () => {
@@ -62,12 +62,12 @@ describe(`[Decorator]`, () => {
 
     const renderTemplate = async (prevent = false) => {
       render(
-        html`<geai-event-dummy-component
+        html`<event-dummy-component-test
           @event1=${prevent ? event1CancellableHandler : event1Handler}
-        ></geai-event-dummy-component>`
+        ></event-dummy-component-test>`
       );
 
-      dummyComponentRef = document.querySelector("geai-event-dummy-component")!;
+      dummyComponentRef = document.querySelector("event-dummy-component-test")!;
       await dummyComponentRef.updateComplete;
     };
 
@@ -101,7 +101,6 @@ describe(`[Decorator]`, () => {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "geai-event-dummy-component": DummyComponent;
+    "event-dummy-component-test": DummyComponent;
   }
 }
-
