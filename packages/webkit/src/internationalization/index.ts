@@ -14,6 +14,7 @@ export { getClientLanguage } from "./get-client-language.js";
 export { getCurrentLanguage } from "./get-current-language.js";
 export { getCurrentTranslations } from "./get-current-translations.js";
 export { getLanguageFromUrl } from "./get-language-from-url.js";
+export { languageHasBeenInitialized } from "./language-has-been-initialized.js";
 export { registerTranslations } from "./register-translations.js";
 export { setInitialApplicationLanguage } from "./set-initial-application-language.js";
 export { setLanguage } from "./set-language.js";

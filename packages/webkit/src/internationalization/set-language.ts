@@ -51,6 +51,14 @@ export const setLanguage = (
     // resolved promise corresponds to the current language. Otherwise, we could
     // notify language changes that don't correspond with the current language
     if (kasstorWebkitI18n!.currentLanguage === fullLanguageName) {
+      // Resolve the promise for the initial language, if it was not previously
+      // initialized
+      if (kasstorWebkitI18n!.internalLanguageInitializedResolver) {
+        kasstorWebkitI18n!.internalLanguageInitializedResolver();
+        kasstorWebkitI18n!.internalLanguageInitializedResolver = false;
+      }
+
+      // After that, notify all subscribers for the language change
       notifyLanguageChange();
     }
   });

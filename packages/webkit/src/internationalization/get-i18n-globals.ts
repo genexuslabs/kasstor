@@ -1,9 +1,20 @@
+// Alias to improve minification
+const global = globalThis;
+
 export const getI18nGlobals = () => {
-  globalThis.kasstorWebkitI18n! ??= {
+  let languageInitializedResolver: (() => void) | undefined;
+
+  global.kasstorWebkitI18n ??= {
     currentLanguage: undefined,
+    languageInitialized: new Promise(resolve => {
+      languageInitializedResolver = resolve;
+    }),
     loadedTranslations: new Map(),
     translationLoaders: new Map()
   };
-  return globalThis.kasstorWebkitI18n!;
+  global.kasstorWebkitI18n.internalLanguageInitializedResolver ??=
+    languageInitializedResolver;
+
+  return global.kasstorWebkitI18n!;
 };
 

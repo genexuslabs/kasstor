@@ -11,6 +11,7 @@ export {
   getCurrentLanguage,
   getCurrentTranslations,
   getLanguageFromUrl,
+  languageHasBeenInitialized,
   registerTranslations,
   setInitialApplicationLanguage,
   setLanguage,

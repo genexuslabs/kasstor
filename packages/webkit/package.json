@@ -62,14 +62,14 @@
       "development": "./dist/browser/development/array/index.js",
       "default": "./dist/browser/production/array/index.js"
     },
-    "./internationalization.js": {
+    "./internationalization/all-supported-languages.js": {
       "node": {
-        "development": "./dist/node/development/internationalization/index.js",
-        "default": "./dist/node/production/internationalization/index.js"
+        "development": "./dist/node/development/internationalization/all-supported-languages.js",
+        "default": "./dist/node/production/internationalization/all-supported-languages.js"
       },
-      "types": "./dist/browser/development/internationalization/index.d.ts",
-      "development": "./dist/browser/development/internationalization/index.js",
-      "default": "./dist/browser/production/internationalization/index.js"
+      "types": "./dist/browser/development/internationalization/all-supported-languages.d.ts",
+      "development": "./dist/browser/development/internationalization/all-supported-languages.js",
+      "default": "./dist/browser/production/internationalization/all-supported-languages.js"
     },
     "./internationalization/from-language-fullname-to-subtag.js": {
       "node": {
@@ -125,6 +125,15 @@
       "development": "./dist/browser/development/internationalization/get-language-from-url.js",
       "default": "./dist/browser/production/internationalization/get-language-from-url.js"
     },
+    "./internationalization/language-has-been-initialized.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/language-has-been-initialized.js",
+        "default": "./dist/node/production/internationalization/language-has-been-initialized.js"
+      },
+      "types": "./dist/browser/development/internationalization/language-has-been-initialized.d.ts",
+      "development": "./dist/browser/development/internationalization/language-has-been-initialized.js",
+      "default": "./dist/browser/production/internationalization/language-has-been-initialized.js"
+    },
     "./internationalization/register-translations.js": {
       "node": {
         "development": "./dist/node/development/internationalization/register-translations.js",
@@ -160,6 +169,15 @@
       "types": "./dist/browser/development/internationalization/subscriber.d.ts",
       "development": "./dist/browser/development/internationalization/subscriber.js",
       "default": "./dist/browser/production/internationalization/subscriber.js"
+    },
+    "./internationalization.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/index.js",
+        "default": "./dist/node/production/internationalization/index.js"
+      },
+      "types": "./dist/browser/development/internationalization/index.d.ts",
+      "development": "./dist/browser/development/internationalization/index.js",
+      "default": "./dist/browser/production/internationalization/index.js"
     },
     "./shared-local-storage-keys.js": {
       "node": {

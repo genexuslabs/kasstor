@@ -18,6 +18,16 @@ declare global {
         currentLanguage: KasstorLanguage | undefined;
 
         /**
+         * A resolver function for the `languageInitialized` promise.
+         *
+         * When the `internalLanguageInitializedResolver` is `false` it means the
+         * initial language has been initialized.
+         *
+         * Only useful for internal purposes.
+         */
+        internalLanguageInitializedResolver?: (() => void) | false;
+
+        /**
          * Represents the current translations loaded for each "application".
          */
         readonly loadedTranslations: Map<
@@ -33,6 +43,11 @@ declare global {
         languageChangeCallback?: (
           newLanguage: KasstorLanguageFullnameAndSubtag
         ) => void;
+
+        /**
+         * A promise that resolves when the language has been initialized.
+         */
+        readonly languageInitialized: Promise<void>;
 
         /**
          * Called when the language changes by user interaction, so the Host
