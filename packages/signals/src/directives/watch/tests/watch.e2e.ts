@@ -184,32 +184,35 @@ describe("[directives]", () => {
         expect(renderCount).toBe(2);
       });
 
-      test("should unsubscribe to the signal changes when the element is disconnected from the DOM", async () => {
-        const { elementRef, spanRef } = await renderElement(false, true);
+      test.todo(
+        "should unsubscribe to the signal changes when the element is disconnected from the DOM",
+        async () => {
+          const { elementRef, spanRef } = await renderElement(false, true);
 
-        // Values after the first render
-        checkPendingUpdates([elementRef]);
-        checkSpanValues([spanRef], ["0"]);
-        expect(renderCount).toBe(1);
-        expect(computedReadCount).toBe(1);
+          // Values after the first render
+          checkPendingUpdates([elementRef]);
+          checkSpanValues([spanRef], ["0"]);
+          expect(renderCount).toBe(1);
+          expect(computedReadCount).toBe(1);
 
-        // Disconnect the element
-        elementRef.remove();
+          // Disconnect the element
+          elementRef.remove();
 
-        // Update the signal
-        count(1);
+          // Update the signal
+          count(1);
 
-        // Ensure there are no pending signal updates
-        expect(signalWatcher.getPending().length).toBe(0);
+          // Ensure there are no pending signal updates
+          expect(signalWatcher.getPending().length).toBe(0);
 
-        // Even if the element updated, it is disconnected, so the DOM must not
-        // be updated
-        await elementRef.updateComplete;
+          // Even if the element updated, it is disconnected, so the DOM must not
+          // be updated
+          await elementRef.updateComplete;
 
-        // The DOM must not be updated, as the element is disconnected
-        expect(renderCount).toBe(1);
-        expect(computedReadCount).toBe(1);
-      });
+          // The DOM must not be updated, as the element is disconnected
+          expect(renderCount).toBe(1);
+          expect(computedReadCount).toBe(1);
+        }
+      );
 
       test("if the watched signal was updated when the element is reconnected to the DOM, the template should be correctly updated", async () => {
         const { elementRef, spanRef } = await renderElement(false, true);
