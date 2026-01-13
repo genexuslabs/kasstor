@@ -9,6 +9,7 @@ jobs:
   check-version:
     runs-on: ubuntu-latest
     outputs:
+      build-changed: ${{ steps.check-build.outputs.version-changed }}
       core-changed: ${{ steps.check-core.outputs.version-changed }}
       insights-changed: ${{ steps.check-insights.outputs.version-changed }}
       signals-changed: ${{ steps.check-signals.outputs.version-changed }}
@@ -21,6 +22,13 @@ jobs:
       # https://github.com/actions/checkout/releases
       - name: Checkout
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
+
+      - name: Get the latest Kasstor Build version
+        id: get-latest-build-version
+        run: |
+          PACKAGE_NAME=@genexus/kasstor-build
+          LATEST_BUILD_VERSION=$(curl -s https://registry.npmjs.org/$PACKAGE_NAME | jq -r '.["dist-tags"].latest')
+          echo "latest_build_version=$LATEST_BUILD_VERSION" >> $GITHUB_ENV
 
       - name: Get the latest Kasstor Core version
         id: get-latest-core-version
@@ -59,11 +67,24 @@ jobs:
 
       - name: Print last published versions
         run: |
+          echo "The latest Kasstor Build version is ${{ env.latest_build_version }}"
           echo "The latest Kasstor Core version is ${{ env.latest_core_version }}"
           echo "The latest Kasstor Insights version is ${{ env.latest_insights_version }}"
           echo "The latest Kasstor Signals version is ${{ env.latest_signals_version }}"
           echo "The latest Vite Plugin Kasstor version is ${{ env.latest_vite_plugin_version }}"
           echo "The latest Kasstor Webkit version is ${{ env.latest_webkit_version }}"
+
+      - name: Check if `build` version changed
+        id: check-build
+        run: |
+          CURRENT_VERSION=$(jq -r .version packages/build/package.json)
+          PREVIOUS_VERSION=${{ env.latest_build_version }}
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "Version changed!"
+            echo "version-changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "version-changed=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Check if `core` version changed
         id: check-core
@@ -124,6 +145,16 @@ jobs:
           else
             echo "version-changed=false" >> $GITHUB_OUTPUT
           fi
+
+  publish-build:
+    needs: check-version
+    if: needs.check-version.outputs.build-changed == 'true'
+    uses: ./.github/workflows/common-ci-checks.yml
+    with:
+      cache: false
+      publish: true
+      package: "packages/build"
+    secrets: inherit
 
   publish-core:
     needs: check-version
