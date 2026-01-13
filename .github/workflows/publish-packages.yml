@@ -10,7 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       core-changed: ${{ steps.check-core.outputs.version-changed }}
+      insights-changed: ${{ steps.check-insights.outputs.version-changed }}
       signals-changed: ${{ steps.check-signals.outputs.version-changed }}
+      vite-plugin-changed: ${{ steps.check-vite-plugin.outputs.version-changed }}
       webkit-changed: ${{ steps.check-webkit.outputs.version-changed }}
     steps:
       # Pinning to a specific commit hash for security reasons.
@@ -27,12 +29,26 @@ jobs:
           LATEST_CORE_VERSION=$(curl -s https://registry.npmjs.org/$PACKAGE_NAME | jq -r '.["dist-tags"].latest')
           echo "latest_core_version=$LATEST_CORE_VERSION" >> $GITHUB_ENV
 
+      - name: Get the latest Kasstor Insights version
+        id: get-latest-insights-version
+        run: |
+          PACKAGE_NAME=@genexus/kasstor-insights
+          LATEST_INSIGHTS_VERSION=$(curl -s https://registry.npmjs.org/$PACKAGE_NAME | jq -r '.["dist-tags"].latest')
+          echo "latest_insights_version=$LATEST_INSIGHTS_VERSION" >> $GITHUB_ENV
+
       - name: Get the latest Kasstor Signals version
         id: get-latest-signals-version
         run: |
           PACKAGE_NAME=@genexus/kasstor-signals
           LATEST_SIGNALS_VERSION=$(curl -s https://registry.npmjs.org/$PACKAGE_NAME | jq -r '.["dist-tags"].latest')
           echo "latest_signals_version=$LATEST_SIGNALS_VERSION" >> $GITHUB_ENV
+
+      - name: Get the latest Vite Plugin Kasstor version
+        id: get-latest-vite-plugin-version
+        run: |
+          PACKAGE_NAME=@genexus/vite-plugin-kasstor
+          LATEST_VITE_PLUGIN_VERSION=$(curl -s https://registry.npmjs.org/$PACKAGE_NAME | jq -r '.["dist-tags"].latest')
+          echo "latest_vite_plugin_version=$LATEST_VITE_PLUGIN_VERSION" >> $GITHUB_ENV
 
       - name: Get the latest Kasstor Webkit version
         id: get-latest-webkit-version
@@ -44,7 +60,9 @@ jobs:
       - name: Print last published versions
         run: |
           echo "The latest Kasstor Core version is ${{ env.latest_core_version }}"
+          echo "The latest Kasstor Insights version is ${{ env.latest_insights_version }}"
           echo "The latest Kasstor Signals version is ${{ env.latest_signals_version }}"
+          echo "The latest Vite Plugin Kasstor version is ${{ env.latest_vite_plugin_version }}"
           echo "The latest Kasstor Webkit version is ${{ env.latest_webkit_version }}"
 
       - name: Check if `core` version changed
@@ -59,11 +77,35 @@ jobs:
             echo "version-changed=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check if `insights` version changed
+        id: check-insights
+        run: |
+          CURRENT_VERSION=$(jq -r .version packages/insights/package.json)
+          PREVIOUS_VERSION=${{ env.latest_insights_version }}
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "Version changed!"
+            echo "version-changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "version-changed=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Check if `signals` version changed
         id: check-signals
         run: |
           CURRENT_VERSION=$(jq -r .version packages/signals/package.json)
           PREVIOUS_VERSION=${{ env.latest_signals_version }}
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "Version changed!"
+            echo "version-changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "version-changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if `vite-plugin` version changed
+        id: check-vite-plugin
+        run: |
+          CURRENT_VERSION=$(jq -r .version packages/plugins/vite-plugin-kasstor/package.json)
+          PREVIOUS_VERSION=${{ env.latest_vite_plugin_version }}
           if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
             echo "Version changed!"
             echo "version-changed=true" >> $GITHUB_OUTPUT
@@ -93,6 +135,16 @@ jobs:
       package: "packages/core"
     secrets: inherit
 
+  publish-insights:
+    needs: check-version
+    if: needs.check-version.outputs.insights-changed == 'true'
+    uses: ./.github/workflows/common-ci-checks.yml
+    with:
+      cache: false
+      publish: true
+      package: "packages/insights"
+    secrets: inherit
+
   publish-signals:
     needs: check-version
     if: needs.check-version.outputs.signals-changed == 'true'
@@ -101,6 +153,16 @@ jobs:
       cache: false
       publish: true
       package: "packages/signals"
+    secrets: inherit
+
+  publish-vite-plugin:
+    needs: check-version
+    if: needs.check-version.outputs.vite-plugin-changed == 'true'
+    uses: ./.github/workflows/common-ci-checks.yml
+    with:
+      cache: false
+      publish: true
+      package: "packages/plugins/vite-plugin-kasstor"
     secrets: inherit
 
   publish-webkit:
@@ -112,3 +174,4 @@ jobs:
       publish: true
       package: "packages/webkit"
     secrets: inherit
+

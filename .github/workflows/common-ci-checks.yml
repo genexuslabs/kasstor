@@ -74,6 +74,12 @@ jobs:
         run: bun dev
         working-directory: "packages/core"
 
+      # We need to pre-build insights, because the vite-plugin-kasstor package needs it.
+      # TODO: We should only build it when the package is kasstor-signals
+      - name: Pre-build insights
+        run: bun dev
+        working-directory: "packages/insights"
+
       # This is a faster check than trying to build the whole package
       - name: Build types
         run: bun dev.types
@@ -93,3 +99,4 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
         working-directory: ${{ inputs.package }}
+
