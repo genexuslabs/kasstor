@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
-  "description": "A set of utilities to build and test Lit applications and libraries.",
+  "description": "A plugin for the Vite build tool to use the `@genexus/kasstor-build` and `@genexus/kasstor-insights` package in a single entry point. It also adds HMR capabilities for components built with the `@genexus/kasstor-core` package.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/genexuslabs/kasstor.git"
@@ -11,6 +11,7 @@
   "keywords": [
     "lit",
     "lit decorators",
+    "vite",
     "web components"
   ],
   "main": "./dist/index.js",
@@ -46,3 +47,4 @@
     }
   }
 }
+
