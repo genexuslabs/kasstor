@@ -75,10 +75,16 @@ jobs:
         working-directory: "packages/core"
 
       # We need to pre-build insights, because the vite-plugin-kasstor package needs it.
-      # TODO: We should only build it when the package is kasstor-signals
+      # TODO: We should only build it when the package is vite-plugin-kasstor
       - name: Pre-build insights
         run: bun dev
         working-directory: "packages/insights"
+
+      # We need to pre-build build, because the vite-plugin-kasstor package needs it.
+      # TODO: We should only build it when the package is vite-plugin-kasstor
+      - name: Pre-build build
+        run: bun dev
+        working-directory: "packages/build"
 
       # This is a faster check than trying to build the whole package
       - name: Build types
