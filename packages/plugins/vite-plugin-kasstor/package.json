@@ -24,6 +24,7 @@
   ],
   "scripts": {
     "dev": "tsgo",
+    "dev.types": "tsgo",
     "build": "tsc",
     "watch": "tsgo --watch",
     "test": "playwright install && vitest",
