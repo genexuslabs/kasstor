@@ -32,7 +32,7 @@ const iterateStartingFromStartIndex = <Index>(
 
   let currentIndex: Index | null = getNextItem(startIndex);
 
-  // Iterate from the startIndex to the end
+  // Iterate from the startIndex to the end of the structure
   while (currentIndex !== null && !isSameIndex(currentIndex, startIndex)) {
     if (stringStartsWithCurrentQuery(currentIndex)) {
       return currentIndex;
@@ -47,6 +47,7 @@ const iterateStartingFromStartIndex = <Index>(
   }
   currentIndex = getFirstIndex();
 
+  // Iterate from the first index of the structure to the startIndex
   while (currentIndex !== null && !isSameIndex(currentIndex, startIndex)) {
     if (stringStartsWithCurrentQuery(currentIndex)) {
       return currentIndex;
