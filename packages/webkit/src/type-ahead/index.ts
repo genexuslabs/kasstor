@@ -17,28 +17,41 @@ const stringHasAllTheSameLetter = (currentQuery: string) => {
   return true;
 };
 
-const iterateStartingFromStartIndex = <T>(
-  options: T[],
-  startIndex: number,
-  stringStartsWithCurrentQuery: (option: T) => boolean
-): number | null => {
-  // IMPORTANT!: Don't create a copy of the array with the following, because
-  // it will decrease the performance of the algorithm:
-  // [...options.slice(startIndex), ...options.slice(0, startIndex)];
-
-  // Iterate from the startIndex to the end of the array
-  for (let index = startIndex; index < options.length; index++) {
-    if (stringStartsWithCurrentQuery(options[index])) {
-      return index;
-    }
+const iterateStartingFromStartIndex = <Index>(
+  startIndex: Index,
+  stringStartsWithCurrentQuery: (index: Index) => boolean,
+  getFirstIndex: () => Index | null,
+  getNextItem: (currentIndex: Index) => Index | null,
+  isSameIndex: (a: Index, b: Index) => boolean
+): Index | null => {
+  // We need to check the condition for the first item right away, because the
+  // while needs the currentIndex to differ from the startIndex
+  if (stringStartsWithCurrentQuery(startIndex)) {
+    return startIndex;
   }
 
-  // Iterate over the rest of the array, starting from the beginning to the
-  // startIndex
-  for (let index = 0; index < startIndex; index++) {
-    if (stringStartsWithCurrentQuery(options[index])) {
-      return index;
+  let currentIndex: Index | null = getNextItem(startIndex);
+
+  // Iterate from the startIndex to the end
+  while (currentIndex !== null && !isSameIndex(currentIndex, startIndex)) {
+    if (stringStartsWithCurrentQuery(currentIndex)) {
+      return currentIndex;
     }
+    currentIndex = getNextItem(currentIndex);
+  }
+
+  // The getNextItem implementation started from the first item again, so we
+  // don't need to start again
+  if (currentIndex !== null && isSameIndex(currentIndex, startIndex)) {
+    return null;
+  }
+  currentIndex = getFirstIndex();
+
+  while (currentIndex !== null && !isSameIndex(currentIndex, startIndex)) {
+    if (stringStartsWithCurrentQuery(currentIndex)) {
+      return currentIndex;
+    }
+    currentIndex = getNextItem(currentIndex);
   }
 
   return null;
@@ -55,17 +68,21 @@ const iterateStartingFromStartIndex = <T>(
  *
  *   - If no coincidences, it returns `null`.
  */
-const getIndexFromCurrentQuery = <T>(
-  options: T[],
+const getIndexFromCurrentQuery = <Index>(
   currentQuery: string,
-  startIndex: number,
-  getCaptionFromItem: (item: T) => string
-): number | null => {
+  startIndex: Index,
+  getCaptionFromIndex: (index: Index) => string,
+  getFirstIndex: () => Index | null,
+  getNextIndex: (currentIndex: Index) => Index | null,
+  isSameIndex: (a: Index, b: Index) => boolean
+): Index | null => {
   const indexWasFound = iterateStartingFromStartIndex(
-    options,
     startIndex,
-    (option: T) =>
-      getCaptionFromItem(option).toLowerCase().startsWith(currentQuery)
+    (index: Index) =>
+      getCaptionFromIndex(index).toLowerCase().startsWith(currentQuery),
+    getFirstIndex,
+    getNextIndex,
+    isSameIndex
   );
 
   if (indexWasFound !== null) {
@@ -77,8 +94,13 @@ const getIndexFromCurrentQuery = <T>(
   if (stringHasAllTheSameLetter(currentQuery)) {
     const letter = currentQuery[0];
 
-    return iterateStartingFromStartIndex(options, startIndex, (option: T) =>
-      getCaptionFromItem(option).toLowerCase().startsWith(letter)
+    return iterateStartingFromStartIndex(
+      startIndex,
+      (index: Index) =>
+        getCaptionFromIndex(index).toLowerCase().startsWith(letter),
+      getFirstIndex,
+      getNextIndex,
+      isSameIndex
     );
   }
 
@@ -86,7 +108,7 @@ const getIndexFromCurrentQuery = <T>(
   return null;
 };
 
-export class TypeAhead<T> {
+export class TypeAhead<Index> {
   #currentQuery: string = "";
   #lastSearchTime = 0;
 
@@ -97,34 +119,34 @@ export class TypeAhead<T> {
    */
   delay: number;
 
-  getCaptionFromItem: (item: T) => string;
+  getCaptionFromIndex: (index: Index) => string;
 
-  getChildrenFromItem?: ((item: T) => T[] | undefined | null) | undefined;
+  getFirstIndex: () => Index | null;
 
-  getParentFromItem?: ((item: T) => T | undefined | null) | undefined;
+  getNextIndex: (currentIndex: Index) => Index | null;
 
-  items?: T[] | undefined;
+  isSameIndex: (a: Index, b: Index) => boolean;
 
   constructor(options: {
     delay?: number;
-    getCaptionFromItem: (item: T) => string;
-    getChildrenFromItem?: (item: T) => T[] | undefined | null;
-    getParentFromItem?: (item: T) => T | undefined | null;
-    items?: T[];
+    getCaptionFromIndex: (index: Index) => string;
+    getFirstIndex: () => Index | null;
+    getNextIndex: (currentIndex: Index) => Index | null;
+    isSameIndex: (a: Index, b: Index) => boolean;
   }) {
     const {
       delay,
-      getCaptionFromItem,
-      getChildrenFromItem,
-      getParentFromItem,
-      items
+      getCaptionFromIndex,
+      getFirstIndex,
+      getNextIndex,
+      isSameIndex
     } = options;
 
     this.delay = delay ?? DEFAULT_DELAY;
-    this.getCaptionFromItem = getCaptionFromItem;
-    this.getChildrenFromItem = getChildrenFromItem;
-    this.getParentFromItem = getParentFromItem;
-    this.items = items;
+    this.getCaptionFromIndex = getCaptionFromIndex;
+    this.getFirstIndex = getFirstIndex;
+    this.getNextIndex = getNextIndex;
+    this.isSameIndex = isSameIndex;
   }
 
   /**
@@ -134,16 +156,14 @@ export class TypeAhead<T> {
    * `undefined` or a negative value is provided, it means that there is no
    * active item.
    */
-  search(
-    character: string,
-    activeItemIndex: number | undefined
-  ): { item: T; index: number } | null {
-    const { delay, getCaptionFromItem, items } = this;
-
-    // No items
-    if (items === undefined || items.length === 0) {
-      return null;
-    }
+  search(character: string, activeItemIndex: Index | undefined): Index | null {
+    const {
+      delay,
+      getCaptionFromIndex,
+      getFirstIndex,
+      getNextIndex,
+      isSameIndex
+    } = this;
 
     const currentTime = performance.now();
     const elapsedTimeFromLastSearch = currentTime - this.#lastSearchTime;
@@ -162,24 +182,29 @@ export class TypeAhead<T> {
     this.#currentQuery += character.toLowerCase();
 
     const startIndexToSearch =
-      activeItemIndex === undefined || activeItemIndex < 0
-        ? 0
-        : activeItemIndex + 1;
+      activeItemIndex === undefined
+        ? getFirstIndex()
+        : getNextIndex(activeItemIndex);
 
-    const searchIndex = getIndexFromCurrentQuery(
-      items,
-      this.#currentQuery,
-      startIndexToSearch,
-      getCaptionFromItem
-    );
-
-    // If a match was found, return it
-    if (searchIndex !== null) {
-      return { item: items[searchIndex], index: searchIndex };
+    // This case should not occur, but we check it to resolve the type issue
+    if (startIndexToSearch === null) {
+      return startIndexToSearch;
     }
 
+    const searchIndex = getIndexFromCurrentQuery(
+      this.#currentQuery,
+      startIndexToSearch,
+      getCaptionFromIndex,
+      getFirstIndex,
+      getNextIndex,
+      isSameIndex
+    );
+
     // If no matches, clear the search string and return null
-    this.#currentQuery = "";
-    return null;
+    if (searchIndex === null) {
+      this.#currentQuery = "";
+    }
+
+    return searchIndex;
   }
 }
