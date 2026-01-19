@@ -237,10 +237,8 @@ export class TypeAhead<Index> {
       this.#isSameIndex
     );
 
-    // If no matches, clear the search string and return null
-    if (searchIndex === null) {
-      this.#currentQuery = "";
-    }
+    // Don't reset the query when no matches are found.
+    // TODO: Add unit test for this behavior. Also should this be a property?
 
     return searchIndex;
   }
