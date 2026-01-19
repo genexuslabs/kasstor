@@ -21,7 +21,7 @@ const iterateStartingFromStartIndex = <Index>(
   startIndex: Index,
   stringStartsWithCurrentQuery: (index: Index) => boolean,
   getFirstIndex: () => Index | null,
-  getNextItem: (currentIndex: Index) => Index | null,
+  getNextItem: (currentIndex: Index) => Index | null | undefined,
   isSameIndex: (a: Index, b: Index) => boolean
 ): Index | null => {
   // We need to check the condition for the first item right away, because the
@@ -30,10 +30,10 @@ const iterateStartingFromStartIndex = <Index>(
     return startIndex;
   }
 
-  let currentIndex: Index | null = getNextItem(startIndex);
+  let currentIndex: Index | null | undefined = getNextItem(startIndex);
 
   // Iterate from the startIndex to the end of the structure
-  while (currentIndex !== null && !isSameIndex(currentIndex, startIndex)) {
+  while (currentIndex != null && !isSameIndex(currentIndex, startIndex)) {
     if (stringStartsWithCurrentQuery(currentIndex)) {
       return currentIndex;
     }
@@ -42,13 +42,13 @@ const iterateStartingFromStartIndex = <Index>(
 
   // The getNextItem implementation started from the first item again, so we
   // don't need to start again
-  if (currentIndex !== null && isSameIndex(currentIndex, startIndex)) {
+  if (currentIndex != null && isSameIndex(currentIndex, startIndex)) {
     return null;
   }
   currentIndex = getFirstIndex();
 
   // Iterate from the first index of the structure to the startIndex
-  while (currentIndex !== null && !isSameIndex(currentIndex, startIndex)) {
+  while (currentIndex != null && !isSameIndex(currentIndex, startIndex)) {
     if (stringStartsWithCurrentQuery(currentIndex)) {
       return currentIndex;
     }
@@ -74,7 +74,7 @@ const getIndexFromCurrentQuery = <Index>(
   startIndex: Index,
   getCaptionFromIndex: (index: Index) => string,
   getFirstIndex: () => Index | null,
-  getNextIndex: (currentIndex: Index) => Index | null,
+  getNextIndex: (currentIndex: Index) => Index | null | undefined,
   isSameIndex: (a: Index, b: Index) => boolean
 ): Index | null => {
   const indexWasFound = iterateStartingFromStartIndex(
@@ -107,6 +107,41 @@ const getIndexFromCurrentQuery = <Index>(
   return null;
 };
 
+/**
+ * A type-ahead search utility that finds items based on sequential character input.
+ *
+ * @template Index - The type used to represent item indices in the searchable collection.
+ *
+ * @remarks
+ * This class implements a type-ahead search mechanism where users can type characters
+ * sequentially to find matching items. The search query is automatically reset after
+ * a configurable delay period of inactivity.
+ *
+ * The search is not case-insensitive and it accumulates characters typed within the delay period.
+ * When searching, it starts from the next item after the currently active one and wraps
+ * around to the beginning if needed.
+ *
+ * @example
+ * ```typescript
+ * const items: { label: string }[] = [
+ *   { label: "Apple" },
+ *   { label: "Banana" },
+ *   { label: "Blueberry" },
+ *   { label: "Cherry" }
+ * ];
+ *
+ * const typeAhead = new TypeAhead<number>({
+ *   getCaptionFromIndex: (index) => items[index].label,
+ *   getFirstIndex: () => 0,
+ *   getNextIndex: (current) => current + 1 < items.length ? current + 1 : null,
+ *   isSameIndex: (idxA, idxB) => idxA === idxB
+ * });
+ *
+ * const resultA = typeAhead.search('b', undefined);
+ * console.log(resultA); // Result: 1
+ * console.log(typeAhead.search('b', resultA)); // Result: 2
+ * ```
+ */
 export class TypeAhead<Index> {
   #currentQuery: string = "";
   #lastSearchTime = 0;
@@ -118,43 +153,41 @@ export class TypeAhead<Index> {
    */
   delay: number;
 
-  getCaptionFromIndex: (index: Index) => string;
+  #getCaptionFromIndex: (index: Index) => string;
 
-  getFirstIndex: () => Index | null;
+  #getFirstIndex: () => Index | null;
 
-  getNextIndex: (currentIndex: Index) => Index | null;
+  #getNextIndex: (currentIndex: Index) => Index | null | undefined;
 
-  isSameIndex: (a: Index, b: Index) => boolean;
+  #isSameIndex: (a: Index, b: Index) => boolean;
 
   constructor(options: {
     delay?: number;
     getCaptionFromIndex: (index: Index) => string;
     getFirstIndex: () => Index | null;
-    getNextIndex: (currentIndex: Index) => Index | null;
+    getNextIndex: (currentIndex: Index) => Index | null | undefined;
     isSameIndex: (a: Index, b: Index) => boolean;
   }) {
     const { delay, getCaptionFromIndex, getFirstIndex, getNextIndex, isSameIndex } = options;
 
     this.delay = delay ?? DEFAULT_DELAY;
-    this.getCaptionFromIndex = getCaptionFromIndex;
-    this.getFirstIndex = getFirstIndex;
-    this.getNextIndex = getNextIndex;
-    this.isSameIndex = isSameIndex;
+    this.#getCaptionFromIndex = getCaptionFromIndex;
+    this.#getFirstIndex = getFirstIndex;
+    this.#getNextIndex = getNextIndex;
+    this.#isSameIndex = isSameIndex;
   }
 
   /**
-   * TODO
+   * Search a
    * @param character
    * @param activeItemIndex The current select item index, starting from 0. If
    * `undefined` or a negative value is provided, it means that there is no
    * active item.
    */
-  search(character: string, activeItemIndex: Index | undefined): Index | null {
-    const { delay, getCaptionFromIndex, getFirstIndex, getNextIndex, isSameIndex } = this;
-
+  search(character: string, activeItemIndex: Index | undefined | null): Index | null {
     const currentTime = performance.now();
     const elapsedTimeFromLastSearch = currentTime - this.#lastSearchTime;
-    const shouldResetQuery = elapsedTimeFromLastSearch > delay;
+    const shouldResetQuery = elapsedTimeFromLastSearch > this.delay;
 
     // We don't use setTimeout and clearTimeout to implement the query reset,
     // because the delay can be changed dynamically. This way allow us to
@@ -169,20 +202,25 @@ export class TypeAhead<Index> {
     this.#currentQuery += character.toLowerCase();
 
     const startIndexToSearch =
-      activeItemIndex === undefined ? getFirstIndex() : getNextIndex(activeItemIndex);
+      activeItemIndex == null
+        ? this.#getFirstIndex()
+        : // If we are positioned in the last item and the getNextIndex
+          // implementation doesn't go to the first item, we have to manually
+          // go to it
+          this.#getNextIndex(activeItemIndex);
 
     // This case should not occur, but we check it to resolve the type issue
-    if (startIndexToSearch === null) {
+    if (startIndexToSearch == null) {
       return startIndexToSearch;
     }
 
     const searchIndex = getIndexFromCurrentQuery(
       this.#currentQuery,
       startIndexToSearch,
-      getCaptionFromIndex,
-      getFirstIndex,
-      getNextIndex,
-      isSameIndex
+      this.#getCaptionFromIndex,
+      this.#getFirstIndex,
+      this.#getNextIndex,
+      this.#isSameIndex
     );
 
     // If no matches, clear the search string and return null
@@ -193,3 +231,4 @@ export class TypeAhead<Index> {
     return searchIndex;
   }
 }
+
