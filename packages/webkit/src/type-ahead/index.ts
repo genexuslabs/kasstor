@@ -146,13 +146,6 @@ export class TypeAhead<Index> {
   #currentQuery: string = "";
   #lastSearchTime = 0;
 
-  /**
-   * Specifies the time-interval in milliseconds until the previous search
-   * query is cleared. The timer is checked against the last call to the
-   * `search` method.
-   */
-  delay: number;
-
   #getCaptionFromIndex: (index: Index) => string;
 
   #getFirstIndex: () => Index | null;
@@ -160,6 +153,15 @@ export class TypeAhead<Index> {
   #getNextIndex: (currentIndex: Index) => Index | null | undefined;
 
   #isSameIndex: (a: Index, b: Index) => boolean;
+
+  /**
+   * Specifies the time-interval in milliseconds until the previous search
+   * query is cleared. The timer is checked against the last call to the
+   * `search` method.
+   *
+   * @default 512
+   */
+  delay: number;
 
   constructor(options: {
     delay?: number;
@@ -178,11 +180,23 @@ export class TypeAhead<Index> {
   }
 
   /**
-   * Search a
-   * @param character
-   * @param activeItemIndex The current select item index, starting from 0. If
-   * `undefined` or a negative value is provided, it means that there is no
-   * active item.
+   * Searches for an item matching the given character within a navigable collection.
+   *
+   * This method implements type-ahead search functionality by accumulating search characters
+   * over time. If the elapsed time between searches exceeds the configured `delay`, the search
+   * query is reset.
+   *
+   * @param character - The character to search for (non case-insensitive).
+   * @param activeItemIndex - The currently active item index, or undefined/null if no item is active.
+   *
+   * @returns The index of the first matching item, or null if no match is found.
+   *
+   * @remarks
+   * - The search is not case-insensitive.
+   * - Characters are accumulated into a query string until the delay expires.
+   * - Search begins from the next item after the active item, or from the first item if none is active.
+   * - If no match is found, the current query is cleared.
+   * - The delay can be changed dynamically at anytime without requiring to destroy and re-create the class instance.
    */
   search(character: string, activeItemIndex: Index | undefined | null): Index | null {
     const currentTime = performance.now();
