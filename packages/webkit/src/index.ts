@@ -2,6 +2,8 @@ export { insertIntoIndex, removeIndex } from "./array/index.js";
 
 export { SyncWithRAF } from "./sync-with-frames/index.js";
 
+export { TypeAhead } from "./type-ahead/index.js";
+
 // i18n
 export {
   ALL_SUPPORTED_LANGUAGE_SUBTAGS,
@@ -28,4 +30,3 @@ export {
 
 export type { FilterObjectKeys } from "./typings/filter-keys.js";
 export type { ObjectEntries } from "./typings/object-entries.js";
-

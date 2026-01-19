@@ -188,6 +188,15 @@
       "development": "./dist/browser/development/shared-local-storage-keys.js",
       "default": "./dist/browser/production/shared-local-storage-keys.js"
     },
+    "./type-ahead.js": {
+      "node": {
+        "development": "./dist/node/development/type-ahead/index.js",
+        "default": "./dist/node/production/type-ahead/index.js"
+      },
+      "types": "./dist/browser/development/type-ahead/index.d.ts",
+      "development": "./dist/browser/development/type-ahead/index.js",
+      "default": "./dist/browser/production/type-ahead/index.js"
+    },
     "./sync-with-frames.js": {
       "node": {
         "development": "./dist/node/development/sync-with-frames/index.js",
@@ -199,4 +208,3 @@
     }
   }
 }
-
