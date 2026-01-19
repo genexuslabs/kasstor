@@ -79,8 +79,7 @@ const getIndexFromCurrentQuery = <Index>(
 ): Index | null => {
   const indexWasFound = iterateStartingFromStartIndex(
     startIndex,
-    (index: Index) =>
-      getCaptionFromIndex(index).toLowerCase().startsWith(currentQuery),
+    (index: Index) => getCaptionFromIndex(index).toLowerCase().startsWith(currentQuery),
     getFirstIndex,
     getNextIndex,
     isSameIndex
@@ -97,8 +96,7 @@ const getIndexFromCurrentQuery = <Index>(
 
     return iterateStartingFromStartIndex(
       startIndex,
-      (index: Index) =>
-        getCaptionFromIndex(index).toLowerCase().startsWith(letter),
+      (index: Index) => getCaptionFromIndex(index).toLowerCase().startsWith(letter),
       getFirstIndex,
       getNextIndex,
       isSameIndex
@@ -135,13 +133,7 @@ export class TypeAhead<Index> {
     getNextIndex: (currentIndex: Index) => Index | null;
     isSameIndex: (a: Index, b: Index) => boolean;
   }) {
-    const {
-      delay,
-      getCaptionFromIndex,
-      getFirstIndex,
-      getNextIndex,
-      isSameIndex
-    } = options;
+    const { delay, getCaptionFromIndex, getFirstIndex, getNextIndex, isSameIndex } = options;
 
     this.delay = delay ?? DEFAULT_DELAY;
     this.getCaptionFromIndex = getCaptionFromIndex;
@@ -158,13 +150,7 @@ export class TypeAhead<Index> {
    * active item.
    */
   search(character: string, activeItemIndex: Index | undefined): Index | null {
-    const {
-      delay,
-      getCaptionFromIndex,
-      getFirstIndex,
-      getNextIndex,
-      isSameIndex
-    } = this;
+    const { delay, getCaptionFromIndex, getFirstIndex, getNextIndex, isSameIndex } = this;
 
     const currentTime = performance.now();
     const elapsedTimeFromLastSearch = currentTime - this.#lastSearchTime;
@@ -183,9 +169,7 @@ export class TypeAhead<Index> {
     this.#currentQuery += character.toLowerCase();
 
     const startIndexToSearch =
-      activeItemIndex === undefined
-        ? getFirstIndex()
-        : getNextIndex(activeItemIndex);
+      activeItemIndex === undefined ? getFirstIndex() : getNextIndex(activeItemIndex);
 
     // This case should not occur, but we check it to resolve the type issue
     if (startIndexToSearch === null) {
