@@ -221,6 +221,8 @@ export class TypeAhead<Index> {
         : // If we are positioned in the last item and the getNextIndex
           // implementation doesn't go to the first item, we have to manually
           // go to it
+          // TODO: Add a unit test for this case, where the getNextIndex impl doesn't return to
+          // the first index
           (this.#getNextIndex(activeItemIndex) ?? this.#getFirstIndex());
 
     // This case should not occur, but we check it to resolve the type issue
