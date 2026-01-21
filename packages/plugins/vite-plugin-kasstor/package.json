@@ -1,6 +1,6 @@
 {
   "name": "@genexus/vite-plugin-kasstor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
   "description": "A plugin for the Vite build tool to use the `@genexus/kasstor-build` and `@genexus/kasstor-insights` package in a single entry point. It also adds HMR capabilities for components built with the `@genexus/kasstor-core` package.",
@@ -48,4 +48,3 @@
     }
   }
 }
-
