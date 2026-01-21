@@ -1,6 +1,6 @@
 {
   "name": "@genexus/kasstor-monorepo",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "homepage": "https://github.com/genexuslabs/kasstor/",
   "description": "A set of utilities to build and test Lit applications and libraries.",
