@@ -1,3 +1,4 @@
+import { FILE_EXTENSION_TO_APPLY_PRIVATE_FIELD_TRANSFORM } from "../constants.js";
 import { transformPrivateFieldsToPublic } from "../internal/transform-private-fields.js";
 
 const PRIVATE_FIELD_REGEX = /#[a-zA-Z_$][a-zA-Z0-9_$]*/;
@@ -9,13 +10,18 @@ const PRIVATE_FIELD_REGEX = /#[a-zA-Z_$][a-zA-Z0-9_$]*/;
  */
 export const transform = (options: {
   code: string;
+  filePathWithExtension: string;
   hmrForComponent: boolean;
   isDevServer: boolean;
 }) => {
-  const { code, hmrForComponent, isDevServer } = options;
+  const { code, filePathWithExtension, hmrForComponent, isDevServer } = options;
 
-  // Only works for dev server
-  if (!hmrForComponent || !isDevServer) {
+  // Only works for dev server and for JS files
+  if (
+    !hmrForComponent ||
+    !isDevServer ||
+    !FILE_EXTENSION_TO_APPLY_PRIVATE_FIELD_TRANSFORM.test(filePathWithExtension)
+  ) {
     return null;
   }
 

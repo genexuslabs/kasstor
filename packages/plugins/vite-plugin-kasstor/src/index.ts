@@ -240,8 +240,13 @@ export async function kasstor(options?: KasstorPluginOptions): Promise<Plugin> {
      *
      * Only applies in dev server.
      */
-    transform(code: string) {
-      return transform({ code, hmrForComponent, isDevServer });
+    transform(code: string, id: string) {
+      return transform({
+        code,
+        filePathWithExtension: id,
+        hmrForComponent,
+        isDevServer
+      });
     },
 
     /**
@@ -277,3 +282,4 @@ export async function kasstor(options?: KasstorPluginOptions): Promise<Plugin> {
 }
 
 export default kasstor;
+
