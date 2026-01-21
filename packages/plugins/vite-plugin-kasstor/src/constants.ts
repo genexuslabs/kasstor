@@ -9,6 +9,8 @@ export const RESOLVED_VIRTUAL_HMR_HANDLERS_MODULE_ID =
   "\0" + VIRTUAL_HMR_HANDLERS_MODULE_ID;
 
 export const DEFAULT_COMPONENT_FILE_PATTERN = /\.lit\.(ts|js)$/;
+export const FILE_EXTENSION_TO_APPLY_PRIVATE_FIELD_TRANSFORM =
+  /\.(ts|js|tsx|jsx|mjs|mts)$/;
 export const DEFAULT_SCSS_FILE_PATTERN = /(\.scss|\.scss\.js)$/;
 
 export const DEFINE_CUSTOM_ELEMENT_REGEX =
@@ -28,3 +30,4 @@ export const LIBRARY_ANALYSIS_MESSAGES = {
 
 export const HMR_WS_EVENT_NAME = "kasstor:hmr-update";
 export const PERFORMANCE_METRIC_WS_EVENT_NAME = "kasstor:performance-metric";
+
