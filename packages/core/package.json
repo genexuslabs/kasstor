@@ -1,6 +1,6 @@
 {
   "name": "@genexus/kasstor-core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
   "description": "A set of utilities to build and test Lit applications and libraries.",
@@ -38,7 +38,7 @@
     "test:e2e": "playwright install && vitest --project browser"
   },
   "peerDependencies": {
-    "@genexus/kasstor-webkit": "^0.1.0",
+    "@genexus/kasstor-webkit": "~0.2.1",
     "lit": "^3.3.1"
   },
   "lint-staged": {
@@ -83,3 +83,4 @@
     }
   }
 }
+
