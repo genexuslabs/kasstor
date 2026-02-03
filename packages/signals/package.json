@@ -1,6 +1,6 @@
 {
   "name": "@genexus/kasstor-signals",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
   "description": "A package that implements Signals to be used in any type of application. It also provides directives for using those signals in components built with the `@genexus/kasstor-core` package.",
@@ -38,8 +38,8 @@
     "test:e2e": "playwright install && vitest --project browser"
   },
   "peerDependencies": {
-    "@genexus/kasstor-core": "^0.1.0",
-    "alien-signals": "^3.1.1",
+    "@genexus/kasstor-core": "~0.2.0",
+    "alien-signals": "^3.1.2",
     "lit": "^3.3.1"
   },
   "lint-staged": {
