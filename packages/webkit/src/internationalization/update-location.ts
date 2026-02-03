@@ -44,6 +44,7 @@ export const updateLocation = (
   }
 
   const newPathname = "/" + pathSegments.join("/");
+  const newLocation = `${newPathname}${search}${hash}`;
 
   // If the location was changed with backward or forward navigation,
   // we don't need to update the URL again. Otherwise, we would create
@@ -52,9 +53,9 @@ export const updateLocation = (
     // Use the router of the Host application instead of the history API to,
     // change the URL to avoid full page reloads and to keep the routing state
     // when navigating through the application (back/forward).
-    locationChangeCallback(`${newPathname}${search}${hash}`);
+    locationChangeCallback(newLocation);
   }
 
-  return newPathname;
+  return newLocation;
 };
 
