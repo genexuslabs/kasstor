@@ -12,25 +12,30 @@ getI18nGlobals();
 
 const setLanguageInDocument = (languageSubtag: KasstorLanguageSubtag) => {
   document.documentElement.setAttribute("lang", languageSubtag);
-  document.documentElement.setAttribute(
-    "dir",
-    getLanguageDirection(languageSubtag)
-  );
+  document.documentElement.setAttribute("dir", getLanguageDirection(languageSubtag));
 };
 
 /**
- * Sets the active language and loads translations
- * @param language - Language code to set as active
- * @param executeLocationChange - Whether to update the browser's URL to reflect the new language
- * @remarks Loads translations asynchronously and notifies subscribers when complete
- * @returns The new location pathname if it was updated, otherwise undefined
+ * Sets the active language, loads its translations asynchronously, and notifies
+ * subscribers when loading is done.
+ *
+ * @param language - Full name (e.g. `"english"`) or subtag (e.g. `"en"`).
+ * @param executeLocationChange - If `true` (default), updates the browser URL
+ *   to reflect the new language.
+ * @returns The new pathname if the location was updated, otherwise `undefined`.
+ *
+ * Behavior:
+ * - Sets `document.documentElement.lang` and `dir` (LTR/RTL).
+ * - Persists the language in local storage (browser only).
+ * - Loads translations for all registered features, then notifies
+ *   subscribers; if the user changes language again before load finishes,
+ *   only the latest language’s subscribers are notified.
  */
 export const setLanguage = (
   language: KasstorLanguage | KasstorLanguageSubtag,
   executeLocationChange = true
 ) => {
-  const { fullLanguageName, subtag } =
-    fromLanguageToFullnameAndSubtag(language);
+  const { fullLanguageName, subtag } = fromLanguageToFullnameAndSubtag(language);
   kasstorWebkitI18n!.currentLanguage = fullLanguageName;
 
   let newLocation = undefined;
@@ -40,10 +45,7 @@ export const setLanguage = (
   if (typeof window !== "undefined") {
     setLanguageInLocalStorage(subtag);
     setLanguageInDocument(subtag);
-    newLocation = updateLocation(
-      { fullLanguageName, subtag },
-      executeLocationChange
-    );
+    newLocation = updateLocation({ fullLanguageName, subtag }, executeLocationChange);
   }
 
   getTranslationsForLanguage(fullLanguageName).then(() => {
@@ -65,4 +67,3 @@ export const setLanguage = (
 
   return newLocation;
 };
-

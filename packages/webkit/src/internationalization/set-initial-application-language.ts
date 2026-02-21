@@ -8,17 +8,32 @@ import { trackLanguageChangesWithForwardAndBackwardNavigation } from "./track-la
 import type { KasstorLanguageFullnameAndSubtag } from "./types";
 
 /**
- * Sets the initial application language based on the URL or client preferences.
- * @param options - Configuration options
- * @param options.locationChangeCallback - Callback to update the URL when the language changes.
- * @param options.pathname - Optional pathname to extract the language from. If not provided, the function will use the current window location.
- * @throws Will throw an error if called on the server without a pathname.
- * @returns The initial language set for the application and the location to replace if the URL must be updated.
+ * Sets the initial application language from the URL or client preferences, and
+ * wires callbacks for future language and location changes.
+ *
+ * @param options - Configuration.
+ * @param options.locationChangeCallback - Called with the new pathname when the
+ *   language (and thus URL) changes. Invoke your app's or framework's navigation
+ *   here (e.g. React Router's `navigate`, Angular router, Vue Router, or
+ *   `history.replaceState`), so the URL reflects the new language.
+ * @param options.languageChangeCallback - Optional; called with the new
+ *   language when it changes.
+ * @param options.pathname - Pathname to read the language from (e.g. `/es/home`).
+ *   When running in the browser and not using server-side rendering, omit this:
+ *   the current window location is used. When running on the server (SSR), this
+ *   is required because `window` is undefined; if omitted on the server, the
+ *   function throws.
+ * @returns `{ initialLanguage, locationToReplace }` — the language that was set
+ *   and the pathname to replace in the URL, if any.
+ * @throws Error if called on the server without providing `pathname`.
+ *
+ * Behavior:
+ * - Resolves initial language from URL, then client preferences, then default.
+ * - Calls `setLanguage` with that language (without updating the URL).
+ * - Enables tracking of language changes for forward/back navigation.
  */
 export const setInitialApplicationLanguage = (options: {
-  languageChangeCallback?: (
-    newLanguage: KasstorLanguageFullnameAndSubtag
-  ) => void;
+  languageChangeCallback?: (newLanguage: KasstorLanguageFullnameAndSubtag) => void;
   locationChangeCallback: (newLocation: string) => void;
   pathname?: string;
 }): {
@@ -34,9 +49,7 @@ export const setInitialApplicationLanguage = (options: {
   }
 
   const languageFromUrl = getLanguageFromUrl(pathname);
-  const initialLanguage = isValidLanguage(languageFromUrl)
-    ? languageFromUrl
-    : getClientLanguage();
+  const initialLanguage = isValidLanguage(languageFromUrl) ? languageFromUrl : getClientLanguage();
 
   // Side effect to initialize the i18n globals if not already done
   getI18nGlobals();
@@ -52,4 +65,3 @@ export const setInitialApplicationLanguage = (options: {
     locationToReplace: initialLocation
   };
 };
-

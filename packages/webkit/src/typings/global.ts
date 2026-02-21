@@ -6,7 +6,7 @@ import type {
   KasstorTranslationsLoader
 } from "../internationalization/types";
 
-type ApplicationIdentifier = string;
+type FeatureIdentifier = string;
 
 declare global {
   var kasstorWebkitI18n:
@@ -28,10 +28,10 @@ declare global {
         internalLanguageInitializedResolver?: (() => void) | false;
 
         /**
-         * Represents the current translations loaded for each "application".
+         * Current translations loaded per feature (e.g. per component or per app).
          */
         readonly loadedTranslations: Map<
-          ApplicationIdentifier,
+          FeatureIdentifier,
           KasstorTranslations<KasstorTranslationShape>
         >;
 
@@ -40,9 +40,7 @@ declare global {
          * navigating forward/back in the browser, so the Host application
          * can update its UI accordingly.
          */
-        languageChangeCallback?: (
-          newLanguage: KasstorLanguageFullnameAndSubtag
-        ) => void;
+        languageChangeCallback?: (newLanguage: KasstorLanguageFullnameAndSubtag) => void;
 
         /**
          * A promise that resolves when the language has been initialized.
@@ -56,10 +54,10 @@ declare global {
         locationChangeCallback?: (newLocation: string) => void;
 
         /**
-         * Loaders for the translations of each applications.
+         * Loaders for the translations of each feature.
          */
         readonly translationLoaders: Map<
-          ApplicationIdentifier,
+          FeatureIdentifier,
           KasstorTranslationsLoader<KasstorTranslationShape>
         >;
       }
@@ -68,4 +66,3 @@ declare global {
 
 // Necessary to auto-detect this module in the project
 // export {};
-
