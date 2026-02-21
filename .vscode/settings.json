@@ -5,7 +5,15 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "always"
   },
-  "cSpell.words": ["genexus", "Kasstor", "subtag", "SUBTAGS", "Vite"],
+  "cSpell.words": [
+    "computeds",
+    "genexus",
+    "Kasstor",
+    "microtask",
+    "subtag",
+    "SUBTAGS",
+    "Vite"
+  ],
   "editor.tabSize": 2
 }
 

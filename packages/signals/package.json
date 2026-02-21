@@ -40,7 +40,7 @@
   "peerDependencies": {
     "@genexus/kasstor-core": "~0.2.0",
     "alien-signals": "^3.1.2",
-    "lit": "^3.3.1"
+    "lit": "^3.3.2"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
@@ -72,6 +72,51 @@
       "types": "./dist/browser/development/core/batch/index.d.ts",
       "development": "./dist/browser/development/core/batch/index.js",
       "default": "./dist/browser/production/core/batch/index.js"
+    },
+    "./core/computed.js": {
+      "node": {
+        "development": "./dist/node/development/core/computed/index.js",
+        "default": "./dist/node/production/core/computed/index.js"
+      },
+      "types": "./dist/browser/development/core/computed/index.d.ts",
+      "development": "./dist/browser/development/core/computed/index.js",
+      "default": "./dist/browser/production/core/computed/index.js"
+    },
+    "./core/effect.js": {
+      "node": {
+        "development": "./dist/node/development/core/effect/index.js",
+        "default": "./dist/node/production/core/effect/index.js"
+      },
+      "types": "./dist/browser/development/core/effect/index.d.ts",
+      "development": "./dist/browser/development/core/effect/index.js",
+      "default": "./dist/browser/production/core/effect/index.js"
+    },
+    "./core/effect-scope.js": {
+      "node": {
+        "development": "./dist/node/development/core/effect-scope/index.js",
+        "default": "./dist/node/production/core/effect-scope/index.js"
+      },
+      "types": "./dist/browser/development/core/effect-scope/index.d.ts",
+      "development": "./dist/browser/development/core/effect-scope/index.js",
+      "default": "./dist/browser/production/core/effect-scope/index.js"
+    },
+    "./core/signal.js": {
+      "node": {
+        "development": "./dist/node/development/core/signal/index.js",
+        "default": "./dist/node/production/core/signal/index.js"
+      },
+      "types": "./dist/browser/development/core/signal/index.d.ts",
+      "development": "./dist/browser/development/core/signal/index.js",
+      "default": "./dist/browser/production/core/signal/index.js"
+    },
+    "./core/trigger.js": {
+      "node": {
+        "development": "./dist/node/development/core/trigger/index.js",
+        "default": "./dist/node/production/core/trigger/index.js"
+      },
+      "types": "./dist/browser/development/core/trigger/index.d.ts",
+      "development": "./dist/browser/development/core/trigger/index.js",
+      "default": "./dist/browser/production/core/trigger/index.js"
     },
     "./core/untrack.js": {
       "node": {
