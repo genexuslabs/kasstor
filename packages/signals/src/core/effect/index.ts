@@ -1,7 +1,8 @@
 import { effect as alienEffect } from "alien-signals";
 
 /**
- * Runs a side effect that re-runs whenever its dependencies change.
+ * Runs a watcher/effect: side-effectful code that re-runs whenever its
+ * dependencies (signals or computeds read inside it) change.
  *
  * Behavior:
  * - Runs once immediately, then again whenever any tracked signal/computed

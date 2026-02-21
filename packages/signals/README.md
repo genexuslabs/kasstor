@@ -62,15 +62,23 @@ export class MyCounter extends KasstorElement {
 
 ## Core Concepts
 
-Signals are reactive values that automatically track dependencies and notify subscribers when they change. This creates a reactive system without the complexity of manual subscription management.
+### What are signals?
 
-### Why Signals?
+Signals are data structures for managing **observable state**. A signal holds a value (or a computed value that depends on other signals). When a signal changes, consumers that depend on it are notified. Because signals form a **dependency graph**, computed values re-compute and effects re-run when their dependencies change. Signals are well-suited for **shared state**: values that many components may read or update.
+
+Signal APIs typically have three main concepts:
+
+- **State signals** — Hold a single value (e.g. `signal(0)`). Read and write the value; dependents are notified on write.
+- **Computed signals** — Wrap a computation that depends on other signals (e.g. `computed(() => a() + b())`). Memoized; recompute when dependencies change.
+- **Watchers / effects** — Run side-effectful code when signal values change (e.g. `effect(() => { ... })`). Used to sync state, update the DOM, or trigger component updates.
+
+### Why signals?
 
 - **Automatic dependency tracking**: Effects and computed values automatically know which signals they depend on.
 
-- **Minimal updates**: Only components that depend on changed signals are updated.
+- **Minimal updates**: Only the code that depends on changed signals runs again (or, in Lit with `watch`, only the bound parts of the template).
 
-- **Simple API**: Create reactive state with just a function call.
+- **Simple API**: Create reactive state with a function call; no manual subscription management.
 
 - **Framework agnostic**: Works with vanilla JS, Lit, or any framework.
 
@@ -443,7 +451,7 @@ Directives are used in Lit templates to subscribe to signals and update only the
 
 > **Essential for Lit:** Without `watch`, Lit templates do not update when a signal changes. Changing a signal does not trigger a component update. Always use **`watch(signal)`** in the template wherever you render a signal so that part subscribes and re-renders.
 
-This is intentional (pin-point updates): only the parts wrapped in `watch` re-render when their signal changes, which improves performance. Wrap each signal read in the template with `watch(signal)` so that:
+**Pin-point updates:** Only the bindings wrapped in `watch` are updated when their signal changes; the rest of the template is skipped. Updates from `watch` participate in the Lit reactive update lifecycle. The benefit scales with template size: more bindings and logic mean more work skipped when only a few signals change. Wrap each signal read in the template with `watch(signal)` so that:
 
 - The current value is rendered.
 - That part of the template subscribes to the signal and re-renders when the value changes.

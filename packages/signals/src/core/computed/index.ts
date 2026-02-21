@@ -1,8 +1,9 @@
 import { computed as alienComputed } from "alien-signals";
 
 /**
- * Creates a memoized derived value. Read-only. The computation runs only when
- * someone reads the value; if nobody reads it, the computation is not executed.
+ * Creates a computed signal: a memoized value derived from other signals.
+ * Read-only. The computation runs only when someone reads the value; if
+ * nobody reads it, the computation is not executed.
  *
  * Behavior:
  * - **Lazy / on read:** The getter function runs only when the computed is read

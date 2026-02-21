@@ -1,8 +1,9 @@
 import { signal as alienSignal } from "alien-signals";
 
 /**
- * Creates a reactive value. The returned function is the signal: call with no
- * arguments to read, call with one argument to set.
+ * Creates a state signal: a reactive value that holds a single value. The
+ * returned function is the signal: call with no arguments to read, call with
+ * one argument to set.
  *
  * Behavior:
  * - Reading the signal (e.g. inside `computed` or `effect`) tracks it as a

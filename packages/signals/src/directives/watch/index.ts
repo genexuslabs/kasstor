@@ -151,9 +151,9 @@ export class WatchDirective<T> extends AsyncDirective {
 }
 
 /**
- * Subscribes to a signal in a Lit template and updates only this part when the signal changes.
+ * Subscribes to a signal in a Lit template and updates only this binding when the signal changes (pin-point update). Only the bindings wrapped in `watch` are updated; the rest of the template is skipped. Updates participate in the Lit reactive update lifecycle.
  *
- * **Important:** Without `watch`, Lit templates do not update when a signal changes. Modifying a signal does not trigger a Lit component update (Lit does not call `requestUpdate()` when a signal changes). This design allows pin-point updates: only the parts wrapped in `watch` re-render when their signal changes, improving performance. You must use `watch(signal)` wherever you render a signal in the template so that part subscribes and re-renders when the value changes.
+ * **Important:** Without `watch`, Lit templates do not update when a signal changes. Modifying a signal does not trigger a Lit component update (Lit does not call `requestUpdate()` when a signal changes). You must use `watch(signal)` wherever you render a signal in the template so that part subscribes and re-renders when the value changes.
  *
  * Behavior:
  * - Renders the current signal value and subscribes so future changes update this part.
