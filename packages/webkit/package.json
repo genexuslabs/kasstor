@@ -37,9 +37,6 @@
     "test:unit": "vitest --project unit",
     "test:e2e": "playwright install && vitest --project browser"
   },
-  "peerDependencies": {
-    "lit": "^3.3.2"
-  },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
   },

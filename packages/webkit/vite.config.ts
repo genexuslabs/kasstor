@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) =>
     isNode: mode.startsWith("node"),
     isProduction: mode.endsWith("production"),
     packagePath: "packages/webkit/",
-    peerDependencies: Object.keys(packageJson.peerDependencies)
+    peerDependencies: []
   })
 );
 
