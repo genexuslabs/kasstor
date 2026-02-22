@@ -33,7 +33,6 @@ export const registerTranslations = <T extends KasstorTranslationShape>(
   // To improve the DX with HMR, we replace the translations loader anyways
   translationLoaders.set(featureId, loader);
 
-  // TODO: Add an e2e test for this
   // This is a dummy setLanguage to load the translations for the new feature
   if (currentLanguage) {
     setLanguage(currentLanguage);
