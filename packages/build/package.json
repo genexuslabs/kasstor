@@ -23,7 +23,7 @@
   ],
   "scripts": {
     "dev": "tsgo",
-    "dev.types": "tsgo",
+    "dev.types": "tsc",
     "build": "tsc",
     "test": "vitest",
     "test.ci": "bun run test --watch=false"

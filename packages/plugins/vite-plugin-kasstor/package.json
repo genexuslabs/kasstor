@@ -23,10 +23,10 @@
     "dist/"
   ],
   "scripts": {
-    "dev": "tsgo",
-    "dev.types": "tsgo",
+    "dev": "tsc",
+    "dev.types": "tsc",
     "build": "tsc",
-    "watch": "tsgo --watch",
+    "watch": "tsc --watch",
     "test": "playwright install && vitest",
     "test.ci": "bun run test --watch=false --browser.headless",
     "test:unit": "vitest --project unit",
