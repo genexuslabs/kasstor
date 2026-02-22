@@ -1,0 +1,46 @@
+{
+  "name": "@genexus/kasstor-advanced-examples",
+  "version": "0.2.0",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/genexuslabs/kasstor",
+  "private": true,
+  "description": "A set of advanced examples for the Kasstor library.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/genexuslabs/kasstor.git"
+  },
+  "keywords": [
+    "lit",
+    "lit decorators",
+    "web components"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "bun dev.types && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun dev.types'",
+    "dev.types": "tsc --project tsconfig-types.json",
+    "build": "tsc --noEmit && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun build:prod:browser' 'bun build:prod:node' 'bun build.types'",
+    "build:dev:browser": "vite build --mode browser-development",
+    "build:dev:node": "vite build --mode node-development",
+    "build:prod:browser": "vite build --mode browser-production",
+    "build:prod:node": "vite build --mode node-production",
+    "build.types": "tsc --project tsconfig-types.json",
+    "watch": "bun run clear.dist && concurrently 'bun build:dev:browser --watch' 'bun build:dev:node --watch' 'bun build:prod:browser --watch' 'bun build:prod:node --watch' 'bun dev.types --watch'",
+    "clear.dist": "bun run ./scripts/remove-dist.ts",
+    "test": "playwright install && vitest",
+    "test.ci": "bun run test --watch=false --browser.headless",
+    "test:unit": "vitest --project unit",
+    "test:e2e": "playwright install && vitest --project browser"
+  },
+  "dependencies": {
+    "@genexus/kasstor-core": "~0.2.1",
+    "@genexus/kasstor-webkit": "~0.2.1",
+    "lit": "^3.3.2"
+  },
+  "devDependencies": {
+    "@genexus/vite-plugin-kasstor": "~0.2.0"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
+  }
+}
+
