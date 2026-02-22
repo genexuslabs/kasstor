@@ -8,9 +8,27 @@
   <em>An ecosystem for building Lit-based web components with first-class DX: decorators, SCSS, typed events, HMR, optional signals, etc.</em>
 </p>
 
-<center>
-  [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-</center>
+<p align="center">
+  <a href="./LICENSE">
+    <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License />
+  </a>
+
+  <a href="https://www.npmjs.com/@genexus/kasstor-core">
+    <img src="https://img.shields.io/npm/v/@genexus/kasstor-core.svg?logo=npm&logoColor=fff&label=kasstor-core&color=limegreen" alt="kasstor-core on npm" />
+  </a>
+
+  <a href="https://www.npmjs.com/@genexus/kasstor-signals">
+    <img src="https://img.shields.io/npm/v/@genexus/kasstor-signals.svg?logo=npm&logoColor=fff&label=kasstor-signals&color=limegreen" alt="kasstor-signals on npm" />
+  </a>
+
+  <a href="https://www.npmjs.com/@genexus/kasstor-webkit">
+    <img src="https://img.shields.io/npm/v/@genexus/kasstor-webkit.svg?logo=npm&logoColor=fff&label=kasstor-webkit&color=limegreen" alt="kasstor-webkit on npm" />
+  </a>
+
+  <a href="https://www.npmjs.com/@genexus/vite-plugin-kasstor">
+    <img src="https://img.shields.io/npm/v/@genexus/vite-plugin-kasstor.svg?logo=npm&logoColor=fff&label=vite-plugin-kasstor&color=limegreen" alt="vite-plugin-kasstor on npm" />
+  </a>
+</p>
 
 <hr>
 
