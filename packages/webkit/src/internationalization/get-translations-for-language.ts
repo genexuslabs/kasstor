@@ -3,27 +3,22 @@ import type { KasstorLanguage } from "./types";
 
 const { loadedTranslations, translationLoaders } = getI18nGlobals();
 
-export const getTranslationsForLanguage = <T extends KasstorLanguage>(
-  language: T
-) => {
-  const loadersForEachApplication: Promise<void>[] = [
-    ...translationLoaders.entries()
-  ]
-    // Load the language translations for each application in parallel
-    .map(async ([appId, loader]) => {
+export const getTranslationsForLanguage = <T extends KasstorLanguage>(language: T) => {
+  const loadersForEachFeature: Promise<void>[] = [...translationLoaders.entries()]
+    // Load the language translations for each feature in parallel
+    .map(async ([featureId, loader]) => {
       const translations = await loader[language]();
-      const appTranslations = loadedTranslations.get(appId);
+      const featureTranslations = loadedTranslations.get(featureId);
 
-      // The applications at least has one language translated
-      if (appTranslations !== undefined) {
-        appTranslations.set(language, translations);
+      // This feature already has at least one language loaded
+      if (featureTranslations !== undefined) {
+        featureTranslations.set(language, translations);
       }
-      // It is the first translation added for the application
+      // First translation added for this feature
       else {
-        loadedTranslations.set(appId, new Map([[language, translations]]));
+        loadedTranslations.set(featureId, new Map([[language, translations]]));
       }
     });
 
-  return Promise.all(loadersForEachApplication);
+  return Promise.all(loadersForEachFeature);
 };
-

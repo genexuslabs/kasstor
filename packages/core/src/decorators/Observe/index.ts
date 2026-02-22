@@ -13,40 +13,32 @@ const observersForEachClass = new WeakMap<
 >();
 
 /**
- * Runs when observed properties change, e.g. `@property` or `@state`.
+ * Executes the decorated method when any of the observed properties change.
  *
- * All callbacks for each `Observe` in a component are called in sync before the
- * `willUpdate` lifecycle method of the component, and even before the
- * `firstWillUpdate`. So, they are not called when a value for a property/state
- * changes.
+ * @param propertyOrProperties - One property name or an array. Must be reactive properties on the class (e.g. `@property` or `@state`).
  *
- * On the initial load, the `Observe` callback is called if the default value
- * or the initial value of the component is not `undefined`. So, if you set
- * `undefined` as the default value of the property/state or the host (that
- * uses the component) sets `undefined` as initial value, the `Observe`
- * callback won't be called.
+ * Behavior:
+ * - Callback runs in sync before `willUpdate` (and before `firstWillUpdate`).
+ * - On initial load, runs only if the initial value is not `undefined`.
+ * - Works with SSR.
+ * - Setting a property inside the callback does not trigger an extra update.
  *
- * This decorators works with Server Side Rendering (SSR).
+ * Restrictions:
+ * - Must be applied to a **method** (callback receives `newValue`, `oldValue`).
+ * - Observed names must exist on the class and be reactive properties (e.g. `@property` or `@state`); otherwise a development-only error is thrown.
  *
- * Changing a property/state inside of a `Observe` callback doesn't trigger an
- * extra update.
+ * @throws In development, throws if applied to a non-function or if a listed property does not exist.
  *
  * @example
  * ```ts
  * \@state() propBoolean: boolean = false;
- *
  * \@property() propString: string | undefined;
- * \@property() propNumber: number | undefined;
  *
  * \@Observe("propString")
- * protected propStringChanged(newValue?: unknown, oldValue?: unknown) {
- *   ...
- * }
+ * protected propStringChanged(newValue?: unknown, oldValue?: unknown) { ... }
  *
- * \@Observe(["propBoolean", "propNumber", ...])
- * protected propBooleanOrNumberChanged(newValue?: unknown, oldValue?: unknown) {
- *   ...
- * }
+ * \@Observe(["propBoolean", "propNumber"])
+ * protected propsChanged(newValue?: unknown, oldValue?: unknown) { ... }
  * ```
  */
 export function Observe(propertyOrProperties: string | string[]) {
@@ -74,7 +66,7 @@ export function Observe(propertyOrProperties: string | string[]) {
 
       if (propertiesThatCanNotBeObserved.length !== 0) {
         throw new Error(
-          `The ${propertiesThatCanNotBeObserved.map(prop => `"${prop}"`).join(", ")} ${propertiesThatCanNotBeObserved.length === 1 ? "property" : "properties"}} can not be observed, because the @Observe can only be applied to @property or @state.`
+          `The ${propertiesThatCanNotBeObserved.map(prop => `"${prop}"`).join(", ")} ${propertiesThatCanNotBeObserved.length === 1 ? "property" : "properties"} can not be observed, because the @Observe can only be applied to @property or @state.`
         );
       }
     }
@@ -135,3 +127,4 @@ export function Observe(propertyOrProperties: string | string[]) {
     return descriptor;
   };
 }
+

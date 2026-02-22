@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
-  "description": "A set of utilities to build documentation for Lit applications and libraries.",
+  "description": "Utilities to analyze Lit component libraries and auto-generate documentation, type declarations, and metadata.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/genexuslabs/kasstor.git"
@@ -22,8 +22,8 @@
     "dist/"
   ],
   "scripts": {
-    "dev": "tsgo",
-    "dev.types": "tsgo",
+    "dev": "tsc",
+    "dev.types": "tsc",
     "build": "tsc",
     "test": "vitest",
     "test.ci": "bun run test --watch=false"
@@ -35,6 +35,10 @@
     "micromark": "~4.0.2",
     "prettier": "^3.7.4",
     "typescript": "~5.9.3"
+  },
+  "devDependencies": {
+    "lit": "^3.3.2",
+    "@genexus/kasstor-core": "~0.2.0"
   },
   "exports": {
     ".": {

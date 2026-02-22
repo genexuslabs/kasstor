@@ -51,11 +51,25 @@ class LazyLoadDirective extends AsyncDirective {
 }
 
 /**
+ * Loads a component when its element is attached to the DOM (for use in `KasstorElement` templates).
  *
+ * Behavior:
+ * - If the component is already registered, does nothing.
+ * - Otherwise triggers the Kasstor loader for that tag (when registered in a library).
+ * - Improves initial load by not loading components that are not used immediately.
+ *
+ * @throws {Error} When not used in an ElementPart. Use only on the element tag, e.g. `<my-component ${lazyLoad()}></my-component>`.
+ *
+ * @example
+ * ```ts
+ * import { lazyLoad } from "@genexus/kasstor-core/directives/lazy-load.js";
+ * override render() { return html`<my-component ${lazyLoad()}></my-component>`; }
+ * ```
  */
 export const lazyLoad = directive(LazyLoadDirective);
 
 /**
- *
+ * Type for the lazy load directive.
  */
 export type { LazyLoadDirective };
+

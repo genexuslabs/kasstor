@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
-  "description": "A plugin for the Vite build tool to use the `@genexus/kasstor-build` and `@genexus/kasstor-insights` package in a single entry point. It also adds HMR capabilities for components built with the `@genexus/kasstor-core` package.",
+  "description": "Vite plugin that wires @genexus/kasstor-build and @genexus/kasstor-insights into a single entry point and adds HMR for components built with @genexus/kasstor-core.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/genexuslabs/kasstor.git"
@@ -23,10 +23,10 @@
     "dist/"
   ],
   "scripts": {
-    "dev": "tsgo",
-    "dev.types": "tsgo",
+    "dev": "tsc",
+    "dev.types": "tsc",
     "build": "tsc",
-    "watch": "tsgo --watch",
+    "watch": "tsc --watch",
     "test": "playwright install && vitest",
     "test.ci": "bun run test --watch=false --browser.headless",
     "test:unit": "vitest --project unit",

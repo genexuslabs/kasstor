@@ -23,9 +23,14 @@ const isSubtagLanguage = (
 ): language is KasstorLanguageSubtag =>
   ALL_SUPPORTED_LANGUAGE_SUBTAGS.has(language as KasstorLanguageSubtag);
 
-export const fromLanguageToFullnameAndSubtag = <
-  T extends KasstorLanguage | KasstorLanguageSubtag
->(
+/**
+ * Normalizes a language input (full name or subtag) to
+ * `{ fullLanguageName, subtag }`.
+ *
+ * @param language - Full name (e.g. `"english"`) or subtag (e.g. `"en"`).
+ * @returns Object with both full name and subtag.
+ */
+export const fromLanguageToFullnameAndSubtag = <T extends KasstorLanguage | KasstorLanguageSubtag>(
   language: T
 ): KasstorLanguageFullnameAndSubtag =>
   isSubtagLanguage(language)
@@ -37,4 +42,3 @@ export const fromLanguageToFullnameAndSubtag = <
         fullLanguageName: language,
         subtag: fromLanguageFullnameToSubtag(language satisfies KasstorLanguage)
       };
-

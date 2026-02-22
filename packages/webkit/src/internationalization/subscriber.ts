@@ -8,41 +8,49 @@ let autoSubscriberId = 0;
 const translationChangeSubscribers: Map<
   string,
   {
-    applicationId: string;
+    featureId: string;
     callback: (newTranslation: KasstorTranslationShape) => void;
   }
 > = new Map();
 
 export const notifyLanguageChange = () =>
-  translationChangeSubscribers.forEach(({ applicationId, callback }) =>
+  translationChangeSubscribers.forEach(({ featureId, callback }) =>
     // The translation must be defined, since this function is called after all
     // translations for the language has been loaded
-    callback(getCurrentTranslations(applicationId)!)
+    callback(getCurrentTranslations(featureId)!)
   );
 
 /**
- * Subscribes to language change notifications
- * @param {string} applicationId - Application/component ID needing translations
- * @param {(newTranslation: KasstorTranslationShape) => void} callback - Function to call when translations update
- * @returns A unique identifier for the subscriber which must be stored for later calls to `unsubscribeToLanguageChanges`
+ * Subscribes to language change notifications. When the app language changes,
+ * the callback receives the new translations for the given feature.
+ *
+ * @param featureId - Feature ID whose translations are needed (same ID used in `registerTranslations`).
+ * @param callback - Called with the new translation shape when language changes.
+ * @returns A unique subscriber ID; pass it to `unsubscribeToLanguageChanges` to remove the subscription.
+ *
+ * Behavior:
+ * - Callback runs after translations for the new language are loaded.
+ * - Store the returned ID and call `unsubscribeToLanguageChanges(id)` in
+ *   `disconnectedCallback` (or equivalent) to avoid leaks.
  */
 export const subscribeToLanguageChanges = (
-  applicationId: string,
+  featureId: string,
   callback: (newTranslation: KasstorTranslationShape) => void
-) => {
+): string => {
   const subscriberId = `kasstor-webkit-i18n-subscriber-${autoSubscriberId++}`;
-  translationChangeSubscribers.set(subscriberId, { applicationId, callback });
+  translationChangeSubscribers.set(subscriberId, { featureId, callback });
 
   return subscriberId;
 };
 
 /**
- * Removes a language change subscription
- * @param {string} subscriberId - ID of the subscriber to remove
- * @returns {boolean} True if subscription was removed, false if not found
+ * Removes a language change subscription by the ID returned from
+ * `subscribeToLanguageChanges`.
+ *
+ * @param subscriberId - The ID returned when subscribing.
+ * @returns `true` if the subscription was removed, `false` if not found.
  */
-export const unsubscribeToLanguageChanges = (subscriberId: string) =>
+export const unsubscribeToLanguageChanges = (subscriberId: string): boolean =>
   // There is no need to free the memory for the translationChangeSubscribers
   // Map, because we assume a component/page will always be rendered
   translationChangeSubscribers.delete(subscriberId);
-

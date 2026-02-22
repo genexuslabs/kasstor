@@ -29,9 +29,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strict": true,
-    "verbatimModuleSyntax": true,
-
-    "types": ["@vitest/browser/providers/playwright"]
+    "verbatimModuleSyntax": true
   },
   "include": ["src/**/*.ts"],
   // "exclude": ["node_modules", "vite.config.ts", "**/**.e2e.ts"]
@@ -40,3 +38,4 @@
   // TODO: Exclude test files expect when running tests
   "exclude": ["node_modules", "vite.config.ts"]
 }
+

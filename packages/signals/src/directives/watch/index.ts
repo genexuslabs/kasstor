@@ -151,30 +151,30 @@ export class WatchDirective<T> extends AsyncDirective {
 }
 
 /**
- * Renders a signal and subscribes to it, updating the part when the signal
- * changes.
+ * Subscribes to a signal in a Lit template and updates only this binding when the signal changes (pin-point update). Only the bindings wrapped in `watch` are updated; the rest of the template is skipped. Updates participate in the Lit reactive update lifecycle.
  *
- * The directive works as follows:
- *  - If the signal changes while the host component has a pending update,
- *    the part will be updated during the host's update.
+ * **Important:** Without `watch`, Lit templates do not update when a signal changes. Modifying a signal does not trigger a Lit component update (Lit does not call `requestUpdate()` when a signal changes). You must use `watch(signal)` wherever you render a signal in the template so that part subscribes and re-renders when the value changes.
  *
- *  - If the signal changes while the host component does NOT have a pending
- *    update, the part will be updated in a microtask.
+ * Behavior:
+ * - Renders the current signal value and subscribes so future changes update this part.
+ * - If the host component has a pending update when the signal changes, the part updates in that cycle; otherwise updates in a microtask.
+ * - Works with SSR: renders the value on the server without subscribing.
  *
- * In general, all signals observed by the watch directive will update the
- * templates in a microtask for coordination purposes, and, in the moment to
- * update the part, it will check if the host has a pending update to avoid
- * extra updates.
+ * Restrictions:
+ * - Pass a signal (or computed) getter function. Do not pass a plain value or non-reactive source.
+ *
+ * @param signal - A signal or computed (getter function). Called to read the value and to establish the subscription.
+ * @returns The current value for rendering.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { signal } from "@genexus/kasstor-signals/core.js";
  * import { watch } from "@genexus/kasstor-signals/directives/watch.js";
  * import { html } from "lit";
  *
  * const count = signal(0);
  *
- * const myTemplate = html`<p>Count value: ${watch(count)}</p>`;
+ * html`<p>Count: ${watch(count)}</p>`;
  * ```
  */
 export const watch = directive(WatchDirective) as WatchDirectiveFunction;

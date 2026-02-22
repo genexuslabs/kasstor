@@ -4,8 +4,10 @@ import { getLanguageFromLocalStorage } from "./get-and-set-language-in-local-sto
 import type { KasstorLanguageSubtag } from "./types";
 
 /**
- * Get the user's preferred language from the browser settings.
- * @returns The first supported language found in the user's preferences, or null if none is found.
+ * Returns the first supported language from the user’s browser preferences.
+ *
+ * @returns The matching subtag, or `null` if none of the user’s preferred
+ *   languages are supported.
  */
 const getLanguageFromUserPreferences = (): KasstorLanguageSubtag | null => {
   const preferredLanguages = navigator.languages;
@@ -28,17 +30,16 @@ const getLanguageFromUserPreferences = (): KasstorLanguageSubtag | null => {
 };
 
 /**
- * Get the client's language preference.
- *  - The function checks for a language setting in local storage first.
- *  - If not found, it checks the user's browser preferences.
- *  - If neither is available, it defaults to `"en"`.
+ * Returns the client’s preferred language (subtag). Safe to call on the server;
+ * returns the default language when `window` is undefined.
  *
- * @returns The client's preferred language.
+ * Behavior:
+ * - In the browser: reads local storage first, then `navigator.languages`, then defaults to `"en"`.
+ * - On the server: returns the default language (e.g. `"en"`).
+ *
+ * @returns A supported BCP 47 language subtag; never `null`.
  */
 export const getClientLanguage = (): KasstorLanguageSubtag =>
   typeof window === "undefined"
     ? DEFAULT_LANGUAGE
-    : (getLanguageFromLocalStorage() ??
-      getLanguageFromUserPreferences() ??
-      DEFAULT_LANGUAGE);
-
+    : (getLanguageFromLocalStorage() ?? getLanguageFromUserPreferences() ?? DEFAULT_LANGUAGE);

@@ -42,29 +42,28 @@ class RenderByPlatformDirective extends AsyncDirective {
 }
 
 /**
- * A Lit directive that conditionally renders content based on the current platform (browser or server).
+ * Renders different content on the server vs. the browser and avoids hydration mismatch.
  *
- * During server-side rendering (SSR), it renders the server value. On the browser, it renders the browser value.
+ * @param browserValue - Value to render in the browser.
+ * @param serverValue - Value to render on the server. If omitted, the server renders nothing for this expression (useful for browser-only content).
  *
- * When hydrating a server-rendered component, it waits for the hydration process to complete before switching
- * to the browser value to prevent hydration mismatch errors.
+ * Behavior:
+ * - Server: renders `serverValue`; client: renders `browserValue`.
+ * - When `serverValue` is omitted, the server renders nothing there; only the browser shows `browserValue` after hydration. Use this for client-only UI or content that depends on `window` or other browser APIs.
+ * - During hydration, keeps the server value until first update, then switches to `browserValue`.
+ * - Must be used in a template rendered by a {@link KasstorElement} (host needed for hydration).
+ *
+ * Restrictions:
+ * - For identical content in both environments, don't use this directive; render the value directly.
+ * - Using in a standalone template (no KasstorElement host) can break hydration.
  *
  * @example
  * ```ts
- * html`
- *   <h1>${renderByPlatform("Browser only", "Server only")}</h1>
- *   <p>${renderByPlatform("Browser only description")}</p>
- * `
+ * // Different content per environment
+ * html`<h1>${renderByPlatform("Browser only", "Server only")}</h1>`
+ * // Browser-only content (server renders nothing here)
+ * html`<p>${renderByPlatform("Client-only text")}</p>`
  * ```
- *
- * @param browserValue - The value to render in the browser environment
- * @param serverValue - The value to render in the server environment. If not provided, uses browserValue
- *
- * @returns The appropriate value based on the current platform and hydration state.
- *
- * @remarks
- * - During client-side hydration, returns the server value initially and switches to the browser value after hydration completes
- * - Requires the directive to be used with a {@link KasstorElement} component
  */
 export const renderByPlatform = directive(RenderByPlatformDirective);
 

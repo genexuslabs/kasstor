@@ -12,7 +12,12 @@ const languageToLanguageSubtagDictionary = {
   chinese: "zh"
 } as const satisfies Record<KasstorLanguage, KasstorLanguageSubtag>;
 
+/**
+ * Maps a full language name to its BCP 47 subtag.
+ *
+ * @param language - Full name (e.g. `"english"`, `"spanish"`).
+ * @returns The subtag (e.g. `"en"`, `"es"`).
+ */
 export const fromLanguageFullnameToSubtag = <T extends KasstorLanguage>(
   language: T
-) => languageToLanguageSubtagDictionary[language];
-
+): KasstorLanguageSubtag => languageToLanguageSubtagDictionary[language];

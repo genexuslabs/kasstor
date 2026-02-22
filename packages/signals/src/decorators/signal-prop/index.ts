@@ -28,52 +28,45 @@ const getSignalRefAndCreateItIfNecessary = (
 };
 
 /**
- * Decorator that makes a class property into a signal. The property
- * can be accessed and modified directly, and the changes will be
- * reflected in any `computed` values or `effect`s that depend on it.
+ * Turns a class property into a reactive signal. Read and write the property normally; use `$propName` for the raw signal when passing to {@link watch} or when you need the signal function (e.g. for `trigger`).
  *
- * You can also use `$propertyName` to access the raw signal reference.
+ * Behavior:
+ * - Reading/writing the property (e.g. `this.count`, `this.count = 5`) uses the underlying signal.
+ * - `this.$propName` is the raw signal getter/setter for use with `watch` or when you need the signal (e.g. `trigger(this.$count)`).
+ * - **Changes to the property do not trigger component re-renders.** In Lit, use the `watch` directive in the template so the UI updates when the value changes.
+ * - You can use the property inside `computed` and `effect`: reading `this.propName` tracks the underlying signal, so the computed or effect updates when the property changes.
  *
- * When used in a LitElement component, changes to the property will NOT
- * trigger component updates. Use the `watch` directive to reflect
- * the signal value in the component template.
+ * Typing `this.$propName`: For correct TypeScript types when using `this.$propName`, add a `declare` for the raw signal with type `KasstorSignalState<MyClass["propName"]>`. Import the type from the package (e.g. `import type { KasstorSignalState } from "@genexus/kasstor-signals"`).
+ *
+ * Restrictions:
+ * - Apply to class instance fields (not to accessors in a way that conflicts). Initializer value is used as the signal's initial value.
  *
  * @example
- * ```typescript
- * import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
- * import { SignalProp } from "@genexus/kasstor-signals/decorators/signal-prop.js";
- * import { watch } from "@genexus/kasstor-signals/directives/watch.js";
- * import { html } from "lit";
+ * ```ts
+ * import type { KasstorSignalState } from "@genexus/kasstor-signals";
  *
  * \@Component({ tag: "my-component" })
  * class MyComponent extends KasstorElement {
- *  \@SignalProp count: number = 0;
+ *   declare $count: KasstorSignalState<MyComponent["count"]>;
  *
- * override render() {
- *   return html`<p>Count value: ${watch(this.$count)}</p>`;
+ *   \@SignalProp count: number = 0;
+ *   override render() {
+ *     return html`<p>${watch(this.$count)}</p>`;
+ *   }
  * }
  * ```
  *
  * @example
- * ```typescript
- * import { computed } from "@genexus/kasstor-signals";
- * import { SignalProp } from "@genexus/kasstor-signals/decorators/signal-prop.js";
- *
+ * ```ts
  * class Counter {
  *   \@SignalProp count: number = 0;
  *
  *   doubleCount = computed(() => this.count * 2);
  * }
  *
- * const counter = new Counter();
- * console.log(counter.count); // 0
- * console.log(counter.$count()); // 0
- * console.log(counter.doubleCount); // 0
- *
- * counter.count = 5;
- * console.log(counter.count); // 5
- * console.log(counter.$count()); // 5
- * console.log(counter.doubleCount); // 10
+ * const c = new Counter();
+ * c.count = 5;
+ * console.log(c.doubleCount()); // 10
  * ```
  */
 export function SignalProp<Target extends object>(
@@ -115,4 +108,3 @@ export function SignalProp<Target extends object>(
     }
   });
 }
-

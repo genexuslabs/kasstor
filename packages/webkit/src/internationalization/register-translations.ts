@@ -1,37 +1,41 @@
 import { getI18nGlobals } from "./get-i18n-globals";
 import { setLanguage } from "./set-language";
-import type {
-  KasstorTranslationShape,
-  KasstorTranslationsLoader
-} from "./types";
+import type { KasstorTranslationShape, KasstorTranslationsLoader } from "./types";
 
 /**
- * Registers translation loaders for an application
- * @param {string} applicationId - Unique application identifier
- * @param {KasstorTranslationsLoader<T>} loader - Translation loader function
- * @remarks Overwrites existing loaders for HMR compatibility
+ * Registers translation loaders for a feature. Each language is loaded
+ * asynchronously via the loader’s promise.
+ *
+ * @param featureId - Unique identifier for the feature (e.g. a component, a module, or the whole app).
+ * @param loader - Object mapping each supported language to a function that
+ *   returns a Promise of the translations for that language.
+ *
+ * Behavior:
+ * - Replaces any existing loader for the same `featureId` (e.g. for HMR).
+ * - If a loader already existed, a console warning is emitted.
+ * - After registration, if a current language is set, translations for that
+ *   language are requested.
  */
 export const registerTranslations = <T extends KasstorTranslationShape>(
-  applicationId: string,
+  featureId: string,
   loader: KasstorTranslationsLoader<T>
 ) => {
   // Current language is not an object, so it won't be lively updated. That why
   // we can't destructure it outside the function
   const { currentLanguage, translationLoaders } = getI18nGlobals();
 
-  if (translationLoaders.has(applicationId)) {
+  if (translationLoaders.has(featureId)) {
     console.warn(
-      `The translations loader for the application "${applicationId}" has already been registered. This issue can occur when using Hot Module Replacement. Also, validate that your applicationId is unique and your are not registering the translations multiple times.`
+      `The translations loader for the feature "${featureId}" has already been registered. This issue can occur when using Hot Module Replacement. Also, validate that your featureId is unique and you are not registering the translations multiple times.`
     );
   }
 
   // To improve the DX with HMR, we replace the translations loader anyways
-  translationLoaders.set(applicationId, loader);
+  translationLoaders.set(featureId, loader);
 
   // TODO: Add an e2e test for this
-  // This is a dummy setLanguage to load the translations for the new application
+  // This is a dummy setLanguage to load the translations for the new feature
   if (currentLanguage) {
     setLanguage(currentLanguage);
   }
 };
-

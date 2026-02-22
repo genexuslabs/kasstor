@@ -6,6 +6,10 @@ import { DEV_MODE } from "../../development-flags";
  */
 const EVENT_EMITTERS = Symbol("event-emitters");
 
+/**
+ * Typed emitter for a single custom event. Created by the `@Event()` decorator;
+ * do not instantiate directly. Use the property to call {@link EventEmitter.emit}.
+ */
 export class EventEmitter<T> {
   constructor(
     private target: HTMLElement,
@@ -14,16 +18,17 @@ export class EventEmitter<T> {
   ) {}
 
   /**
-   * Emits the CustomEvent with the details information (if any) and returns
-   * a reference for the CustomEvent emitted. This reference can be used to
-   * know if the event was prevented, for example:
+   * Dispatches a CustomEvent and returns it (e.g. to check `defaultPrevented`).
+   *
+   * @param value - Event detail (stored in `event.detail`). Optional.
+   * @param options - Override decorator defaults for this emit (bubbles, cancelable, composed).
+   * @returns The dispatched CustomEvent.
    *
    * @example
    * ```ts
    * const eventInfo = this.myEvent.emit(detail);
-   *
    * if (eventInfo.defaultPrevented) {
-   *   // Do something...
+   *   // Do something if the event was cancelled
    * }
    * ```
    */
@@ -43,24 +48,26 @@ export class EventEmitter<T> {
 }
 
 /**
- * Components can emit data and events using the `Event` decorator. To dispatch
- * Custom DOM events for other components to handle, use the `@Event()`
- * decorator.
+ * Declares a custom DOM event that the component can emit, with typed detail and optional default options.
  *
- * The Event decorator also makes it easier to automatically build types and
- * documentation for the event data.
+ * Usage:
+ * - The decorated property is an {@link EventEmitter}. Call `this.myEvent.emit(detail)` to dispatch a `CustomEvent`.
+ * - The event name is the property name as a string (casing is preserved). Listeners get `event.detail` and can call `preventDefault()`.
  *
- * @param defaultOptions Options used by default when emitting the event.
- * In some scenarios the event options must be different and for that you can
- * pass a different set of options in the emit function:
+ * @param defaultOptions - Default options for every emit (bubbles, cancelable, composed). Overridable per call via {@link EventEmitter.emit}.
  *
+ * Restrictions:
+ * - Apply only to a **property** (not a method). Type the property as `EventEmitter<Detail>`.
+ * - Emitter is created lazily per instance.
+ *
+ * @throws In development, throws if applied to a method (descriptor is present).
  *
  * @example
- * ```tsx
- * \@Event() protected myEvent: EventEmitter<EventDetailType>;
+ * ```ts
+ * \@Event() protected myEvent!: EventEmitter<EventDetailType>;
  *
  * #performEvent = () => {
- *   this.myEvent.emit(detail, { another options });
+ *   this.myEvent.emit(detail, { bubbles: false });
  * }
  * ```
  */
