@@ -10,10 +10,17 @@ export const getI18nGlobals = () => {
       languageInitializedResolver = resolve;
     }),
     loadedTranslations: new Map(),
-    translationLoaders: new Map()
+    translationLoaders: new Map(),
+
+    /**
+     * Cache of load Promises per language (one entry per language, bounded).
+     * Deduplicates concurrent or repeated getTranslationsForLanguage(lang) so
+     * loaders run once per language. Cleared on registerTranslations so new
+     * features are included in the next load. Reset with globals on test teardown.
+     */
+    translationLoadCache: new Map()
   };
-  global.kasstorWebkitI18n.internalLanguageInitializedResolver ??=
-    languageInitializedResolver;
+  global.kasstorWebkitI18n.internalLanguageInitializedResolver ??= languageInitializedResolver;
 
   return global.kasstorWebkitI18n!;
 };

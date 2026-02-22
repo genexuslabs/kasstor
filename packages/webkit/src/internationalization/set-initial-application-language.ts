@@ -56,12 +56,12 @@ export const setInitialApplicationLanguage = (options: {
   kasstorWebkitI18n!.languageChangeCallback = languageChangeCallback;
   kasstorWebkitI18n!.locationChangeCallback = locationChangeCallback;
 
-  const initialLocation = setLanguage(initialLanguage, false);
+  const locationToReplace = setLanguage(initialLanguage, false);
 
   trackLanguageChangesWithForwardAndBackwardNavigation();
 
   return {
     initialLanguage: fromLanguageToFullnameAndSubtag(initialLanguage),
-    locationToReplace: initialLocation
+    locationToReplace
   };
 };

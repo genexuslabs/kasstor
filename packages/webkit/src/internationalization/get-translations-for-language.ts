@@ -1,24 +1,47 @@
 import { getI18nGlobals } from "./get-i18n-globals";
 import type { KasstorLanguage } from "./types";
 
-const { loadedTranslations, translationLoaders } = getI18nGlobals();
-
+/**
+ * Loads translations for the given language for all registered features.
+ *
+ * **Cache:** The Promise for each language is cached so that concurrent or
+ * duplicate calls (e.g. two setLanguage flows for the same language) run
+ * loaders only once. Cache is invalidated when loaders change (registerTranslations)
+ * so newly registered features get their translations on the next load.
+ *
+ * **Performance:** Cache lookup is O(1). Loaders run in parallel per feature.
+ * We avoid an extra async IIFE by caching the Promise.all result directly.
+ */
 export const getTranslationsForLanguage = <T extends KasstorLanguage>(language: T) => {
-  const loadersForEachFeature: Promise<void>[] = [...translationLoaders.entries()]
-    // Load the language translations for each feature in parallel
-    .map(async ([featureId, loader]) => {
-      const translations = await loader[language]();
-      const featureTranslations = loadedTranslations.get(featureId);
+  const { loadedTranslations, translationLoaders, translationLoadCache } = getI18nGlobals();
 
-      // This feature already has at least one language loaded
-      if (featureTranslations !== undefined) {
-        featureTranslations.set(language, translations);
-      }
-      // First translation added for this feature
-      else {
-        loadedTranslations.set(featureId, new Map([[language, translations]]));
-      }
-    });
+  // Cache lookup is O(1)
+  const cached = translationLoadCache.get(language);
+  if (cached !== undefined) {
+    return cached;
+  }
 
-  return Promise.all(loadersForEachFeature);
+  // Single pass over loaders: build one array of promises, then await all.
+  // Avoids extra .map() allocation and async IIFE wrapper.
+  const loadPromises: Promise<void>[] = [];
+
+  for (const [featureId, loader] of translationLoaders) {
+    loadPromises.push(
+      loader[language]().then(translations => {
+        const featureTranslations = loadedTranslations.get(featureId);
+
+        // If the translations for the feature are not loaded, we set them
+        if (featureTranslations === undefined) {
+          loadedTranslations.set(featureId, new Map([[language, translations]]));
+        } else {
+          featureTranslations.set(language, translations);
+        }
+      })
+    );
+  }
+
+  const loadPromise = Promise.all(loadPromises).then(() => {});
+
+  translationLoadCache.set(language, loadPromise);
+  return loadPromise;
 };
