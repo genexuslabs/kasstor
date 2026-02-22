@@ -40,6 +40,36 @@ Example — prefer:
 }
 ```
 
+## Code examples: efficiency and performance
+
+- **Write examples to be as efficient as possible.** Prefer performant JavaScript/TypeScript and avoid unnecessary work.
+
+- **Avoid:**
+  - Extra iterations (e.g. one loop to collect items and another to process them when a single pass suffices).
+  - Mutating the same structure you are iterating over (e.g. removing from `localStorage` while looping by index over it).
+  - Redundant computations or repeated lookups that could be done once.
+
+- **Prefer:** Iterate over a snapshot when you need to remove items (e.g. `Object.keys(localStorage)` then loop and `removeItem`), so you never mutate while iterating. Single-pass logic and minimal unnecessary allocations.
+
+- Apply to code in READMEs, JSDoc `@example` blocks, and any snippet you add or edit.
+
+Example — avoid (mutating while iterating by index):
+```ts
+for (let i = localStorage.length - 1; i >= 0; i--) {
+  const key = localStorage.key(i);
+  if (key !== null && key !== KEEP_KEY) localStorage.removeItem(key);
+}
+```
+
+Example — prefer (iterate over a snapshot; no mutation of the iterated structure):
+```ts
+const keys = Object.keys(localStorage);
+for (let i = 0; i < keys.length; i++) {
+  const key = keys[i];
+  if (key !== KEEP_KEY) localStorage.removeItem(key);
+}
+```
+
 ## Documentation: prefer bullets over long paragraphs
 
 - **Prefer** describing properties, options, or behavioral aspects of a function/API as **bullet points** instead of a single long paragraph.
