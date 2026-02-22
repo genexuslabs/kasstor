@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
-  "description": "A package that implements Signals to be used in any type of application. It also provides directives for using those signals in components built with the `@genexus/kasstor-core` package.",
+  "description": "Reactive signals for state management; works with any JS app and provides a decorator and directives for Lit components built with @genexus/kasstor-core. Built on alien-signals.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/genexuslabs/kasstor.git"

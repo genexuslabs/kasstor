@@ -3,7 +3,7 @@
   "version": "0.2.1",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
-  "description": "A set of utilities to resolve common problems of web applications.",
+  "description": "Utilities for web applications: array helpers, internationalization (i18n), type-ahead search, frame synchronization, and shared local storage keys.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/genexuslabs/kasstor.git"

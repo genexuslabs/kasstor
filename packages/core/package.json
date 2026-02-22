@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
-  "description": "A set of utilities to build and test Lit applications and libraries.",
+  "description": "Decorators and directives to enhance Lit components for building web component libraries and applications.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/genexuslabs/kasstor.git"
@@ -39,7 +39,7 @@
   },
   "peerDependencies": {
     "@genexus/kasstor-webkit": "~0.2.1",
-    "lit": "^3.3.1"
+    "lit": "^3.3.2"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
@@ -80,6 +80,15 @@
       "types": "./dist/browser/development/decorators/Observe/index.d.ts",
       "development": "./dist/browser/development/decorators/Observe/index.js",
       "default": "./dist/browser/production/decorators/Observe/index.js"
+    },
+    "./bootstrapping/register-custom-element-loaders.js": {
+      "node": {
+        "development": "./dist/node/development/bootstrapping/register-custom-element-loaders/index.js",
+        "default": "./dist/node/production/bootstrapping/register-custom-element-loaders/index.js"
+      },
+      "types": "./dist/browser/development/bootstrapping/register-custom-element-loaders/index.d.ts",
+      "development": "./dist/browser/development/bootstrapping/register-custom-element-loaders/index.js",
+      "default": "./dist/browser/production/bootstrapping/register-custom-element-loaders/index.js"
     }
   }
 }
