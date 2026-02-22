@@ -3,10 +3,7 @@ import { LitElement, unsafeCSS, type PropertyValues } from "lit";
 
 import { DEV_MODE, IS_SERVER } from "../../development-flags.js";
 import { componentWasServerSideRendered } from "./component-was-server-side-rendered.js";
-import {
-  addGlobalStyleSheet,
-  removeGlobalStyleSheet
-} from "./global-stylesheets.js";
+import { addGlobalStyleSheet, removeGlobalStyleSheet } from "./global-stylesheets.js";
 import { register, replaceConstructorWithProxy } from "./hmr-for-component.js";
 import type { ComponentOptions } from "./types";
 import { getDelayForUpdate } from "./update-scheduler.js";
@@ -15,14 +12,29 @@ import { getDelayForUpdate } from "./update-scheduler.js";
 export type { ComponentOptions, ComponentShadowRootOptions } from "./types";
 
 const DEFAULT_SHADOW_ROOT_MODE = "open" satisfies ShadowRootMode;
-const DEFAULT_SHADOW_ROOT_DELEGATE_FOCUS =
-  false satisfies ShadowRootInit["delegatesFocus"];
+const DEFAULT_SHADOW_ROOT_DELEGATE_FOCUS = false satisfies ShadowRootInit["delegatesFocus"];
+
+/**
+ * Symbol used to store the metadata attached to the Kasstor component defined in the `@Component`
+ * decorator.
+ *
+ * Not exported so it's not part of the public API.
+ *
+ * **Note**: It's still discoverable via
+ * `Object.getOwnPropertySymbols(proto).find(s => s.description === "kasstor-metadata")`.
+ */
+const KASSTOR_METADATA_SYMBOL = Symbol("kasstor-component-metadata");
 
 /**
  * Class decorator factory that defines the decorated class as a custom element.
  *
  * @category Decorator
  * @param options Configuration options for the component
+ *
+ * @remarks
+ * - The decorated class must extend {@link KasstorElement} (not `LitElement` directly).
+ * - If `tag` is already defined by another constructor, the decorator does not
+ *   redefine it and a console warning is emitted (except when HMR has replaced the component).
  *
  * @example
  * ```ts
@@ -42,9 +54,10 @@ const DEFAULT_SHADOW_ROOT_DELEGATE_FOCUS =
  */
 export const Component = <
   LibraryPrefix extends `${string}-`,
-  T extends typeof KasstorElement
+  Metadata,
+  T extends typeof KasstorElement<Metadata>
 >(
-  options: ComponentOptions<LibraryPrefix>
+  options: ComponentOptions<LibraryPrefix, Metadata>
 ) =>
   function (target: T): T | void {
     const { globalStyles, tag, styles, shadow } = options;
@@ -103,8 +116,7 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
     }
 
     if (DEV_MODE) {
-      const hasGlobalStylesWhenNotUsingShadow =
-        shadow === false && !!globalStyles;
+      const hasGlobalStylesWhenNotUsingShadow = shadow === false && !!globalStyles;
 
       if (hasGlobalStylesWhenNotUsingShadow) {
         console.warn(
@@ -126,6 +138,8 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
       stylesheet.replaceSync(stylesToAttach);
       (prototype as any).globalStyles = stylesheet;
     }
+
+    prototype[KASSTOR_METADATA_SYMBOL] = options.metadata;
 
     // We won't implement the define method of the custom elements protocol,
     // since at the time of creating the Component decorator, there are not
@@ -174,10 +188,11 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
  * }
  * ```
  */
-export abstract class KasstorElement extends LitElement {
+export abstract class KasstorElement<Metadata = unknown> extends LitElement {
   #serverSideRendered: boolean;
 
   protected globalStyles: CSSStyleSheet | undefined;
+  [KASSTOR_METADATA_SYMBOL]: Metadata | undefined;
 
   constructor() {
     super();
@@ -233,6 +248,13 @@ export abstract class KasstorElement extends LitElement {
     this.#serverSideRendered = value;
   }
 
+  /**
+   * Metadata attached to the component defined in the `@Component` decorator.
+   */
+  protected get kstMetadata(): Metadata | undefined {
+    return this[KASSTOR_METADATA_SYMBOL];
+  }
+
   override connectedCallback(): void {
     super.connectedCallback();
 
@@ -243,8 +265,7 @@ export abstract class KasstorElement extends LitElement {
     // Register instance globally for dev-time tooling (HMR, style replacement)
     // Only in dev mode
     if (DEV_MODE) {
-      const tagName =
-        (this.constructor as any).is || this.tagName.toLowerCase();
+      const tagName = (this.constructor as any).is || this.tagName.toLowerCase();
       globalThis.kasstorCoreRegisteredInstances ??= new Map();
 
       const { kasstorCoreRegisteredInstances } = globalThis;
@@ -334,8 +355,7 @@ export abstract class KasstorElement extends LitElement {
     // Unregister instance globally for dev-time tooling (HMR, style replacement)
     // Only in dev mode
     if (DEV_MODE) {
-      const tagName =
-        (this.constructor as any).is || this.tagName.toLowerCase();
+      const tagName = (this.constructor as any).is || this.tagName.toLowerCase();
 
       globalThis.kasstorCoreRegisteredInstances!.get(tagName)!.delete(this);
     }

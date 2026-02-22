@@ -1,9 +1,25 @@
 /**
- * Options for the Component decorator
+ * Options for the Component decorator.
  */
-export type ComponentOptions<LibraryPrefix extends `${string}-`> = {
+export type ComponentOptions<LibraryPrefix extends `${string}-`, Metadata> = {
+  /**
+   * CSS string applied as a global stylesheet when the component is connected.
+   * Works with and without Shadow DOM. When `shadow: false`, consider using
+   * `styles` instead; the decorator may merge them for you.
+   */
   globalStyles?: string;
 
+  /**
+   * Optional metadata attached to the component (e.g. for extending the component).
+   * Available on instances as `this.kstMetadata`.
+   */
+  metadata?: Metadata;
+
+  /**
+   * Custom element tag name (e.g. `"my-button"`). Must include a hyphen and
+   * match the library prefix. If this tag is already defined, the decorator
+   * will not redefine it and a warning is logged (unless under HMR).
+   */
   tag: `${LibraryPrefix}${string}`;
 
   /**
