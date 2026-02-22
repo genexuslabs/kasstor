@@ -57,7 +57,9 @@ export default defineConfig({
 });
 ```
 
-Defaults: HMR for components and styles enabled, insights off, component files matched by `/.lit\.(ts|js)$/`, styles by `/(\.scss|\.scss\.js)$/`. At build start the plugin runs **@genexus/kasstor-build** and, unless you set `fileGeneration: false`, generates documentation and types (library summary, per-component types and readmes, exported types for the library).
+**Convention:** The plugin expects Kasstor component files to use the **`.lit.ts`** (or `.lit.js`) extension by default. Name your component files like `my-button.lit.ts` so they are picked up for HMR and for build/library analysis. You can override this with `includedPaths.component`.
+
+**Defaults**: HMR for components and styles enabled, insights off, component files matched by `/.lit\.(ts|js)$/`, styles by `/(\.scss|\.scss\.js)$/`. At build start the plugin runs **@genexus/kasstor-build** and, unless you set `fileGeneration: false`, generates documentation and types (library summary, per-component types and readmes, exported types for the library).
 
 ## Configuration
 
@@ -244,3 +246,4 @@ When **`insights`** is enabled (e.g. `insights: true` or `insights: { performanc
 ## Contributing
 
 See [CONTRIBUTING.md](../../CONTRIBUTING.md) for how to report issues and submit changes.
+
