@@ -12,7 +12,21 @@ export type CustomElementDependencies<ElementItself = string> =
   | "never-observe"
   | "always-observe";
 
+/**
+ * Describes how to load a single custom element and how to observe its
+ * Shadow DOM for nested custom elements. Used as the value type for each
+ * entry in `LibraryLoaderOptions.customElements`.
+ *
+ * - **loader** — Required. Invoked when the element is first needed (e.g. by
+ *   `lazyLoad`); must return a Promise that resolves when the component is
+ *   defined. Typically `() => import("./my-panel.js")`. Cached per tag.
+ * - **dependencies** — Optional. Controls Shadow DOM observation for nested
+ *   tags: `"never-observe"` (default for many), `"always-observe"`, or an
+ *   array of tag names. Omitted entries use the library's
+ *   `defaultCustomElementWatchingBehavior`.
+ */
 export type CustomElementInfo<TagName extends string> = {
+  /** Returns a Promise that resolves when the custom element is defined. */
   loader: () => Promise<unknown>;
 
   /**

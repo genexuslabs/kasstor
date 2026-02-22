@@ -11,6 +11,36 @@ import type {
 import { autoLoadCustomElementsIfNeeded } from "./auto-load-custom-elements-if-needed.js";
 import { setMutationObserver } from "./set-mutation-observer.js";
 
+/**
+ * Registers custom element loaders for a library so that components can be
+ * loaded on demand (e.g. when used with the `lazyLoad` directive) instead of
+ * only via direct import.
+ *
+ * Call this once at application or library startup. Each entry in
+ * `options.customElements` maps a custom element tag name to a loader function
+ * that returns a Promise (typically a dynamic `import()` of the component
+ * module). When that tag is attached to the DOM (e.g. via
+ * `<my-panel ${lazyLoad()}></my-panel>`), the loader runs and the element is
+ * defined.
+ *
+ * @param options - Configuration for the library: `libraryName`, `libraryPrefix`,
+ *   `defaultCustomElementWatchingBehavior`, and `customElements` (record of tag
+ *   name to `CustomElementInfo` with `loader` and optional `dependencies`).
+ * @see {@link LibraryLoaderOptions} for the full options shape.
+ * @see {@link CustomElementInfo} for each entry's `loader` and `dependencies`.
+ *
+ * @example
+ * ```ts
+ * registerCustomElementLoaders({
+ *   libraryName: "My Library",
+ *   libraryPrefix: "my-",
+ *   defaultCustomElementWatchingBehavior: "never-observe",
+ *   customElements: {
+ *     "my-panel": { loader: () => import("./my-panel.js") }
+ *   }
+ * });
+ * ```
+ */
 export const registerCustomElementLoaders = <Prefix extends LibraryPrefix>(
   options: LibraryLoaderOptions<Prefix>
 ) => {
