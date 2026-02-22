@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
-  "description": "A set of utilities to build and test Lit applications and libraries.",
+  "description": "Live showcase and demo application for the Kasstor ecosystem.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/genexuslabs/kasstor.git"
@@ -37,7 +37,7 @@
     "@genexus/kasstor-signals": "workspace:*",
     "@genexus/kasstor-webkit": "workspace:*",
     "@genexus/mercury": "1.0.0",
-    "lit": "~3.3.1"
+    "lit": "^3.3.2"
   },
   "devDependencies": {
     "@genexus/vite-plugin-mercury": "1.0.0",
