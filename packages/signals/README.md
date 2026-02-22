@@ -36,7 +36,7 @@ npm i @genexus/kasstor-signals
 In Lit, wrap every signal you render in the template with **`watch`** so that part updates when the signal changes:
 
 ```ts
-import { Component, KasstorElement } from "@genexus/kasstor-core";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { computed, signal } from "@genexus/kasstor-signals/core.js";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
 import { html } from "lit";
@@ -44,6 +44,10 @@ import { html } from "lit";
 const count = signal(0);
 const doubled = computed(() => count() * 2);
 
+/**
+ * Counter that displays a signal and its doubled value; uses watch in template.
+ * @access public
+ */
 @Component({ tag: "my-counter" })
 export class MyCounter extends KasstorElement {
   #incrementCount = (): void => {
@@ -125,13 +129,17 @@ import {
   Component,
   KasstorElement
 } from "@genexus/kasstor-core/decorators/component.js";
-import { signal } from "@genexus/kasstor-signals/core/signal.js";
+import { computed, signal } from "@genexus/kasstor-signals/core.js";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
 import { html } from "lit";
 
 const count = signal(0);
 const doubleCount = computed(() => count() * 2);
 
+/**
+ * Counter that displays a signal and its doubled value; uses watch in template.
+ * @access public
+ */
 @Component({ tag: "my-counter" })
 export class MyCounter extends KasstorElement {
   #incrementCount = () => {
@@ -194,6 +202,10 @@ const totalPrice = computed(() => {
 
 const itemCount = computed(() => items().length);
 
+/**
+ * Cart summary that displays item count and total price from shared signals.
+ * @access public
+ */
 @Component({ tag: "app-cart" })
 export class AppCart extends KasstorElement {
   override render() {
@@ -334,11 +346,15 @@ import type { KasstorSignalState } from "@genexus/kasstor-signals";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
 import { html } from "lit";
 
+/**
+ * Counter with a reactive count via @SignalProp; uses watch in template.
+ * @access public
+ */
 @Component({ tag: "app-counter" })
 export class AppCounter extends KasstorElement {
   declare $count: KasstorSignalState<AppCounter["count"]>;
 
-  /** Current counter value */
+  /** Current counter value. */
   @SignalProp count: number = 0;
 
   #onIncrement = (): void => {
@@ -396,16 +412,21 @@ import { html } from "lit";
 import { property } from "lit/decorators/property.js";
 import { state } from "lit/decorators/state.js";
 
+/**
+ * User profile that loads name and email by userId; uses SignalProp for reactive props.
+ * @access public
+ */
 @Component({ tag: "app-user-profile" })
 export class AppUserProfile extends KasstorElement {
   @state() isLoading = false;
 
+  /** Id of the user to load; when set, profile data is fetched. */
   @property() userId: string = "";
 
-  /** User full name */
+  /** User full name. */
   @SignalProp name: string = "";
 
-  /** User email address */
+  /** User email address. */
   @SignalProp email: string = "";
 
   protected async updated(
@@ -473,6 +494,10 @@ import { html } from "lit";
 
 const notificationCount = signal(0);
 
+/**
+ * Notifications header with badge count from a shared signal; uses watch in template.
+ * @access public
+ */
 @Component({ tag: "app-notifications" })
 export class AppNotifications extends KasstorElement {
   #onNotify = (): void => {
@@ -515,6 +540,10 @@ const todoListTemplate = computed(() => {
   `;
 });
 
+/**
+ * Todo list that renders items from a shared signal template computed; uses watch.
+ * @access public
+ */
 @Component({ tag: "app-todo-list" })
 export class AppTodoList extends KasstorElement {
   render() {
@@ -636,11 +665,15 @@ effect(() => {
 When a component reads signals from a store in its template, the component must subscribe so it re-renders when those signals change. Either use **`watch`** for each signal in the template (pin-point updates) or run an **`effect`** that reads the signals and calls **`this.requestUpdate()`** so the whole component updates. Use **`connectedCallback`** to start the effect and **`disconnectedCallback`** to stop it (so the effect is cleaned up when the element is removed and re-created when it is re-inserted, e.g. when moved in the DOM). The effect is not auto-disposed by the library—you must call the returned stop function.
 
 ```ts
-import { Component, KasstorElement } from "@genexus/kasstor-core";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { effect } from "@genexus/kasstor-signals/core/effect.js";
 import { displayName, isLoading } from "../signals/app-store";
 import { html } from "lit";
 
+/**
+ * Header that subscribes to store signals via effect and requestUpdate.
+ * @access public
+ */
 @Component({ tag: "app-header" })
 export class AppHeader extends KasstorElement {
   #stopEffect?: () => void;
@@ -740,6 +773,10 @@ import { html } from "lit";
 
 const searchQuery = signal("");
 
+/**
+ * Search UI that subscribes to searchQuery via effect and requestUpdate.
+ * @access public
+ */
 @Component({ tag: "app-search" })
 export class AppSearch extends KasstorElement {
   #stopEffect?: () => void;

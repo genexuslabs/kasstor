@@ -88,19 +88,23 @@ import { html, nothing } from "lit";
 import { property } from "lit/decorators.js";
 import styles from "./button.scss?inline";
 
+/**
+ * A button with caption, disabled state, and a click event.
+ * @access public
+ */
 @Component({
   tag: "my-button",
   styles,
   shadow: { delegatesFocus: true }
 })
 export class MyButton extends KasstorElement {
-  /** Specifies the caption to show */
+  /** Specifies the caption to show. */
   @property() caption: string = "Click me";
 
-  /** Whether the button is disabled */
+  /** Whether the button is disabled. */
   @property({ type: Boolean, reflect: true }) disabled: boolean = false;
 
-  /** Emitted when button is clicked */
+  /** Emitted when the button is clicked. */
   @Event() protected click!: EventEmitter<void>;
 
   #onClick = (event: MouseEvent): void => {
@@ -231,12 +235,16 @@ import {
 import { html } from "lit";
 import { property } from "lit/decorators/property.js";
 
+/**
+ * Text input that emits the new value on change.
+ * @access public
+ */
 @Component({ tag: "my-input" })
 export class MyInput extends KasstorElement {
-  /** Specifies the value of the input */
+  /** Current value of the input. */
   @property() value: string = "";
 
-  /** Emitted when input value changes */
+  /** Emitted when the input value changes; detail is the new string. */
   @Event() protected input!: EventEmitter<string>;
 
   #onInput = (event: InputEvent): void => {
@@ -305,11 +313,18 @@ import {
 import { html } from "lit";
 import { property, state } from "lit/decorators.js";
 
+/**
+ * Example component demonstrating @Observe on single and multiple properties.
+ * @access public
+ */
 @Component({ tag: "my-observe-example" })
 export class MyObserveExample extends KasstorElement {
   @state() private propBoolean: boolean = false;
 
+  /** String property observed by propStringChanged. */
   @property() propString: string | undefined;
+
+  /** Number property observed by propBooleanOrNumberChanged. */
   @property({ type: Number }) propNumber: number | undefined;
 
   @Observe("propString")
@@ -341,9 +356,17 @@ The `lazyLoad` directive automatically loads a component when it is attached to 
 #### Example
 
 ```ts
+import {
+  Component,
+  KasstorElement
+} from "@genexus/kasstor-core/decorators/component.js";
 import { lazyLoad } from "@genexus/kasstor-core/directives/lazy-load.js";
 import { html } from "lit";
 
+/**
+ * Root app component that lazy-loads the dashboard.
+ * @access public
+ */
 @Component({ tag: "my-app" })
 export class MyApp extends KasstorElement {
   override render() {
@@ -374,9 +397,17 @@ The `renderByPlatform` directive renders content based on the current platform (
 #### Example
 
 ```ts
+import {
+  Component,
+  KasstorElement
+} from "@genexus/kasstor-core/decorators/component.js";
 import { renderByPlatform } from "@genexus/kasstor-core/directives/render-by-platform.js";
 import { html } from "lit";
 
+/**
+ * Renders different content on server vs browser using renderByPlatform.
+ * @access public
+ */
 @Component({ tag: "my-render-by-platform-example" })
 export class MyRenderByPlatformExample extends KasstorElement {
   override render() {

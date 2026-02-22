@@ -475,14 +475,14 @@ export class AppFooterElement extends AppElement<typeof footerMetadata> {
 }
 ```
 
-If you don't use a custom decorator, use `@Component` from `@genexus/kasstor-core` and pass `metadata: { featureId: "header" }` (or `"footer"`) in the options; the base class and concrete components stay the same.
+If you don't use a custom decorator, use `@Component` from `@genexus/kasstor-core/decorators/component.js` and pass `metadata: { featureId: "header" }` (or `"footer"`) in the options; the base class and concrete components stay the same.
 
 **Alternative: single component (no base class)**
 
 If you prefer not to use a base class, subscribe in `connectedCallback` and unsubscribe in `disconnectedCallback`; in the callback, set `this.translations = newTranslations`.
 
 ```ts
-import { Component, KasstorElement } from "@genexus/kasstor-core";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import {
   getCurrentTranslations,
   subscribeToLanguageChanges,
@@ -492,6 +492,10 @@ import { html } from "lit";
 import { state } from "lit/decorators";
 import { GREETING_FEATURE_ID } from "../common/feature-ids";
 
+/**
+ * Greeting that subscribes to i18n changes for a feature; no base class.
+ * @access public
+ */
 @Component({ tag: "app-greeting" })
 export class AppGreeting extends KasstorElement {
   @state() private translations = getCurrentTranslations(GREETING_FEATURE_ID);
