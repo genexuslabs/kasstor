@@ -1,40 +1,57 @@
 import { describe, expect, test } from "vitest";
 import { getLanguageFromUrl } from "../index.js";
+import { SUPPORTED_SUBTAGS } from "./i18n-shared-constants.js";
 
 describe("[getLanguageFromUrl]", () => {
-  test("extracts es from /es/home", () => {
-    expect(getLanguageFromUrl("/es/home")).toBe("es");
+  const extractsSubtag: { pathname: string; expected: string }[] = [
+    { pathname: "/en", expected: "en" },
+    { pathname: "/en/home", expected: "en" },
+    { pathname: "/es/home", expected: "es" },
+    { pathname: "/fr/foo/bar", expected: "fr" },
+    { pathname: "/ja", expected: "ja" },
+    { pathname: "/es/", expected: "es" },
+    { pathname: "/zh/dashboard", expected: "zh" }
+  ];
+
+  test.each(extractsSubtag)(
+    "extracts $expected from pathname $pathname",
+    ({ pathname, expected }) => {
+      expect(getLanguageFromUrl(pathname)).toBe(expected);
+    }
+  );
+
+  test("extracts each supported subtag when used as first segment", () => {
+    SUPPORTED_SUBTAGS.forEach(subtag => {
+      expect(getLanguageFromUrl(`/${subtag}`)).toBe(subtag);
+      expect(getLanguageFromUrl(`/${subtag}/any/path`)).toBe(subtag);
+    });
   });
 
-  test("extracts en from /en", () => {
-    expect(getLanguageFromUrl("/en")).toBe("en");
+  test("extracts only the first segment when path has multiple segments", () => {
+    expect(getLanguageFromUrl("/ab/cd/ef")).toBe("ab");
   });
 
-  test("extracts fr from /fr/foo/bar", () => {
-    expect(getLanguageFromUrl("/fr/foo/bar")).toBe("fr");
-  });
+  const returnsNull: { pathname: string; description: string }[] = [
+    { pathname: "/", description: "root path" },
+    { pathname: "", description: "empty pathname" },
+    { pathname: "/home", description: "path without language segment" },
+    { pathname: "/123/ab", description: "numeric first segment" },
+    { pathname: "/en-US", description: "region-specific code" },
+    { pathname: "/e", description: "single letter" },
+    { pathname: "/eng", description: "three letters" },
+    { pathname: "/EN", description: "uppercase two letters" }
+  ];
 
-  test("returns null for path without language segment /home", () => {
-    expect(getLanguageFromUrl("/home")).toBeNull();
-  });
+  test.each(returnsNull)(
+    "returns null for $description ($pathname)",
+    ({ pathname }) => {
+      expect(getLanguageFromUrl(pathname)).toBeNull();
+    }
+  );
 
-  test("returns null for /123/ab", () => {
-    expect(getLanguageFromUrl("/123/ab")).toBeNull();
-  });
-
-  test("returns null for root path /", () => {
-    expect(getLanguageFromUrl("/")).toBeNull();
-  });
-
-  test("returns null for empty pathname", () => {
-    expect(getLanguageFromUrl("")).toBeNull();
-  });
-
-  test("extracts two-letter segment when path has single segment", () => {
-    expect(getLanguageFromUrl("/ja")).toBe("ja");
-  });
-
-  test("returns null when first segment is not exactly two letters (e.g. /en-US)", () => {
-    expect(getLanguageFromUrl("/en-US")).toBeNull();
+  test("returns null when first segment is not exactly two lowercase letters", () => {
+    expect(getLanguageFromUrl("/En")).toBeNull();
+    expect(getLanguageFromUrl("/eN")).toBeNull();
+    expect(getLanguageFromUrl("/1s")).toBeNull();
   });
 });

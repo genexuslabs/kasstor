@@ -2,13 +2,18 @@ import { describe, expect, test } from "vitest";
 import { getLanguageDirection } from "../get-language-direction.js";
 import { SUPPORTED_SUBTAGS } from "./i18n-shared-constants.js";
 
+const RTL_SUBTAG = "ar";
+const LTR_SUBTAGS = SUPPORTED_SUBTAGS.filter(s => s !== RTL_SUBTAG);
+
 describe("[getLanguageDirection]", () => {
-  test("returns rtl for ar", () => {
-    expect(getLanguageDirection("ar")).toBe("rtl");
+  test("returns rtl for Arabic (ar)", () => {
+    expect(getLanguageDirection(RTL_SUBTAG)).toBe("rtl");
   });
 
-  test("returns ltr for all other supported subtags", () => {
-    const ltr = SUPPORTED_SUBTAGS.filter(s => s !== "ar");
-    ltr.forEach(subtag => expect(getLanguageDirection(subtag)).toBe("ltr"));
-  });
+  test.each(LTR_SUBTAGS)(
+    "returns ltr for %s",
+    subtag => {
+      expect(getLanguageDirection(subtag)).toBe("ltr");
+    }
+  );
 });

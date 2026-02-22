@@ -4,27 +4,29 @@ import type { KasstorLanguageSubtag } from "../types.js";
 import { SUPPORTED_SUBTAGS } from "./i18n-shared-constants.js";
 
 describe("[isValidLanguage]", () => {
-  SUPPORTED_SUBTAGS.forEach(subtag => {
-    test(`returns true for supported subtag "${subtag}"`, () => {
+  test.each(SUPPORTED_SUBTAGS)(
+    "returns true for supported subtag %s",
+    subtag => {
       expect(isValidLanguage(subtag)).toBe(true);
-    });
-  });
+    }
+  );
 
-  test("returns false for null", () => {
-    expect(isValidLanguage(null)).toBe(false);
-  });
+  const invalidInputs: { value: string | null; description: string }[] = [
+    { value: null, description: "null" },
+    { value: "", description: "empty string" },
+    { value: "xx", description: "unsupported code" },
+    { value: "en-US", description: "region-specific code" },
+    { value: "e", description: "single character" },
+    { value: "eng", description: "three characters" },
+    { value: "EN", description: "uppercase" }
+  ];
 
-  test("returns false for empty string", () => {
-    expect(isValidLanguage("")).toBe(false);
-  });
-
-  test("returns false for unsupported code xx", () => {
-    expect(isValidLanguage("xx")).toBe(false);
-  });
-
-  test("returns false for region-specific code en-US", () => {
-    expect(isValidLanguage("en-US")).toBe(false);
-  });
+  test.each(invalidInputs)(
+    "returns false for $description",
+    ({ value }) => {
+      expect(isValidLanguage(value)).toBe(false);
+    }
+  );
 
   test("narrows type when true", () => {
     const value: string | null = "en";
