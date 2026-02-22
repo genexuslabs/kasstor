@@ -36,6 +36,10 @@
     "prettier": "^3.7.4",
     "typescript": "~5.9.3"
   },
+  "devDependencies": {
+    "lit": "^3.3.2",
+    "@genexus/kasstor-core": "~0.2.0"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
