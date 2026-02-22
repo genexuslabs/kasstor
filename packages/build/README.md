@@ -221,4 +221,4 @@ All paths are relative to **process.cwd()** and **relativeComponentsSrcPath**.
 
 ## Contributing
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for how to report issues and submit changes.
+Kasstor is open source and we appreciate issue reports and pull requests. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for more information.

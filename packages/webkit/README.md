@@ -717,5 +717,5 @@ const loader = {
 
 ## Contributing
 
-Kasstor is open source. We appreciate issue reports and pull requests. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for more information.
+Kasstor is open source and we appreciate issue reports and pull requests. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for more information.
 
