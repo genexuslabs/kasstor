@@ -22,7 +22,7 @@
     "dist/"
   ],
   "scripts": {
-    "dev": "tsgo",
+    "dev": "tsc",
     "dev.types": "tsc",
     "build": "tsc",
     "test": "vitest",
