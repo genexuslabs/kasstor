@@ -1,6 +1,6 @@
 {
   "name": "@genexus/kasstor-webkit",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
   "description": "Utilities for web applications: array helpers, internationalization (i18n), type-ahead search, frame synchronization, and shared local storage keys.",
