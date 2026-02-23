@@ -68,7 +68,7 @@ export class EventEmitter<T> {
  *
  * #performEvent = () => {
  *   this.myEvent.emit(detail, { bubbles: false });
- * }
+ * };
  * ```
  */
 export function Event<T>(defaultOptions?: EventInit) {
@@ -114,4 +114,3 @@ export function Event<T>(defaultOptions?: EventInit) {
     });
   };
 }
-
