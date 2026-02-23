@@ -4,18 +4,8 @@
  */
 
 import { afterEach, describe, expect, test, vi } from "vitest";
-import {
-  registerTranslations,
-  setInitialApplicationLanguage,
-  setLanguage
-} from "../index.js";
-import {
-  createEnEsLoader,
-  FEATURE_MAIN,
-  resetI18nState,
-  setPathname
-} from "./i18n-e2e-helpers.js";
-import type { AppMainShape } from "./i18n-e2e-helpers.js";
+import { registerTranslations, setInitialApplicationLanguage, setLanguage } from "../index.js";
+import { createEnEsLoader, FEATURE_MAIN, resetI18nState, setPathname } from "./i18n-e2e-helpers.js";
 
 describe("[i18n e2e] setInitialApplicationLanguage", () => {
   afterEach(() => {
@@ -108,3 +98,4 @@ describe("[i18n e2e] setInitialApplicationLanguage", () => {
     });
   });
 });
+
