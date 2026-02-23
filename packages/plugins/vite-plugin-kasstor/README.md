@@ -238,9 +238,9 @@ When **`insights`** is enabled (e.g. `insights: true` or `insights: { performanc
 ## Compatibility
 
 - **Vite:** 6.x, 7.x, 8.x
-- **@genexus/kasstor-core:** ~0.2.0
-- **@genexus/kasstor-build:** ~0.1.1
-- **@genexus/kasstor-insights:** ~0.2.0
+- **@genexus/kasstor-core:** ~0.3.0
+- **@genexus/kasstor-build:** ~0.2.0
+- **@genexus/kasstor-insights:** ~0.3.0
 - **Node.js:** 22+
 
 ## Contributing
