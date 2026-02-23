@@ -60,6 +60,14 @@ declare global {
           FeatureIdentifier,
           KasstorTranslationsLoader<KasstorTranslationShape>
         >;
+
+        /**
+         * Cache of load Promises per language. Deduplicates getTranslationsForLanguage
+         * calls so loaders run once per language; cleared when translationLoaders
+         * change (registerTranslations) so new features are loaded. Bounded by
+         * number of supported languages; no long-lived references to translation data.
+         */
+        readonly translationLoadCache: Map<KasstorLanguage, Promise<void>>;
       }
     | undefined;
 }

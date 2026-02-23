@@ -20,9 +20,8 @@ export const registerTranslations = <T extends KasstorTranslationShape>(
   featureId: string,
   loader: KasstorTranslationsLoader<T>
 ) => {
-  // Current language is not an object, so it won't be lively updated. That why
-  // we can't destructure it outside the function
-  const { currentLanguage, translationLoaders } = getI18nGlobals();
+  // Single getI18nGlobals() call: currentLanguage and loaders for logic, cache for invalidation
+  const { currentLanguage, translationLoaders, translationLoadCache } = getI18nGlobals();
 
   if (translationLoaders.has(featureId)) {
     console.warn(
@@ -33,8 +32,10 @@ export const registerTranslations = <T extends KasstorTranslationShape>(
   // To improve the DX with HMR, we replace the translations loader anyways
   translationLoaders.set(featureId, loader);
 
-  // TODO: Add an e2e test for this
-  // This is a dummy setLanguage to load the translations for the new feature
+  // Invalidate so the next setLanguage (below or elsewhere) runs loaders for all
+  // features, including this one. Otherwise a cached Promise would skip the new loader.
+  translationLoadCache.clear();
+
   if (currentLanguage) {
     setLanguage(currentLanguage);
   }
