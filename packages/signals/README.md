@@ -5,9 +5,13 @@ A reactive signals system for state management that works with any JavaScript ap
 ## Table of Contents
 
 - [Installation](#installation)
+
 - [Quick example (Lit + watch)](#quick-example-lit--watch)
+
 - [Core Concepts](#core-concepts)
+
 - [Based on alien-signals](#based-on-alien-signals)
+
 - [API](#api)
   - [Core](#core)
     - [`signal`](#signal)
@@ -17,12 +21,17 @@ A reactive signals system for state management that works with any JavaScript ap
     - [`trigger`](#trigger)
     - [`batch`](#batch)
     - [`untrack`](#untrack)
+
   - [Decorators](#decorators)
     - [`SignalProp`](#signalprop)
+
   - [Directives](#directives)
     - [`watch`](#watch)
+
 - [Best Practices](#best-practices)
+
 - [API Reference](#api-reference)
+
 - [Contributing](#contributing)
 
 ## Installation
@@ -125,10 +134,7 @@ console.log(count()); // 5
 #### In a Lit component (with `watch`)
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { computed, signal } from "@genexus/kasstor-signals/core.js";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
 import { html } from "lit";
@@ -183,10 +189,7 @@ console.log(fullName()); // "Jane Doe"
 #### Example (real-world)
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { signal, computed } from "@genexus/kasstor-signals/core.js";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
 import { html } from "lit";
@@ -331,12 +334,7 @@ Runs the callback and flushes all signal updates once it completes. **Improves p
 #### Example (without batch vs with batch)
 
 ```ts
-import {
-  batch,
-  signal,
-  computed,
-  effect
-} from "@genexus/kasstor-signals/core.js";
+import { batch, signal, computed, effect } from "@genexus/kasstor-signals/core.js";
 
 const firstName = signal("John");
 const lastName = signal("Doe");
@@ -410,10 +408,7 @@ Turns a class property into a reactive signal. Read and write the property norma
 #### Example
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { SignalProp } from "@genexus/kasstor-signals/decorators/signal-prop.js";
 import type { KasstorSignalState } from "@genexus/kasstor-signals";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
@@ -475,10 +470,7 @@ stop();
 #### Example (multiple SignalProps)
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { SignalProp } from "@genexus/kasstor-signals/decorators/signal-prop.js";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
 import { html } from "lit";
@@ -502,9 +494,7 @@ export class AppUserProfile extends KasstorElement {
   /** User email address. */
   @SignalProp email: string = "";
 
-  protected async updated(
-    changedProperties: Map<PropertyKey, unknown>
-  ): Promise<void> {
+  protected async updated(changedProperties: Map<PropertyKey, unknown>): Promise<void> {
     if (changedProperties.has("userId") && this.userId) {
       await this.#loadUserData();
     }
@@ -557,10 +547,7 @@ Directives are used in Lit templates to subscribe to signals and update only the
 #### Example
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { signal } from "@genexus/kasstor-signals/core/signal.js";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
 import { html } from "lit";
@@ -591,10 +578,7 @@ export class AppNotifications extends KasstorElement {
 #### Example (complex)
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { signal, computed } from "@genexus/kasstor-signals/core/signal.js";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
 import { html } from "lit";
@@ -607,9 +591,7 @@ const todoList = signal([
 const todoListTemplate = computed(() => {
   const todos = todoList();
   return html`
-    ${todos.map(
-      todo => html`<li ?data-completed=${todo.completed}>${todo.text}</li>`
-    )}
+    ${todos.map(todo => html`<li ?data-completed=${todo.completed}>${todo.text}</li>`)}
   `;
 });
 
@@ -667,7 +649,7 @@ When a component reads signals from a store in its template, the component must 
 ```ts
 import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { effect } from "@genexus/kasstor-signals/core/effect.js";
-import { displayName, isLoading } from "../signals/app-store";
+import { displayName, isLoading } from "../signals/app-store.js";
 import { html } from "lit";
 
 /**
@@ -695,9 +677,7 @@ export class AppHeader extends KasstorElement {
   override render() {
     return html`
       <header>
-        ${isLoading()
-          ? html`<p>Loading...</p>`
-          : html`<h1>Welcome ${displayName()}</h1>`}
+        ${isLoading() ? html`<p>Loading...</p>` : html`<h1>Welcome ${displayName()}</h1>`}
       </header>
     `;
   }
@@ -763,10 +743,7 @@ Use **`batch`** when you are updating several signals in one logical step (e.g. 
   - The effect is not auto-disposed—you must call the stop function.
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { effect } from "@genexus/kasstor-signals/core/effect.js";
 import { signal } from "@genexus/kasstor-signals/core/signal.js";
 import { html } from "lit";
