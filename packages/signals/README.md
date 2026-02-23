@@ -560,7 +560,7 @@ const notificationCount = signal(0);
  */
 @Component({ tag: "app-notifications" })
 export class AppNotifications extends KasstorElement {
-  #onNotify = (): void => {
+  #increaseNotificationCount = (): void => {
     notificationCount(notificationCount() + 1);
   };
 
@@ -569,7 +569,7 @@ export class AppNotifications extends KasstorElement {
       <header>
         <span class="badge">${watch(notificationCount)}</span>
       </header>
-      <button @click=${this.#onNotify}>Notify</button>
+      <button @click=${this.#increaseNotificationCount}>Notify</button>
     `;
   }
 }
