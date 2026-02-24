@@ -8,23 +8,23 @@ Consult this table to choose which document to load. Details and examples are in
 
 ### Core ([docs/core.md](docs/core.md))
 
-| API | Description |
-|-----|-------------|
-| [signal](docs/core.md#signal) | Creates reactive value; getter/setter function. Call with no args to read, one arg to set. Reading tracks dependency; setting notifies dependents. |
-| [computed](docs/core.md#computed) | Memoized getter. Computation runs only when read; recomputes on next read when dependencies change. Only signals read during run are tracked. |
-| [effect](docs/core.md#effect) | Runs function and re-runs when dependencies change. Returns stop function (call to remove subscription; not auto-disposed). |
-| [effectScope](docs/core.md#effectscope) | Groups effects; returns stop function. Call to dispose all effects in scope. Nested scopes: stopping parent stops children. |
-| [trigger](docs/core.md#trigger) | Manually notifies signal's dependents without changing value. Use after in-place mutation. `trigger(() => { src1(); src2(); })` for multiple. |
-| [batch](docs/core.md#batch) | Runs `fn`; defers updates, flushes when `fn` completes. Computeds/effects run once when multiple deps change. Returns `fn` return value. |
-| [untrack](docs/core.md#untrack) | Runs `fn` without tracking signal reads. Use inside computed/effect to read without adding dependency. |
-| Type guards | `isSignal`, `isComputed`, `isEffect`, `isEffectScope` — Return true if value is corresponding primitive. |
+| API                                     | Description                                                                                                                                        |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [signal](docs/core.md#signal)           | Creates reactive value; getter/setter function. Call with no args to read, one arg to set. Reading tracks dependency; setting notifies dependents. |
+| [computed](docs/core.md#computed)       | Memoized getter. Computation runs only when read; recomputes on next read when dependencies change. Only signals read during run are tracked.      |
+| [effect](docs/core.md#effect)           | Runs function and re-runs when dependencies change. Returns stop function (call to remove subscription; not auto-disposed).                        |
+| [effectScope](docs/core.md#effectscope) | Groups effects; returns stop function. Call to dispose all effects in scope. Nested scopes: stopping parent stops children.                        |
+| [trigger](docs/core.md#trigger)         | Manually notifies signal's dependents without changing value. Use after in-place mutation. `trigger(() => { src1(); src2(); })` for multiple.      |
+| [batch](docs/core.md#batch)             | Runs `fn`; defers updates, flushes when `fn` completes. Computeds/effects run once when multiple deps change. Returns `fn` return value.           |
+| [untrack](docs/core.md#untrack)         | Runs `fn` without tracking signal reads. Use inside computed/effect to read without adding dependency.                                             |
+| Type guards                             | `isSignal`, `isComputed`, `isEffect`, `isEffectScope` — Return true if value is corresponding primitive.                                           |
 
 ### Decorators and Directives ([docs/decorators-directives.md](docs/decorators-directives.md))
 
-| API | Description |
-|-----|-------------|
+| API                                                    | Description                                                                                                                                                                                                                       |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [SignalProp](docs/decorators-directives.md#signalprop) | Turns property into reactive signal. Read/write normally; use `$propName` for raw signal (watch, trigger). Add `declare $propName: KasstorSignalState<...>` for typing. Changes do not trigger re-render—use `watch` in template. |
-| [watch](docs/decorators-directives.md#watch) | Lit directive: subscribes to signal in template; re-renders only that part when value changes. Without `watch`, Lit templates do not update. Pass signal/computed getter. |
+| [watch](docs/decorators-directives.md#watch)           | Lit directive: subscribes to signal in template; re-renders only that part when value changes. Without `watch`, Lit templates do not update. Pass signal/computed getter.                                                         |
 
 ### Best Practices ([docs/best-practices.md](docs/best-practices.md))
 
@@ -104,3 +104,4 @@ This package is based on [alien-signals](https://github.com/stackblitz/alien-sig
 ## Contributing
 
 Kasstor is open source and we appreciate issue reports and pull requests. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for more information.
+
