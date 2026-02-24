@@ -26,6 +26,16 @@ Vite plugin that wires **@genexus/kasstor-build** and **@genexus/kasstor-insight
 
 - [Contributing](#contributing)
 
+## Reference
+
+| Section | Description |
+|---------|-------------|
+| [Plugin options](#configuration) | `KasstorPluginOptions`, `includedPaths`, `excludedPaths`, `hmr`, `insights`, `fileGeneration`. |
+| [HMR](#hmr) | How component and style hot reload works; limitations. |
+| [Build integration](#build-integration) | Per-component types, readmes, exported types, library summary. |
+| [Performance insights](#performance-insights) | Visual overlay for re-render counts; inject via `insights: true`. |
+| [Compatibility](#compatibility) | Vite, kasstor-core, kasstor-build, kasstor-insights, Node.js versions. |
+
 ## Installation
 
 ```bash

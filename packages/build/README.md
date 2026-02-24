@@ -21,6 +21,15 @@ Utilities to **analyze** Lit component libraries and **auto-generate** documenta
 
 - [Contributing](#contributing)
 
+## Reference
+
+| Section | Description |
+|---------|-------------|
+| [buildLibrary](#buildlibrary) | Main API; options and incremental build. |
+| [Options (KasstorBuildOptions)](#options-kasstorbuildoptions) | `customComponentDecoratorNames`, `fileGeneration`, `includedPaths`, etc. |
+| [Return value](#return-value) | `componentsBuilded`, `elapsedTimes`, `updatedReadmesForComponents`, `updatedTypesForComponents`. |
+| [What gets generated](#what-gets-generated) | Library summary, exported types, per-component types, per-component readme. |
+
 ## Installation
 
 ```bash

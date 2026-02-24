@@ -22,6 +22,15 @@ Utilities to **visualize and inspect** how Lit/Kasstor components behave at runt
 
 - [Contributing](#contributing)
 
+## Reference
+
+| Section | Description |
+|---------|-------------|
+| [kst-performance-scan](#component-kst-performance-scan) | Custom element; visual overlay for re-render counts; `showFps` property. |
+| [Via Vite plugin](#via-vite-plugin) | Enable `insights` in vite-plugin-kasstor; no manual setup. |
+| [Manual: add the component](#manual-add-the-component) | Import and render `<kst-performance-scan>` in your app. |
+| [Development only](#development-only) | Not included in production builds; conditionally import in dev. |
+
 ## Installation
 
 ```bash
