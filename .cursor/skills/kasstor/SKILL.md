@@ -1,61 +1,23 @@
-<p align="center">
-  <img src="./kasstor-logo.png" alt="Kasstor logo" height="120px"/>
-  <br>
-  <h1 align="center">Kasstor — The natural builder for the web platform</h1>
-</p>
+---
+name: kasstor
+description: Build web components with Kasstor, migrate from Stencil to Lit/Kasstor, or create a library/application of web components using Lit. Use when working with Kasstor, Lit-based components, Stencil migration, or when the user mentions Kasstor, kasstor-build, kasstor-core, kasstor-insights, kasstor-signals, vite-plugin-kasstor, or kasstor-webkit.
+---
 
-<p align="center">
-  <em>An ecosystem for building Lit-based web components with first-class DX: decorators, SCSS, typed events, HMR, optional signals, etc.</em>
-</p>
+# Kasstor — The natural builder for the web platform
 
-<p align="center">
-  <a href="./LICENSE">
-    <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License />
-  </a>
+An ecosystem for building Lit-based web components with first-class DX: decorators, SCSS, typed events, HMR, optional signals, etc.
 
-  <a href="https://www.npmjs.com/@genexus/kasstor-core">
-    <img src="https://img.shields.io/npm/v/@genexus/kasstor-core.svg?logo=npm&logoColor=fff&label=kasstor-core&color=limegreen" alt="kasstor-core on npm" />
-  </a>
+## Instructions
 
-  <a href="https://www.npmjs.com/@genexus/kasstor-signals">
-    <img src="https://img.shields.io/npm/v/@genexus/kasstor-signals.svg?logo=npm&logoColor=fff&label=kasstor-signals&color=limegreen" alt="kasstor-signals on npm" />
-  </a>
+- Use **this document** as the entry point: what Kasstor is, why use it, installation, requirements, and the packages table below.
 
-  <a href="https://www.npmjs.com/@genexus/kasstor-webkit">
-    <img src="https://img.shields.io/npm/v/@genexus/kasstor-webkit.svg?logo=npm&logoColor=fff&label=kasstor-webkit&color=limegreen" alt="kasstor-webkit on npm" />
-  </a>
+- **Kasstor is split into packages.** Each package (core, signals, webkit, vite-plugin, build, insights) has its own npm package and documentation. The table in [Packages](#packages) lists them and links to each package’s README in this skill folder.
 
-  <a href="https://www.npmjs.com/@genexus/vite-plugin-kasstor">
-    <img src="https://img.shields.io/npm/v/@genexus/vite-plugin-kasstor.svg?logo=npm&logoColor=fff&label=vite-plugin-kasstor&color=limegreen" alt="vite-plugin-kasstor on npm" />
-  </a>
-</p>
+- **When you need details for a specific package**, open that package’s README (e.g. [core/README.md](core/README.md), [signals/README.md](signals/README.md)). At the top of each package README you’ll find an **API Reference table** that lists the APIs and links to sub-readmes with the full content. Use that table to choose which sub-readme to load instead of loading the whole package.
 
-<hr>
+- Focus on **consuming** Kasstor packages (npm install, Vite config, component authoring).
 
-## Table of Contents
-
-- [What is Kasstor?](#what-is-kasstor)
-
-- [Why Kasstor? (DX over plain Lit)](#why-kasstor-dx-over-plain-lit)
-
-- [Installation and quick example](#installation-and-quick-example)
-  - [Dependencies](#dependencies)
-
-  - [Project layout](#project-layout)
-
-  - [Vite configuration](#vite-configuration)
-
-  - [TypeScript configuration](#typescript-configuration)
-
-  - [Example component](#example-component)
-
-- [Requirements and best fit](#requirements-and-best-fit)
-
-- [Packages](#packages)
-
-- [Development](#development)
-
-- [Contributing](#contributing)
+---
 
 ## What is Kasstor?
 
@@ -70,9 +32,9 @@
 | Custom events with ad-hoc `detail` types and manual dispatch                                                | **`@Event()` + `EventEmitter<T>`** — typed events and `emit()` with full type safety                                                                                                                                                                                                                                          |
 | Components are loaded only via direct import                                                                | **More loading options** — direct import, or **declarative lazy loading** with the **`lazyLoad`** directive (load when the element is attached in a Lit template); requires the library to register loaders via **`registerCustomElementLoaders`** from `@genexus/kasstor-core`                                               |
 | Full page reload on every change in dev                                                                     | **HMR** — component and style hot reload via `@genexus/vite-plugin-kasstor`                                                                                                                                                                                                                                                   |
-| No built-in “react to property changes” hook beyond `willUpdate`                                            | **`@Observe()`** — run logic when specific properties change, with SSR-friendly lifecycle                                                                                                                                                                                                                                     |
+| No built-in "react to property changes" hook beyond `willUpdate`                                            | **`@Observe()`** — run logic when specific properties change, with SSR-friendly lifecycle                                                                                                                                                                                                                                     |
 | Default LitElement rendering; no optimization when many components mount at once                            | **Lower TBT (Total Blocking Time)** — optimized first paint when many components mount; initial render path is tuned so large trees block the main thread less and become interactive sooner (better LCP/TBT); in other words, better Lighthouse Performance scores                                                           |
-| Lit has **`willUpdate`** but no “first update” hook; SSR-safe init before first paint is verbose            | **`firstWillUpdate`** — runs once before the first update; supports SSR-friendly initialization (e.g. data needed before first render) without extra boilerplate                                                                                                                                                              |
+| Lit has **`willUpdate`** but no "first update" hook; SSR-safe init before first paint is verbose            | **`firstWillUpdate`** — runs once before the first update; supports SSR-friendly initialization (e.g. data needed before first render) without extra boilerplate                                                                                                                                                              |
 | Using the component without Shadow DOM requires custom setup                                                | **No-Shadow** — `shadow: false` in `@Component`; you can style the component the same way as with Shadow (use the component tag name instead of the `:host` selector in your styles)                                                                                                                                          |
 | SSR and hydration need extra wiring (guards, lifecycle, directives)                                         | **SSR** — `firstWillUpdate`, `@Observe` lifecycle, and a **`renderByPlatform`** directive to conditionally render content on the server that may differ on the client or be client-only; initialization and reactive side effects are easier to make SSR-safe (global styles are client-only and not supported on the server) |
 
@@ -140,18 +102,12 @@ A working baseline (adjust paths and options to your project):
     "module": "es2022",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
-
-    // Bundler mode
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": false,
     "outDir": "dist/",
-
-    // Necessary to not add the src folder inside the dist
     "rootDir": "./src",
-
-    // Linting
     "allowUnreachableCode": false,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
@@ -259,82 +215,13 @@ html`<app-counter
 
 ## Packages
 
-| Package                                                                              | Description                                                                                                                                                                                                                               |
-| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**@genexus/kasstor-core**](./packages/core/README.md)                               | Core runtime: decorators (`@Component`, `@Event`, `@Observe`), directives (`lazyLoad`, `renderByPlatform`), and `KasstorElement` base class for Lit components.                                                                           |
-| [**@genexus/vite-plugin-kasstor**](./packages/plugins/vite-plugin-kasstor/README.md) | Vite plugin: HMR for `.lit.ts` components and SCSS, build integration, and optional performance insights. **No need to install** `kasstor-build` or `kasstor-insights` when using this plugin.                                            |
-| [**@genexus/kasstor-signals**](./packages/signals/README.md)                         | Reactive signals and computed values; optional state layer for Lit. Use the **`watch`** directive in templates for pin-point updates—only the bound parts re-render when a signal changes, without triggering a full component re-render. |
-| [**@genexus/kasstor-webkit**](./packages/webkit/README.md)                           | Shared utilities: internationalization (i18n), array helpers, typeahead, and frame-sync helpers for apps and component libraries.                                                                                                         |
-| [**@genexus/kasstor-insights**](./packages/insights/README.md)                       | Performance monitoring and benchmarking for Lit apps. Included via the Vite plugin when `insights` option is enabled; no need to install separately when using Vite.                                                                      |
-| [**@genexus/kasstor-build**](./packages/build/README.md)                             | Library analysis and optional file generation (types, readmes). Used by the Vite plugin under the hood; no need to install separately when using Vite.                                                                                    |
+| Package                                                     | Description                                                                                                                                                                                                                               |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [**@genexus/kasstor-core**](./core/README.md)               | Core runtime: decorators (`@Component`, `@Event`, `@Observe`), directives (`lazyLoad`, `renderByPlatform`), and `KasstorElement` base class for Lit components.                                                                           |
+| [**@genexus/vite-plugin-kasstor**](./vite-plugin/README.md) | Vite plugin: HMR for `.lit.ts` components and SCSS, build integration, and optional performance insights. **No need to install** `kasstor-build` or `kasstor-insights` when using this plugin.                                            |
+| [**@genexus/kasstor-signals**](./signals/README.md)         | Reactive signals and computed values; optional state layer for Lit. Use the **`watch`** directive in templates for pin-point updates—only the bound parts re-render when a signal changes, without triggering a full component re-render. |
+| [**@genexus/kasstor-webkit**](./webkit/README.md)           | Shared utilities: internationalization (i18n), array helpers, typeahead, and frame-sync helpers for apps and component libraries.                                                                                                         |
+| [**@genexus/kasstor-insights**](./insights/README.md)       | Performance monitoring and benchmarking for Lit apps. Included via the Vite plugin when `insights` option is enabled; no need to install separately when using Vite.                                                                      |
+| [**@genexus/kasstor-build**](./build/README.md)             | Library analysis and optional file generation (types, readmes). Used by the Vite plugin under the hood; no need to install separately when using Vite.                                                                                    |
 
 Install only what you need; `@genexus/kasstor-core` plus the Vite plugin (`@genexus/vite-plugin-kasstor`) is the usual starting point.
-
-## Development
-
-### Setup
-
-```bash
-git clone https://github.com/genexuslabs/kasstor
-cd kasstor
-bun i
-```
-
-### Development build
-
-From the repo root, `bun dev` runs all package dev builds. To build a single package:
-
-- **@genexus/kasstor-build** — `bun dev:build`
-
-- **@genexus/kasstor-core** — `bun dev:core`
-
-- **@genexus/kasstor-insights** — `bun dev:insights`
-
-- **@genexus/kasstor-signals** — `bun dev:signals`
-
-- **@genexus/vite-plugin-kasstor** — `bun dev:vite-plugin`
-
-- **@genexus/kasstor-webkit** — `bun dev:webkit`
-
-Or run everything at once:
-
-```bash
-bun dev
-```
-
-### Production Build
-
-From the repo root, `bun run build` runs all package builds. To build a single package:
-
-- **@genexus/kasstor-build** — `bun build:build`
-
-- **@genexus/kasstor-core** — `bun build:core`
-
-- **@genexus/kasstor-insights** — `bun build:insights`
-
-- **@genexus/kasstor-signals** — `bun build:signals`
-
-- **@genexus/vite-plugin-kasstor** — `bun build:vite-plugin`
-
-- **@genexus/kasstor-webkit** — `bun build:webkit`
-
-Or run everything at once:
-
-```bash
-bun run build
-```
-
-### Test
-
-```bash
-bun run test
-```
-
-- Unit only: `bun run test:unit`
-- E2E only: `bun run test:e2e`
-- For tests that run in both browser and Node, use the `.shared-test.ts` extension.
-
-## Contributing
-
-Kasstor is open source and we appreciate issue reports and pull requests. See [CONTRIBUTING.md](./CONTRIBUTING.md) for more information.
-

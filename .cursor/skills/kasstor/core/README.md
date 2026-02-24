@@ -6,30 +6,26 @@ A set of decorators and directives to enhance Lit components with powerful featu
 
 Consult this table to choose which document to load. Details and examples are in the linked sub-readmes.
 
-### Decorators ([docs/decorators.md](docs/decorators.md))
+### Decorators ([decorators.md](decorators.md))
 
 | API | Description |
 |-----|-------------|
-| [Component](docs/decorators.md#component) | Defines a Kasstor custom element. Auto-registers; Shadow Root config (mode, formAssociated, delegatesFocus); SSR, SCSS, no-Shadow; firstWillUpdate; HMR; improved TBT. Must extend KasstorElement; tag must have hyphen. |
-| [Event](docs/decorators.md#event) | Type-safe custom events. `Event(defaultOptions?)`; `EventEmitter<T>.emit(detail?, options?)`. Applied to properties only. Returns event with `defaultPrevented`. |
-| [Observe](docs/decorators.md#observe) | Runs callback when `@property`/`@state` change. `Observe(propertyOrProperties: string | string[])`. Applied to methods only. SSR-safe; provides new/old values. |
+| [Component](decorators.md#component) | Defines a Kasstor custom element. Auto-registers; Shadow Root config (mode, formAssociated, delegatesFocus); SSR, SCSS, no-Shadow; firstWillUpdate; HMR; improved TBT. Must extend KasstorElement; tag must have hyphen. |
+| [Event](decorators.md#event) | Type-safe custom events. `Event(defaultOptions?)`; `EventEmitter<T>.emit(detail?, options?)`. Applied to properties only. Returns event with `defaultPrevented`. |
+| [Observe](decorators.md#observe) | Runs callback when `@property`/`@state` change. `Observe(propertyOrProperties: string | string[])`. Applied to methods only. SSR-safe; provides new/old values. |
 
-### Bootstrapping ([docs/bootstrapping.md](docs/bootstrapping.md))
-
-| API | Description |
-|-----|-------------|
-| [registerCustomElementLoaders](docs/bootstrapping.md#registercustomelementloaders) | Registers loaders for declarative lazy loading. Call once at startup with `customElements` map (tag → loader + optional dependencies). Required for `lazyLoad`. |
-
-### Directives ([docs/directives.md](docs/directives.md))
+### Bootstrapping ([bootstrapping.md](bootstrapping.md))
 
 | API | Description |
 |-----|-------------|
-| [lazyLoad](docs/directives.md#lazyload) | Loads component when element is attached. Use on element tag only (e.g. `<my-panel ${lazyLoad()}></my-panel>`). Requires `registerCustomElementLoaders`. |
-| [renderByPlatform](docs/directives.md#renderbyplatform) | Different content server vs browser. `renderByPlatform(browserValue, serverValue?)`. Single arg = browser-only. Needs KasstorElement host for hydration. |
+| [registerCustomElementLoaders](bootstrapping.md#registercustomelementloaders) | Registers loaders for declarative lazy loading. Call once at startup with `customElements` map (tag → loader + optional dependencies). Required for `lazyLoad`. |
 
-### Best Practices ([docs/best-practices.md](docs/best-practices.md))
+### Directives ([directives.md](directives.md))
 
-Property configuration, do's and don'ts, and pro tips for `renderByPlatform`.
+| API | Description |
+|-----|-------------|
+| [lazyLoad](directives.md#lazyload) | Loads component when element is attached. Use on element tag only (e.g. `<my-panel ${lazyLoad()}></my-panel>`). Requires `registerCustomElementLoaders`. |
+| [renderByPlatform](directives.md#renderbyplatform) | Different content server vs browser. `renderByPlatform(browserValue, serverValue?)`. Single arg = browser-only. Needs KasstorElement host for hydration. |
 
 ## Installation
 
@@ -57,18 +53,12 @@ A working baseline (adjust paths and options to your project):
     "module": "es2022",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
-
-    // Bundler mode
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": false,
     "outDir": "dist/",
-
-    // Necessary to not add the src folder inside the dist
     "rootDir": "./src",
-
-    // Linting
     "allowUnreachableCode": false,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
@@ -88,7 +78,3 @@ A working baseline (adjust paths and options to your project):
 ```
 
 If you use a different build tool or emit TypeScript yourself, keep at least `experimentalDecorators: true` and `useDefineForClassFields: false`.
-
-## Contributing
-
-Kasstor is open source and we appreciate issue reports and pull requests. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for more information.

@@ -5,30 +5,14 @@ Utilities to **analyze** Lit component libraries and **auto-generate** documenta
 ## Table of Contents
 
 - [Installation](#installation)
-
 - [What this package does](#what-this-package-does)
-
 - [Quick start](#quick-start)
-
 - [Usage](#usage)
-
 - [API](#api)
   - [`buildLibrary`](#buildlibrary)
   - [Options (`KasstorBuildOptions`)](#options-kasstorbuildoptions)
   - [Return value](#return-value)
-
 - [What gets generated](#what-gets-generated)
-
-- [Contributing](#contributing)
-
-## Reference
-
-| Section | Description |
-|---------|-------------|
-| [buildLibrary](#buildlibrary) | Main API; options and incremental build. |
-| [Options (KasstorBuildOptions)](#options-kasstorbuildoptions) | `customComponentDecoratorNames`, `fileGeneration`, `includedPaths`, etc. |
-| [Return value](#return-value) | `componentsBuilded`, `elapsedTimes`, `updatedReadmesForComponents`, `updatedTypesForComponents`. |
-| [What gets generated](#what-gets-generated) | Library summary, exported types, per-component types, per-component readme. |
 
 ## Installation
 
@@ -134,9 +118,6 @@ function buildLibrary(
 The same type is used by **@genexus/vite-plugin-kasstor**. You can import **KasstorBuildOptions** and **KasstorBuildComponentData** from `@genexus/kasstor-build`. Full type definition:
 
 ```ts
-/**
- * Options for buildLibrary. Import from "@genexus/kasstor-build".
- */
 export type KasstorBuildOptions = {
   /** Decorator names treated as component decorators. Default: ["Component"]. */
   customComponentDecoratorNames?: string[];
@@ -159,39 +140,17 @@ export type KasstorBuildOptions = {
   fileGeneration?:
     | false
     | {
-        /**
-         * File name (or path) for the single file that exports all types
-         * used by the components. E.g. "components.ts". If `false`, not generated.
-         */
         exportTypesForTheLibrary?: string | false;
-
-        /**
-         * File name for the library summary. If `false`, not generated.
-         */
         librarySummary?: string | false;
-
-        /**
-         * If `true`, each component file gets auto-generated types appended
-         * (for IDE autocomplete, event details, querySelector typing).
-         */
         typesForComponents?: boolean;
-
-        /**
-         * If `true`, a readme.md is written next to each component
-         * with properties, events, slots, CSS parts, etc.
-         */
         readmesForComponents?: boolean;
       };
 
-  /**
-   * Paths or patterns to include. Only matching files are analyzed.
-   * Exclusions take precedence.
-   */
+  /** Paths or patterns to include. Exclusions take precedence. */
   includedPaths?: RegExp | RegExp[];
 
   /**
-   * Base path relative to process.cwd() where component sources live
-   * and where librarySummary / exportTypesForTheLibrary are written.
+   * Base path relative to process.cwd() where component sources live.
    * @default "src/"
    */
   relativeComponentsSrcPath?: string;
@@ -227,7 +186,3 @@ export type KasstorBuildComponentData = {
 - **Per-component readme** — `readme.md` in the same directory as the component file. Contains tables for properties, events, slots, CSS parts, and usage derived from the definition.
 
 All paths are relative to **process.cwd()** and **relativeComponentsSrcPath**.
-
-## Contributing
-
-Kasstor is open source and we appreciate issue reports and pull requests. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for more information.

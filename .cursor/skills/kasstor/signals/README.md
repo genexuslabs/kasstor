@@ -6,25 +6,25 @@ A reactive signals system for state management that works with any JavaScript ap
 
 Consult this table to choose which document to load. Details and examples are in the linked sub-readmes.
 
-### Core ([docs/core.md](docs/core.md))
+### Core ([core.md](core.md))
 
-| API                                     | Description                                                                                                                                        |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [signal](docs/core.md#signal)           | Creates reactive value; getter/setter function. Call with no args to read, one arg to set. Reading tracks dependency; setting notifies dependents. |
-| [computed](docs/core.md#computed)       | Memoized getter. Computation runs only when read; recomputes on next read when dependencies change. Only signals read during run are tracked.      |
-| [effect](docs/core.md#effect)           | Runs function and re-runs when dependencies change. Returns stop function (call to remove subscription; not auto-disposed).                        |
-| [effectScope](docs/core.md#effectscope) | Groups effects; returns stop function. Call to dispose all effects in scope. Nested scopes: stopping parent stops children.                        |
-| [trigger](docs/core.md#trigger)         | Manually notifies signal's dependents without changing value. Use after in-place mutation. `trigger(() => { src1(); src2(); })` for multiple.      |
-| [batch](docs/core.md#batch)             | Runs `fn`; defers updates, flushes when `fn` completes. Computeds/effects run once when multiple deps change. Returns `fn` return value.           |
-| [untrack](docs/core.md#untrack)         | Runs `fn` without tracking signal reads. Use inside computed/effect to read without adding dependency.                                             |
-| Type guards                             | `isSignal`, `isComputed`, `isEffect`, `isEffectScope` — Return true if value is corresponding primitive.                                           |
+| API                                | Description                                                                                                                                        |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [signal](core.md#signal)           | Creates reactive value; getter/setter function. Call with no args to read, one arg to set. Reading tracks dependency; setting notifies dependents. |
+| [computed](core.md#computed)       | Memoized getter. Computation runs only when read; recomputes on next read when dependencies change. Only signals read during run are tracked.      |
+| [effect](core.md#effect)           | Runs function and re-runs when dependencies change. Returns stop function (call to remove subscription; not auto-disposed).                        |
+| [effectScope](core.md#effectscope) | Groups effects; returns stop function. Call to dispose all effects in scope. Nested scopes: stopping parent stops children.                        |
+| [trigger](core.md#trigger)         | Manually notifies signal's dependents without changing value. Use after in-place mutation. `trigger(() => { src1(); src2(); })` for multiple.      |
+| [batch](core.md#batch)             | Runs `fn`; defers updates, flushes when `fn` completes. Computeds/effects run once when multiple deps change. Returns `fn` return value.           |
+| [untrack](core.md#untrack)         | Runs `fn` without tracking signal reads. Use inside computed/effect to read without adding dependency.                                             |
+| Type guards                        | `isSignal`, `isComputed`, `isEffect`, `isEffectScope` — Return true if value is corresponding primitive.                                           |
 
-### Decorators and Directives ([docs/decorators-directives.md](docs/decorators-directives.md))
+### Decorators and Directives ([decorators-directives.md](decorators-directives.md))
 
-| API                                                    | Description                                                                                                                                                                                                                       |
-| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [SignalProp](docs/decorators-directives.md#signalprop) | Turns property into reactive signal. Read/write normally; use `$propName` for raw signal (watch, trigger). Add `declare $propName: KasstorSignalState<...>` for typing. Changes do not trigger re-render—use `watch` in template. |
-| [watch](docs/decorators-directives.md#watch)           | Lit directive: subscribes to signal in template; re-renders only that part when value changes. Without `watch`, Lit templates do not update. Pass signal/computed getter.                                                         |
+| API                                               | Description                                                                                                                                                                                                                       |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [SignalProp](decorators-directives.md#signalprop) | Turns property into reactive signal. Read/write normally; use `$propName` for raw signal (watch, trigger). Add `declare $propName: KasstorSignalState<...>` for typing. Changes do not trigger re-render—use `watch` in template. |
+| [watch](decorators-directives.md#watch)           | Lit directive: subscribes to signal in template; re-renders only that part when value changes. Without `watch`, Lit templates do not update. Pass signal/computed getter.                                                         |
 
 ### Best Practices ([docs/best-practices.md](docs/best-practices.md))
 
@@ -93,15 +93,11 @@ Signal APIs typically have three main concepts:
 
 ### Using signals with Lit
 
-> **Use `watch` in templates.** Changing a signal does not trigger a Lit component update. To have the template update, you must subscribe where you read the signal: use the **`watch`** directive for each place you render a signal (or use an effect + `requestUpdate()` for a full re-render—see Pro tip in [docs/best-practices.md](docs/best-practices.md)).
+> **Use `watch` in templates.** Changing a signal does not trigger a Lit component update. To have the template update, you must subscribe where you read the signal: use the **`watch`** directive for each place you render a signal (or use an effect + `requestUpdate()` for a full re-render—see Pro tip in [best-practices.md](best-practices.md)).
 
 This is a design choice for performance: only the parts wrapped in `watch` re-render (pin-point updates).
 
 ### Based on alien-signals
 
 This package is based on [alien-signals](https://github.com/stackblitz/alien-signals), a minimal, push-pull signal library. Alien-signals is designed for performance (no Array/Set/Map in the core, no recursion in the algorithm), fine-grained reactivity, and a simple API. Its algorithm is related to Vue 3's propagation, Preact's double-linked-list approach, and Svelte's effect scheduling. The core has been adopted by [Vue 3.6](https://github.com/vuejs/core/pull/12349). We re-export and document the core primitives, add general utilities (e.g. `batch`, `untrack`) that work in any JavaScript environment, and Lit-specific utilities (decorators, directives).
-
-## Contributing
-
-Kasstor is open source and we appreciate issue reports and pull requests. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for more information.
 

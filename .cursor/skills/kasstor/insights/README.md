@@ -5,31 +5,11 @@ Utilities to **visualize and inspect** how Lit/Kasstor components behave at runt
 ## Table of Contents
 
 - [Installation](#installation)
-
 - [What this package does](#what-this-package-does)
-
 - [Quick start](#quick-start)
-
 - [Usage](#usage)
-  - [Via Vite plugin](#via-vite-plugin)
-  - [Manual: add the component](#manual-add-the-component)
-
 - [API](#api)
-  - [Component: kst-performance-scan](#component-kst-performance-scan)
-  - [Exports and types](#exports-and-types)
-
 - [Development only](#development-only)
-
-- [Contributing](#contributing)
-
-## Reference
-
-| Section | Description |
-|---------|-------------|
-| [kst-performance-scan](#component-kst-performance-scan) | Custom element; visual overlay for re-render counts; `showFps` property. |
-| [Via Vite plugin](#via-vite-plugin) | Enable `insights` in vite-plugin-kasstor; no manual setup. |
-| [Manual: add the component](#manual-add-the-component) | Import and render `<kst-performance-scan>` in your app. |
-| [Development only](#development-only) | Not included in production builds; conditionally import in dev. |
 
 ## Installation
 
@@ -41,7 +21,7 @@ Typically used as a dev dependency. The **@genexus/vite-plugin-kasstor** plugin 
 
 ## What this package does
 
-- **Re-render overlay** — Patches Lit’s update lifecycle and records which custom elements re-render. The **kst-performance-scan** component reads that data and renders a visual overlay next to each component that updated: it shows the **tag name** and **render count** (e.g. `app-button x 3`). So you see at a glance which parts of the tree are updating and how often.
+- **Re-render overlay** — Patches Lit's update lifecycle and records which custom elements re-render. The **kst-performance-scan** component reads that data and renders a visual overlay next to each component that updated: it shows the **tag name** and **render count** (e.g. `app-button x 3`). So you see at a glance which parts of the tree are updating and how often.
 
 - **DX and quality** — Makes it easy to find unnecessary re-renders, over-reactive state, or components that update too often. You get immediate visual feedback while developing, so you can keep the final product lean and responsive without guessing.
 
@@ -49,7 +29,7 @@ Typically used as a dev dependency. The **@genexus/vite-plugin-kasstor** plugin 
 
 ## Quick start
 
-**Easiest:** use **@genexus/vite-plugin-kasstor** with `insights` enabled. The plugin injects the performance-scan component and the script that loads it into your app’s HTML in dev. You don’t add any component to your templates.
+**Easiest:** use **@genexus/vite-plugin-kasstor** with `insights` enabled. The plugin injects the performance-scan component and the script that loads it into your app's HTML in dev. You don't add any component to your templates.
 
 ```ts
 // vite.config.ts
@@ -76,7 +56,7 @@ html`<kst-performance-scan></kst-performance-scan>
 
 ### Via Vite plugin
 
-Enable **insights** in **@genexus/vite-plugin-kasstor** (e.g. `insights: true` or `insights: { performance: true }`). The plugin injects the performance-scan component and its script into the app in development. No need to import or add the tag yourself. See the [vite-plugin-kasstor README](../../plugins/vite-plugin-kasstor/README.md#performance-insights).
+Enable **insights** in **@genexus/vite-plugin-kasstor** (e.g. `insights: true` or `insights: { performance: true }`). The plugin injects the performance-scan component and its script into the app in development. No need to import or add the tag yourself. See [vite-plugin/README.md](../vite-plugin/README.md#performance-insights).
 
 ### Manual: add the component
 
@@ -99,11 +79,11 @@ render() {
 
 ### Component: kst-performance-scan
 
-Custom element that displays a visual overlay for each Kasstor/Lit component that has re-rendered: tag name and render count. It uses global state populated by the package’s patch of Lit’s update cycle.
+Custom element that displays a visual overlay for each Kasstor/Lit component that has re-rendered: tag name and render count. It uses global state populated by the package's patch of Lit's update cycle.
 
-| Property   | Type    | Default | Description                          |
-|-----------|--------|--------|--------------------------------------|
-| `showFps` | `boolean` | `false` | When `true`, shows FPS in the UI. |
+| Property   | Type      | Default | Description                    |
+| ---------- | --------- | ------- | ------------------------------ |
+| `showFps`  | `boolean` | `false` | When `true`, shows FPS in the UI. |
 
 **Tag name:** `kst-performance-scan`.
 
@@ -141,12 +121,8 @@ declare global {
 
 - **`showFps: boolean`** — When `true`, the overlay also shows FPS. Default `false`.
 
-Internal types used by the patch and the overlay (**PerformanceScanItemModel**, **PerformanceScanRenderedItems**) live in the package; you don’t need them for normal usage.
+Internal types used by the patch and the overlay (**PerformanceScanItemModel**, **PerformanceScanRenderedItems**) live in the package; you don't need them for normal usage.
 
 ## Development only
 
 Use this package in **development** to inspect re-renders. In production builds with **@genexus/vite-plugin-kasstor**, the plugin does not inject the component when building for production. If you add `<kst-performance-scan>` manually, conditionally render or import it only in dev (e.g. `import.meta.env.DEV` or dynamic import) so it is not included in the production bundle.
-
-## Contributing
-
-Kasstor is open source and we appreciate issue reports and pull requests. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for more information.

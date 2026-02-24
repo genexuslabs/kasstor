@@ -5,36 +5,13 @@ Vite plugin that wires **@genexus/kasstor-build** and **@genexus/kasstor-insight
 ## Table of Contents
 
 - [Installation](#installation)
-
 - [What this plugin does](#what-this-plugin-does)
-
 - [Quick start](#quick-start)
-
 - [Configuration](#configuration)
-  - [Plugin options](#plugin-options)
-  - [Options reference](#options-reference)
-
 - [HMR](#hmr)
-  - [How it works](#how-it-works)
-  - [Limitations](#limitations)
-
 - [Build integration](#build-integration)
-
 - [Performance insights](#performance-insights)
-
 - [Compatibility](#compatibility)
-
-- [Contributing](#contributing)
-
-## Reference
-
-| Section | Description |
-|---------|-------------|
-| [Plugin options](#configuration) | `KasstorPluginOptions`, `includedPaths`, `excludedPaths`, `hmr`, `insights`, `fileGeneration`. |
-| [HMR](#hmr) | How component and style hot reload works; limitations. |
-| [Build integration](#build-integration) | Per-component types, readmes, exported types, library summary. |
-| [Performance insights](#performance-insights) | Visual overlay for re-render counts; inject via `insights: true`. |
-| [Compatibility](#compatibility) | Vite, kasstor-core, kasstor-build, kasstor-insights, Node.js versions. |
 
 ## Installation
 
@@ -99,97 +76,9 @@ export default defineConfig({
 
 ### Options reference
 
-The plugin accepts the same options type used in code. Options from **@genexus/kasstor-build** are passed through to the build step.
+The plugin accepts the same options type used in code. Options from **@genexus/kasstor-build** are passed through to the build step. See [build/README.md](../build/README.md) for `fileGeneration` and other **KasstorBuildOptions** fields.
 
-```ts
-import type { KasstorBuildOptions } from "@genexus/kasstor-build";
-
-/**
- * Options for the Kasstor Vite plugin
- */
-export type KasstorPluginOptions = {
-  debug?: boolean;
-
-  /**
-   * Paths or patterns to exclude when searching for components or style files.
-   *
-   * If a path or pattern is specified, components matching these will be
-   * excluded from HMR and documentation generation.
-   *
-   * Exclusions take precedence over inclusions.
-   */
-  excludedPaths?: RegExp | RegExp[];
-
-  /**
-   * Enables or disables Hot Module Replacement (HMR) for components and styles.
-   *
-   * If `true`, HMR is enabled for both components and styles.
-   *
-   * When the HMR is enabled for components, private fields (#field) are
-   * transformed to public fields (__field), enabling proxy-based HMR for class
-   * instances. Without this, HMR for class instances is not possible when they
-   * use private fields.
-   *
-   * ⚠️ Known limitations for HMR in components:
-   *   - The state of the render is destroyed and reconstructed during HMR.
-   *   - The `willUpdate` method is not properly updated on components when HMR is enabled.
-   *
-   * ⚠️ Known limitations for HMR in styles:
-   *   - Changing transitive scss files does not trigger a refresh in components that import them.
-   *     For example, if a component "X" uses a scss file "A" that imports another scss file "B",
-   *     changes to "B" will not trigger a style refresh for the component "X".
-   */
-  hmr?:
-    | boolean
-    | {
-        /**
-         * If `true`, HMR is enabled for components.
-         */
-        component?: boolean;
-
-        /**
-         * If `true`, HMR is enabled for styles.
-         */
-        styles?: boolean;
-      };
-
-  /**
-   * Paths or patterns to include when searching for components or style files.
-   *
-   * If a path or pattern is specified, only components matching these will be
-   * included in HMR and documentation generation.
-   *
-   * Exclusions take precedence over inclusions.
-   */
-  includedPaths?: {
-    /**
-     * Regular expression to match Lit component files.
-     * @default /\.lit\.ts$/
-     */
-    component: RegExp | RegExp[];
-
-    /**
-     * Regular expression to match SCSS files for Lit components.
-     * @default /\.scss$/
-     */
-    styles?: RegExp | RegExp[];
-  };
-
-  insights?:
-    | boolean
-    | {
-        performance?: boolean;
-      };
-} & Pick<
-  KasstorBuildOptions,
-  | "customComponentDecoratorNames"
-  | "defaultComponentAccess"
-  | "excludedPublicMethods"
-  | "fileGeneration"
->;
-```
-
-For the shape of **`fileGeneration`** and other **KasstorBuildOptions** fields, see **@genexus/kasstor-build**.
+Key options: `hmr`, `insights`, `includedPaths`, `excludedPaths`, `fileGeneration`, `customComponentDecoratorNames`, `defaultComponentAccess`, `excludedPublicMethods`.
 
 ## HMR
 
@@ -237,7 +126,7 @@ All of this uses the same path and decorator options you pass to the plugin (`in
 
 When **`insights`** is enabled (e.g. `insights: true` or `insights: { performance: true }`):
 
-- The plugin injects the **performance-scan** component from `@genexus/kasstor-insights` into the app’s HTML in development, plus the script that loads it.
+- The plugin injects the **performance-scan** component from `@genexus/kasstor-insights` into the app's HTML in development, plus the script that loads it.
 
 - In the UI you get a **visual overlay** that highlights which components re-render and how often: each Kasstor component that updates is shown with its tag name and render count.
 
@@ -252,8 +141,3 @@ When **`insights`** is enabled (e.g. `insights: true` or `insights: { performanc
 - **@genexus/kasstor-build:** ~0.2.0
 - **@genexus/kasstor-insights:** ~0.3.0
 - **Node.js:** 22+
-
-## Contributing
-
-Kasstor is open source and we appreciate issue reports and pull requests. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for more information.
-
