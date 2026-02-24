@@ -5,9 +5,13 @@ A reactive signals system for state management that works with any JavaScript ap
 ## Table of Contents
 
 - [Installation](#installation)
+
 - [Quick example (Lit + watch)](#quick-example-lit--watch)
+
 - [Core Concepts](#core-concepts)
+
 - [Based on alien-signals](#based-on-alien-signals)
+
 - [API](#api)
   - [Core](#core)
     - [`signal`](#signal)
@@ -17,12 +21,17 @@ A reactive signals system for state management that works with any JavaScript ap
     - [`trigger`](#trigger)
     - [`batch`](#batch)
     - [`untrack`](#untrack)
+
   - [Decorators](#decorators)
     - [`SignalProp`](#signalprop)
+
   - [Directives](#directives)
     - [`watch`](#watch)
+
 - [Best Practices](#best-practices)
+
 - [API Reference](#api-reference)
+
 - [Contributing](#contributing)
 
 ## Installation
@@ -125,10 +134,7 @@ console.log(count()); // 5
 #### In a Lit component (with `watch`)
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { computed, signal } from "@genexus/kasstor-signals/core.js";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
 import { html } from "lit";
@@ -183,10 +189,7 @@ console.log(fullName()); // "Jane Doe"
 #### Example (real-world)
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { signal, computed } from "@genexus/kasstor-signals/core.js";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
 import { html } from "lit";
@@ -318,6 +321,74 @@ trigger(() => {
 console.log(total()); // 2
 ```
 
+#### `batch`
+
+Runs the callback and flushes all signal updates once it completes. **Improves performance:** computed values and effects that track multiple dependencies run only once when you change several of those dependencies inside the batch, instead of once per changed signal.
+
+- **Behavior:**
+  - All signal writes inside `fn` are deferred; dependents (computed, effect) run only after `fn` returns.
+  - Nested batches are supported; the outer batch flushes when its callback completes.
+  - Reading a signal inside the batch sees the updated value.
+  - `fn` is synchronous; returns the return value of `fn`.
+
+#### Example (without batch vs with batch)
+
+```ts
+import { batch, signal, computed, effect } from "@genexus/kasstor-signals/core.js";
+
+const firstName = signal("John");
+const lastName = signal("Doe");
+const fullName = computed(() => `${firstName()} ${lastName()}`);
+
+effect(() => {
+  console.log("fullName is", fullName());
+});
+// Logs once: "fullName is John Doe"
+
+// Without batch: effect runs after each write
+firstName("Jane"); // Logs: "fullName is Jane Doe"
+lastName("Smith"); // Logs again: "fullName is Jane Smith"
+
+// With batch: effect runs once at the end
+batch(() => {
+  firstName("Alice");
+  lastName("Brown");
+});
+// Logs once: "fullName is Alice Brown"
+```
+
+#### `untrack`
+
+Runs the function without tracking any signal reads. Use inside a computed or effect when you need a value without adding a dependency.
+
+- **Behavior:**
+  - Any signal/computed read inside `fn` does not register as a dependency of the current effect or computed.
+  - Common use: in an effect that reads several signals, wrap the ones you don't want to track so the effect only re-runs when the others change.
+
+#### Example
+
+```ts
+import { signal, effect, untrack } from "@genexus/kasstor-signals/core.js";
+
+const userName = signal("Alice");
+const theme = signal("light");
+const logLevel = signal("info");
+
+// Re-run only when userName or theme changes; read logLevel without tracking it
+effect(() => {
+  const name = userName();
+  const themeValue = theme();
+  const level = untrack(() => logLevel()); // not a dependency
+
+  console.log(`[${level}] User ${name}, theme ${themeValue}`);
+});
+// Logs: "[info] User Alice, theme light"
+
+userName("Bob"); // Logs again (we track userName)
+theme("dark"); // Logs again (we track theme)
+logLevel("debug"); // Does not log (we don't track logLevel)
+```
+
 ### Decorators
 
 Decorators turn class members into reactive signals or wire them to the signals system.
@@ -337,10 +408,7 @@ Turns a class property into a reactive signal. Read and write the property norma
 #### Example
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { SignalProp } from "@genexus/kasstor-signals/decorators/signal-prop.js";
 import type { KasstorSignalState } from "@genexus/kasstor-signals";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
@@ -402,10 +470,7 @@ stop();
 #### Example (multiple SignalProps)
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { SignalProp } from "@genexus/kasstor-signals/decorators/signal-prop.js";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
 import { html } from "lit";
@@ -429,9 +494,7 @@ export class AppUserProfile extends KasstorElement {
   /** User email address. */
   @SignalProp email: string = "";
 
-  protected async updated(
-    changedProperties: Map<PropertyKey, unknown>
-  ): Promise<void> {
+  protected async updated(changedProperties: Map<PropertyKey, unknown>): Promise<void> {
     if (changedProperties.has("userId") && this.userId) {
       await this.#loadUserData();
     }
@@ -484,10 +547,7 @@ Directives are used in Lit templates to subscribe to signals and update only the
 #### Example
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { signal } from "@genexus/kasstor-signals/core/signal.js";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
 import { html } from "lit";
@@ -500,7 +560,7 @@ const notificationCount = signal(0);
  */
 @Component({ tag: "app-notifications" })
 export class AppNotifications extends KasstorElement {
-  #onNotify = (): void => {
+  #increaseNotificationCount = (): void => {
     notificationCount(notificationCount() + 1);
   };
 
@@ -509,7 +569,7 @@ export class AppNotifications extends KasstorElement {
       <header>
         <span class="badge">${watch(notificationCount)}</span>
       </header>
-      <button @click=${this.#onNotify}>Notify</button>
+      <button @click=${this.#increaseNotificationCount}>Notify</button>
     `;
   }
 }
@@ -518,10 +578,7 @@ export class AppNotifications extends KasstorElement {
 #### Example (complex)
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { signal, computed } from "@genexus/kasstor-signals/core/signal.js";
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
 import { html } from "lit";
@@ -534,9 +591,7 @@ const todoList = signal([
 const todoListTemplate = computed(() => {
   const todos = todoList();
   return html`
-    ${todos.map(
-      todo => html`<li ?data-completed=${todo.completed}>${todo.text}</li>`
-    )}
+    ${todos.map(todo => html`<li ?data-completed=${todo.completed}>${todo.text}</li>`)}
   `;
 });
 
@@ -552,79 +607,6 @@ export class AppTodoList extends KasstorElement {
     </ul>`;
   }
 }
-```
-
-#### `batch`
-
-Runs the callback and flushes all signal updates once it completes. **Improves performance:** computed values and effects that track multiple dependencies run only once when you change several of those dependencies inside the batch, instead of once per changed signal.
-
-- **Behavior:**
-  - All signal writes inside `fn` are deferred; dependents (computed, effect) run only after `fn` returns.
-  - Nested batches are supported; the outer batch flushes when its callback completes.
-  - Reading a signal inside the batch sees the updated value.
-  - `fn` is synchronous; returns the return value of `fn`.
-
-#### Example (without batch vs with batch)
-
-```ts
-import {
-  batch,
-  signal,
-  computed,
-  effect
-} from "@genexus/kasstor-signals/core.js";
-
-const firstName = signal("John");
-const lastName = signal("Doe");
-const fullName = computed(() => `${firstName()} ${lastName()}`);
-
-effect(() => {
-  console.log("fullName is", fullName());
-});
-// Logs once: "fullName is John Doe"
-
-// Without batch: effect runs after each write
-firstName("Jane"); // Logs: "fullName is Jane Doe"
-lastName("Smith"); // Logs again: "fullName is Jane Smith"
-
-// With batch: effect runs once at the end
-batch(() => {
-  firstName("Alice");
-  lastName("Brown");
-});
-// Logs once: "fullName is Alice Brown"
-```
-
-#### `untrack`
-
-Runs the function without tracking any signal reads. Use inside a computed or effect when you need a value without adding a dependency.
-
-- **Behavior:**
-  - Any signal/computed read inside `fn` does not register as a dependency of the current effect or computed.
-  - Common use: in an effect that reads several signals, wrap the ones you don’t want to track so the effect only re-runs when the others change.
-
-#### Example
-
-```ts
-import { signal, effect, untrack } from "@genexus/kasstor-signals/core.js";
-
-const userName = signal("Alice");
-const theme = signal("light");
-const logLevel = signal("info");
-
-// Re-run only when userName or theme changes; read logLevel without tracking it
-effect(() => {
-  const name = userName();
-  const themeValue = theme();
-  const level = untrack(() => logLevel()); // not a dependency
-
-  console.log(`[${level}] User ${name}, theme ${themeValue}`);
-});
-// Logs: "[info] User Alice, theme light"
-
-userName("Bob"); // Logs again (we track userName)
-theme("dark"); // Logs again (we track theme)
-logLevel("debug"); // Does not log (we don't track logLevel)
 ```
 
 ## Best Practices
@@ -667,7 +649,7 @@ When a component reads signals from a store in its template, the component must 
 ```ts
 import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { effect } from "@genexus/kasstor-signals/core/effect.js";
-import { displayName, isLoading } from "../signals/app-store";
+import { displayName, isLoading } from "../signals/app-store.js";
 import { html } from "lit";
 
 /**
@@ -695,9 +677,7 @@ export class AppHeader extends KasstorElement {
   override render() {
     return html`
       <header>
-        ${isLoading()
-          ? html`<p>Loading...</p>`
-          : html`<h1>Welcome ${displayName()}</h1>`}
+        ${isLoading() ? html`<p>Loading...</p>` : html`<h1>Welcome ${displayName()}</h1>`}
       </header>
     `;
   }
@@ -763,10 +743,7 @@ Use **`batch`** when you are updating several signals in one logical step (e.g. 
   - The effect is not auto-disposed—you must call the stop function.
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
 import { effect } from "@genexus/kasstor-signals/core/effect.js";
 import { signal } from "@genexus/kasstor-signals/core/signal.js";
 import { html } from "lit";
@@ -813,19 +790,19 @@ export class AppSearch extends KasstorElement {
 - **`effect(fn: () => void)`** — Runs the function and re-runs when dependencies change.
   - Returns a stop function (call it to remove the subscription; the effect is not auto-disposed).
 
+- **`effectScope(fn)`** — Runs the callback (which can create effects/computeds) and returns a stop function.
+  - Call it to dispose all effects in the scope. Nested scopes: stopping a parent stops its children.
+  - Use to avoid memory leaks and for scoped state management.
+
+- **`trigger(target)`** — Manually notifies a signal's dependents without changing its value.
+  - Use after in-place mutation (e.g. `arr().push(1)` then `trigger(arr)`).
+  - To trigger multiple signals: `trigger(() => { src1(); src2(); })`.
+
 - **`batch<T>(fn: () => T)`** — Runs `fn` (synchronous); defers signal updates and flushes when `fn` completes.
   - Improves performance: computeds and effects that track multiple dependencies run only once when you change several of them in the batch.
   - Returns the return value of `fn`. Nested batches supported; reading a signal inside sees the updated value.
 
 - **`untrack<T>(fn: () => T)`** — Runs `fn` without tracking signal reads; returns the return value of `fn`. Use inside computed/effect to read a value without adding a dependency.
-
-- **`effectScope(fn)`** — Runs the callback (which can create effects/computeds) and returns a stop function.
-  - Call it to dispose all effects in the scope. Nested scopes: stopping a parent stops its children.
-  - Use to avoid memory leaks and for scoped state management.
-
-- **`trigger(target)`** — Manually notifies a signal’s dependents without changing its value.
-  - Use after in-place mutation (e.g. `arr().push(1)` then `trigger(arr)`).
-  - To trigger multiple signals: `trigger(() => { src1(); src2(); })`.
 
 - **Type guards:** `isSignal`, `isComputed`, `isEffect`, `isEffectScope` — Return true if the value is the corresponding reactive primitive.
 
