@@ -1,6 +1,6 @@
 <p align="center">
-  <img src="./kasstor-logo.png" alt="Kasstor logo" height="120px"/>
-  <br>
+  <!-- <img src="./kasstor-logo.png" alt="Kasstor logo" height="120px"/> -->
+  <!-- <br> -->
   <h1 align="center">Kasstor — The natural builder for the web platform</h1>
 </p>
 
