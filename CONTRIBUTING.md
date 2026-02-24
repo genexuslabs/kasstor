@@ -4,7 +4,7 @@ This repository is part of the Kasstor ecosystem (Lit-based web components and t
 
 ## Questions
 
-For questions about how this project works or about new functionality, open a [GitHub Discussion](https://github.com/genexuslabs/lit-devkit/discussions) or use the repository’s [Issues](https://github.com/genexuslabs/lit-devkit/issues). Please specify that you are referring to this repository when asking.
+For questions about how this project works or about new functionality, open a [GitHub Discussion](https://github.com/genexuslabs/kasstor/discussions) or use the repository’s [Issues](https://github.com/genexuslabs/kasstor/issues). Please specify that you are referring to this repository when asking.
 
 ## How you can contribute
 
@@ -24,7 +24,7 @@ Contributions are accepted on the **`main`** branch. All work should be done via
 
 Every contribution should be tied to a GitHub issue that describes the problem or improvement.
 
-- **Search [existing issues](https://github.com/genexuslabs/lit-devkit/issues)** to avoid duplicates and to see if the topic is already reported or fixed.
+- **Search [existing issues](https://github.com/genexuslabs/kasstor/issues)** to avoid duplicates and to see if the topic is already reported or fixed.
 - If you find an open issue that matches, you can comment that you want to work on it and reference the issue in your PR later.
 - If there is no issue yet, **open a new issue** with a clear description and, when relevant, steps to reproduce or a minimal example.
 
@@ -73,3 +73,4 @@ Pull requests are reviewed by the maintainers. The result may be:
 ## Code of conduct
 
 We expect respectful and constructive communication in issues, discussions, and pull requests. Our standards are described in [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+
