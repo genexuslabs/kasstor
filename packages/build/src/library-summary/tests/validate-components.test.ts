@@ -2,7 +2,10 @@ import * as ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 import type { ComponentDefinition } from "../../typings/library-components";
-import { ComponentValidator } from "../internal/validate-components.js";
+import {
+  ComponentValidator,
+  type ComponentValidatorOptions
+} from "../internal/validate-components.js";
 
 /**
  * Helper to create a mock source file and class declaration for testing
@@ -406,6 +409,63 @@ describe("ComponentValidator", () => {
     expect(() =>
       validator.validateAndAdd(component2, sourceFile, classDeclaration)
     ).not.toThrow();
+  });
+
+  it("should add hint when duplicate type involves the auto-generated export types file", () => {
+    const generatedPath = "/project/src/components.ts";
+    const validatorOptions: ComponentValidatorOptions = {
+      generatedExportTypesFilePath: generatedPath,
+      resolveModulePathToAbsolute: (modulePath, _componentSrcPath) => {
+        // Simulate: imports containing "components" resolve to the generated file
+        if (modulePath.includes("components")) {
+          return "/project/src/components.js";
+        }
+        return "/project/src/types.js";
+      }
+    };
+    const validator = new ComponentValidator(validatorOptions);
+    const { sourceFile, classDeclaration } = createMockSourceFileAndClass(
+      "class MyComponent {}"
+    );
+
+    const component1: ComponentDefinition = {
+      access: "public",
+      tagName: "my-component-1",
+      className: "MyComponent1",
+      description: "First",
+      fullClassJSDoc: "",
+      srcPath: "foo/a.lit.ts",
+      developmentStatus: "stable",
+      mode: "open",
+      shadow: true,
+      propertyImportTypes: { "./types.js": ["MyType"] }
+    };
+
+    const component2: ComponentDefinition = {
+      access: "public",
+      tagName: "my-component-2",
+      className: "MyComponent2",
+      description: "Second",
+      fullClassJSDoc: "",
+      srcPath: "foo/b.lit.ts",
+      developmentStatus: "stable",
+      mode: "open",
+      shadow: true,
+      propertyImportTypes: { "./components.js": ["MyType"] }
+    };
+
+    validator.validateAndAdd(component1, sourceFile, classDeclaration);
+
+    let thrownMessage = "";
+    try {
+      validator.validateAndAdd(component2, sourceFile, classDeclaration);
+    } catch (error) {
+      thrownMessage = (error as Error).message;
+    }
+    expect(thrownMessage).toMatch(/Duplicate type definition "MyType"/);
+    expect(thrownMessage).toMatch(
+      /Remove that import and import the type from its original module instead/
+    );
   });
 });
 

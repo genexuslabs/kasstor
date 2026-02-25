@@ -1,10 +1,13 @@
-import { relative } from "path";
+import { dirname, relative, resolve } from "path";
 
 import type { KasstorBuildComponentData } from "../typings/build-options";
 import type { ComponentDefinition } from "../typings/library-components";
 import { extractComponentDefinition } from "./internal/extract-component-definition.js";
 import { findComponents } from "./internal/find-lit-components.js";
-import { ComponentValidator } from "./internal/validate-components.js";
+import {
+  ComponentValidator,
+  type ComponentValidatorOptions
+} from "./internal/validate-components.js";
 
 const filterExcludedPublicMethods = (
   component: ComponentDefinition,
@@ -32,12 +35,19 @@ export const getLibraryComponents = async (options: {
   excludedPublicMethods: string[] | undefined;
   includedPaths: RegExp | RegExp[];
   relativeComponentsSrcPath: string;
+  /**
+   * Absolute path where the export types file (e.g. components.ts) is generated.
+   * When provided, duplicate-type errors that involve this file will include a hint
+   * to remove the import from the generated file.
+   */
+  generatedExportTypesFilePath?: string;
 }): Promise<KasstorBuildComponentData[]> => {
   const {
     customComponentDecoratorNames,
     defaultComponentAccess,
     excludedPaths,
     excludedPublicMethods,
+    generatedExportTypesFilePath,
     includedPaths,
     relativeComponentsSrcPath
   } = options;
@@ -50,7 +60,20 @@ export const getLibraryComponents = async (options: {
   });
 
   const componentsAndContents: KasstorBuildComponentData[] = [];
-  const validator = new ComponentValidator();
+  const validatorOptions: ComponentValidatorOptions | undefined =
+    generatedExportTypesFilePath
+      ? {
+          generatedExportTypesFilePath,
+          resolveModulePathToAbsolute: (modulePath, componentSrcPath) =>
+            resolve(
+              process.cwd(),
+              relativeComponentsSrcPath,
+              dirname(componentSrcPath),
+              modulePath
+            )
+        }
+      : undefined;
+  const validator = new ComponentValidator(validatorOptions);
 
   // Process files sequentially to validate incrementally
   for (const { filePath, fileContent } of filePathAndContents) {

@@ -49,6 +49,19 @@ export type KasstorBuildOptions = {
         librarySummary?: string | false;
 
         /**
+         * Generates one declaration file per type used by properties, events,
+         * and methods. Types are merged from propertyImportTypes,
+         * eventImportTypes, and methodImportTypes (duplicate type names are
+         * emitted only once).
+         *
+         * - If `false`, type declaration files are not generated.
+         * - If a string is provided, it is used as the output folder path
+         *   (relative to `process.cwd()`).
+         * - If no value is provided, the default folder is `"docs/types"`.
+         */
+        typeDeclarationsFolder?: string | false;
+
+        /**
          * If `true`, each component file will have auto-generated types at the end
          * of the file.
          *
@@ -82,6 +95,8 @@ export type KasstorBuildOptions = {
    *
    * If some of these paths are also excluded by the `excludedPaths` option,
    * the exclusion takes precedence.
+   *
+   * @default `/\.lit\.(ts|js)$/`.
    */
   includedPaths?: RegExp | RegExp[];
 
@@ -93,3 +108,4 @@ export type KasstorBuildComponentData = {
   fileContent: string;
   filePath: string;
 };
+
