@@ -1,5 +1,6 @@
 import { resolve } from "path";
-import * as ts from "typescript";
+import type { SourceFile, StringLiteral } from "typescript";
+import { isImportDeclaration, isNamedImports, isNamespaceImport } from "typescript";
 import { resolveModulePath } from "./normalize-path.js";
 
 /**
@@ -25,7 +26,7 @@ export type ImportAnalysisCache = {
  * Extract import analysis from source file
  */
 export const extractImportAnalysis = (
-  sourceFile: ts.SourceFile,
+  sourceFile: SourceFile,
   searchPath: string,
   srcPath: string
 ): ImportAnalysisCache => {
@@ -37,8 +38,8 @@ export const extractImportAnalysis = (
 
   // Extract import declarations
   sourceFile.statements.forEach(statement => {
-    if (ts.isImportDeclaration(statement) && statement.moduleSpecifier) {
-      const moduleSpecifier = (statement.moduleSpecifier as ts.StringLiteral)
+    if (isImportDeclaration(statement) && statement.moduleSpecifier) {
+      const moduleSpecifier = (statement.moduleSpecifier as StringLiteral)
         .text;
 
       // Resolve and normalize the module path
@@ -66,7 +67,7 @@ export const extractImportAnalysis = (
 
         // Named imports
         if (statement.importClause.namedBindings) {
-          if (ts.isNamespaceImport(statement.importClause.namedBindings)) {
+          if (isNamespaceImport(statement.importClause.namedBindings)) {
             // namespace import (import * as foo from 'bar')
             importInfo.namespaceImport =
               statement.importClause.namedBindings.name.text;
@@ -74,7 +75,7 @@ export const extractImportAnalysis = (
               statement.importClause.namedBindings.name.text,
               resolvedModulePath
             );
-          } else if (ts.isNamedImports(statement.importClause.namedBindings)) {
+          } else if (isNamedImports(statement.importClause.namedBindings)) {
             // named imports (import { foo, bar } from 'baz')
             statement.importClause.namedBindings.elements.forEach(element => {
               const importName = element.name.text;

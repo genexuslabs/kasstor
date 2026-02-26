@@ -9,14 +9,9 @@ import { writeGlobalTypesForComponent } from "./global-type-declarations/replace
 import { sortByFilePath } from "./internal/sort-by-file-path.js";
 import { getLibraryComponents } from "./library-summary/index.js";
 import { getComponentReadme } from "./readme/get-component-readme.js";
-import type {
-  KasstorBuildComponentData,
-  KasstorBuildOptions
-} from "./typings/build-options.js";
-import type {
-  ComponentDefinition,
-  LibraryComponents
-} from "./typings/library-components";
+import { generateTypeDeclarationsFolder } from "./type-declarations-folder/index.js";
+import type { KasstorBuildComponentData, KasstorBuildOptions } from "./typings/build-options.js";
+import type { ComponentDefinition, LibraryComponents } from "./typings/library-components";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -29,9 +24,9 @@ const librarySummaryTypes = await readFile(
 const DEFAULT_DECLARATION_FILE_NAME = "components.ts";
 // const DEFAULT_DECLARATION_FOR_ALL_COPIED_TYPES = "component-copied-types.ts";
 const DEFAULT_LIBRARY_SUMMARY_FILE_NAME = "library-summary.ts";
-const DEFAULT_COMPONENT_ACCESS =
-  "public" satisfies ComponentDefinition["access"];
-const DEFAULT_INCLUDED_PATHS = /\.lit\.ts$/;
+const DEFAULT_TYPE_DECLARATIONS_FOLDER = "docs/types";
+const DEFAULT_COMPONENT_ACCESS = "public" satisfies ComponentDefinition["access"];
+const DEFAULT_INCLUDED_PATHS = /\.lit\.(ts|js)$/;
 const DEFAULT_RELATIVE_COMPONENTS_SRC_PATH = "src/";
 
 type BuildCacheTagName = string;
@@ -55,15 +50,10 @@ const writeLibrarySummary = async (
     `export const librarySummary = ${JSON.stringify(libraryComponents, undefined, 2)} as const satisfies LibraryComponents;\n\n${librarySummaryTypes}`,
     { parser: "typescript", trailingComma: "none" }
   ).then(formattedLibrarySummary =>
-    writeFile(
-      join(process.cwd(), relativeComponentsSrcPath, fileName),
-      formattedLibrarySummary
-    )
+    writeFile(join(process.cwd(), relativeComponentsSrcPath, fileName), formattedLibrarySummary)
   );
 
-const writeReadmes = (
-  libraryComponentAndContents: KasstorBuildComponentData[]
-): Promise<void[]> =>
+const writeReadmes = (libraryComponentAndContents: KasstorBuildComponentData[]): Promise<void[]> =>
   Promise.all(
     libraryComponentAndContents.map(({ component, filePath }) =>
       getComponentReadme(component).then(readme =>
@@ -78,10 +68,7 @@ const writeReadmes = (
     )
   );
 
-const writeExportTypes = (
-  libraryComponents: LibraryComponents,
-  filePath: string
-): Promise<void> =>
+const writeExportTypes = (libraryComponents: LibraryComponents, filePath: string): Promise<void> =>
   writeFile(filePath, getComponentDeclaration(libraryComponents), "utf-8");
 
 /**
@@ -122,6 +109,7 @@ export const buildLibrary = async (
     analysis: 0,
     librarySummary: 0,
     exportTypesForTheLibrary: 0,
+    typeDeclarationsFolder: 0,
     typesForComponents: 0,
     readmesForComponents: 0
   };
@@ -145,6 +133,16 @@ export const buildLibrary = async (
     defaultComponentAccess: defaultComponentAccess ?? DEFAULT_COMPONENT_ACCESS,
     excludedPaths,
     excludedPublicMethods,
+    generatedExportTypesFilePath:
+      fileGeneration !== false &&
+      fileGeneration?.exportTypesForTheLibrary !== false
+        ? join(
+            process.cwd(),
+            relativeComponentsSrcPath,
+            fileGeneration?.exportTypesForTheLibrary ??
+              DEFAULT_DECLARATION_FILE_NAME
+          )
+        : undefined,
     includedPaths: includedPaths ?? DEFAULT_INCLUDED_PATHS,
     relativeComponentsSrcPath
   });
@@ -160,20 +158,15 @@ export const buildLibrary = async (
       // its events changed or its full description changed
       if (
         cachedComponentData === undefined ||
-        JSON.stringify(component.events) !==
-          JSON.stringify(cachedComponentData.component.events) ||
-        component.fullClassJSDoc !==
-          cachedComponentData.component.fullClassJSDoc
+        JSON.stringify(component.events) !== JSON.stringify(cachedComponentData.component.events) ||
+        component.fullClassJSDoc !== cachedComponentData.component.fullClassJSDoc
       ) {
         updatedTypesForComponents.push(componentData);
         updatedReadmesForComponents.push(componentData);
       }
       // Otherwise, if anything besides events or full description changed
       // we only generate the readme
-      else if (
-        JSON.stringify(component) !==
-        JSON.stringify(cachedComponentData.component)
-      ) {
+      else if (JSON.stringify(component) !== JSON.stringify(cachedComponentData.component)) {
         updatedReadmesForComponents.push(componentData);
       }
     });
@@ -197,17 +190,12 @@ export const buildLibrary = async (
     tagNamesToRemove?.forEach(tagName => buildCache!.delete(tagName));
 
     libraryComponentAndContents.forEach(componentAndContent =>
-      buildCache!.set(
-        componentAndContent.component.tagName,
-        componentAndContent
-      )
+      buildCache!.set(componentAndContent.component.tagName, componentAndContent)
     );
   }
 
   const allLibraryComponents = incrementalBuild
-    ? sortByFilePath(Array.from(buildCache!.values())).map(
-        ({ component }) => component
-      )
+    ? sortByFilePath(Array.from(buildCache!.values())).map(({ component }) => component)
     : libraryComponentAndContents.map(({ component }) => component);
 
   // END of analysis
@@ -224,8 +212,7 @@ export const buildLibrary = async (
         fileGeneration?.librarySummary ?? DEFAULT_LIBRARY_SUMMARY_FILE_NAME
       ).then(() => {
         // END of librarySummary
-        elapsedTimes.librarySummary =
-          performance.now() - startTimeLibrarySummary;
+        elapsedTimes.librarySummary = performance.now() - startTimeLibrarySummary;
       })
     );
   }
@@ -274,11 +261,30 @@ export const buildLibrary = async (
     );
   }
 
+  // One declaration file per type (docs/types by default)
+  if (fileGeneration !== false && fileGeneration?.typeDeclarationsFolder !== false) {
+    const startTimeTypeDeclarationsFolder = performance.now();
+    const typeDeclarationsOutputDir = join(
+      process.cwd(),
+      fileGeneration?.typeDeclarationsFolder ?? DEFAULT_TYPE_DECLARATIONS_FOLDER
+    );
+    const typeDeclarationsBasePath = join(
+      process.cwd(),
+      relativeComponentsSrcPath
+    );
+    promises.push(
+      generateTypeDeclarationsFolder(
+        allLibraryComponents,
+        typeDeclarationsBasePath,
+        typeDeclarationsOutputDir
+      ).then(() => {
+        elapsedTimes.typeDeclarationsFolder = performance.now() - startTimeTypeDeclarationsFolder;
+      })
+    );
+  }
+
   // component.ts file declaration
-  if (
-    fileGeneration !== false &&
-    fileGeneration?.exportTypesForTheLibrary !== false
-  ) {
+  if (fileGeneration !== false && fileGeneration?.exportTypesForTheLibrary !== false) {
     const startTimeAutoGeneratedExportTypesForComponents = performance.now();
 
     const declarationFilePath = join(
@@ -311,8 +317,7 @@ export const buildLibrary = async (
     updatedReadmesForComponents: updatedReadmesForComponents.map(
       ({ component }) => component.tagName
     ),
-    updatedTypesForComponents: updatedTypesForComponents.map(
-      ({ component }) => component.tagName
-    )
+    updatedTypesForComponents: updatedTypesForComponents.map(({ component }) => component.tagName)
   };
 };
+

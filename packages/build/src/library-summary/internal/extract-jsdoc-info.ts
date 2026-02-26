@@ -1,4 +1,5 @@
-import * as ts from "typescript";
+import type { ClassDeclaration, ClassElement, JSDoc, SourceFile } from "typescript";
+import { getJSDocCommentsAndTags, getJSDocTags, isJSDoc } from "typescript";
 
 import type {
   ComponentDefinition,
@@ -25,11 +26,11 @@ const ALL_KIND_OF_DEVELOPMENT_STATUS = [
  * Extract JSDoc information from class declaration
  */
 export const extractJSDocInfo = (
-  classDeclaration: ts.ClassDeclaration,
-  sourceFile: ts.SourceFile
+  classDeclaration: ClassDeclaration,
+  sourceFile: SourceFile
 ) => {
-  const jsDocTags = ts.getJSDocTags(classDeclaration);
-  const jsDocComments = ts.getJSDocCommentsAndTags(classDeclaration);
+  const jsDocTags = getJSDocTags(classDeclaration);
+  const jsDocComments = getJSDocCommentsAndTags(classDeclaration);
 
   let description = "";
   let access: ComponentDefinition["access"] | undefined;
@@ -41,8 +42,8 @@ export const extractJSDocInfo = (
 
   // Extract main description
   const mainComment = jsDocComments.find(
-    comment => ts.isJSDoc(comment) && comment.comment
-  ) as ts.JSDoc | undefined;
+    comment => isJSDoc(comment) && comment.comment
+  ) as JSDoc | undefined;
 
   if (mainComment?.comment) {
     description =
@@ -152,9 +153,9 @@ export const extractJSDocInfo = (
 /**
  * Extract JSDoc information from class member
  */
-export const extractMemberJSDoc = (member: ts.ClassElement) => {
-  const jsDocTags = ts.getJSDocTags(member);
-  const jsDocComments = ts.getJSDocCommentsAndTags(member);
+export const extractMemberJSDoc = (member: ClassElement) => {
+  const jsDocTags = getJSDocTags(member);
+  const jsDocComments = getJSDocCommentsAndTags(member);
 
   let description = "";
   let required = false;
@@ -162,8 +163,8 @@ export const extractMemberJSDoc = (member: ts.ClassElement) => {
 
   // Extract main description
   const mainComment = jsDocComments.find(
-    comment => ts.isJSDoc(comment) && comment.comment
-  ) as ts.JSDoc | undefined;
+    comment => isJSDoc(comment) && comment.comment
+  ) as JSDoc | undefined;
 
   if (mainComment?.comment) {
     description =

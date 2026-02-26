@@ -19,14 +19,14 @@
   ],
   "scripts": {
     "start": "cd packages/showcase && bun start",
-    "dev": "bun dev:webkit && bun dev:signals && bun dev:core && concurrently 'bun dev:build' 'bun dev:insights' 'bun dev:vite-plugin'",
+    "dev": "bun dev:webkit && bun dev:core && bun dev:insights && bun dev:build && bun dev:signals && bun dev:vite-plugin",
     "dev:build": "cd packages/build && bun dev",
     "dev:core": "cd packages/core && bun dev",
     "dev:insights": "cd packages/insights && bun dev",
     "dev:signals": "cd packages/signals && bun dev",
     "dev:vite-plugin": "cd packages/plugins/vite-plugin-kasstor && bun dev",
     "dev:webkit": "cd packages/webkit && bun dev",
-    "build": "bun build:webkit && bun build:insights && bun build:build && bun build:core && bun build:signals && bun build:vite-plugin",
+    "build": "bun build:webkit && bun build:core && bun build:insights && bun build:build && bun build:signals && bun build:vite-plugin",
     "build:build": "cd packages/build && bun run build",
     "build:core": "cd packages/core && bun run build",
     "build:insights": "cd packages/insights && bun run build",
@@ -74,3 +74,4 @@
     "vite": "7.3.0"
   }
 }
+
