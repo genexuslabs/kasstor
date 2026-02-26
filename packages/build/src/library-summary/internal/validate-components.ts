@@ -1,5 +1,5 @@
-import * as path from "path";
-import * as ts from "typescript";
+import { normalize } from "path";
+import type { ClassDeclaration, Node, SourceFile } from "typescript";
 
 import type { ComponentDefinition } from "../../typings/library-components";
 
@@ -34,8 +34,8 @@ export type ComponentValidatorOptions = {
  * Returns true if the two paths refer to the same file (ignoring .ts vs .js extension).
  */
 function pathsReferToSameFile(absolutePathA: string, absolutePathB: string): boolean {
-  const normA = path.normalize(absolutePathA);
-  const normB = path.normalize(absolutePathB);
+  const normA = normalize(absolutePathA);
+  const normB = normalize(absolutePathB);
   if (normA === normB) return true;
   const baseA = normA.replace(/\.(ts|d\.ts|tsx|js)$/i, "");
   const baseB = normB.replace(/\.(ts|d\.ts|tsx|js)$/i, "");
@@ -72,8 +72,8 @@ export class ComponentValidator {
    */
   validateAndAdd(
     component: ComponentDefinition,
-    sourceFile: ts.SourceFile,
-    classDeclaration: ts.ClassDeclaration
+    sourceFile: SourceFile,
+    classDeclaration: ClassDeclaration
   ): void {
     const errors: ValidationError[] = [];
 
@@ -230,13 +230,13 @@ export class ComponentValidator {
   ): string | undefined {
     if (!this.options) return undefined;
     const { generatedExportTypesFilePath, resolveModulePathToAbsolute } = this.options;
-    const resolvedExisting = path.normalize(
+    const resolvedExisting = normalize(
       resolveModulePathToAbsolute(existingModulePath, existingComponentSrcPath)
     );
-    const resolvedCurrent = path.normalize(
+    const resolvedCurrent = normalize(
       resolveModulePathToAbsolute(currentModulePath, currentComponentSrcPath)
     );
-    const generatedNormalized = path.normalize(generatedExportTypesFilePath);
+    const generatedNormalized = normalize(generatedExportTypesFilePath);
     const existingIsGenerated = pathsReferToSameFile(resolvedExisting, generatedNormalized);
     const currentIsGenerated = pathsReferToSameFile(resolvedCurrent, generatedNormalized);
     if (!existingIsGenerated && !currentIsGenerated) return undefined;
@@ -247,8 +247,8 @@ export class ComponentValidator {
    * Get line and column numbers from a node in the source file
    */
   private getLineAndColumn(
-    sourceFile: ts.SourceFile,
-    node: ts.Node
+    sourceFile: SourceFile,
+    node: Node
   ): { line: number; column: number } {
     const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
     return {

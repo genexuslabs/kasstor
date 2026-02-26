@@ -1,4 +1,5 @@
-import * as ts from "typescript";
+import type { ClassDeclaration, Node, SourceFile } from "typescript";
+import { createSourceFile, forEachChild, isClassDeclaration, ScriptKind, ScriptTarget } from "typescript";
 import { describe, expect, it } from "vitest";
 
 import type { ComponentDefinition } from "../../typings/library-components";
@@ -11,25 +12,25 @@ import {
  * Helper to create a mock source file and class declaration for testing
  */
 function createMockSourceFileAndClass(code: string): {
-  sourceFile: ts.SourceFile;
-  classDeclaration: ts.ClassDeclaration;
+  sourceFile: SourceFile;
+  classDeclaration: ClassDeclaration;
 } {
-  const sourceFile = ts.createSourceFile(
+  const sourceFile = createSourceFile(
     "test.ts",
     code,
-    ts.ScriptTarget.ES2022,
+    ScriptTarget.ES2022,
     true,
-    ts.ScriptKind.TS
+    ScriptKind.TS
   );
 
-  let classDeclaration: ts.ClassDeclaration | null = null;
+  let classDeclaration: ClassDeclaration | null = null;
 
-  const findClass = (node: ts.Node): void => {
-    if (ts.isClassDeclaration(node)) {
+  const findClass = (node: Node): void => {
+    if (isClassDeclaration(node)) {
       classDeclaration = node;
       return;
     }
-    ts.forEachChild(node, findClass);
+    forEachChild(node, findClass);
   };
 
   findClass(sourceFile);

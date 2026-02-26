@@ -1,6 +1,24 @@
-import * as fs from "fs/promises";
-import * as path from "path";
-import * as ts from "typescript";
+import { readFile, rm, mkdir, writeFile } from "fs/promises";
+import { resolve, join } from "path";
+import type { Modifier, Node, SourceFile, TypeNode, TypeReferenceNode } from "typescript";
+import {
+  SyntaxKind,
+  ScriptTarget,
+  ScriptKind,
+  canHaveModifiers,
+  createSourceFile,
+  forEachChild,
+  getModifiers,
+  isClassDeclaration,
+  isEnumDeclaration,
+  isIdentifier,
+  isInterfaceDeclaration,
+  isMethodSignature,
+  isPropertySignature,
+  isQualifiedName,
+  isTypeAliasDeclaration,
+  isTypeReferenceNode
+} from "typescript";
 
 import type { ComponentImportTypes, LibraryComponents } from "../typings/library-components.js";
 
@@ -118,12 +136,12 @@ async function resolveFilePathWithExtensions(
 
   for (const ext of extensionsToTry) {
     const pathsToTry = hasJsExtension
-      ? [path.resolve(basePath, basePathWithoutExt + ext), path.resolve(basePath, filePath)]
-      : [path.resolve(basePath, filePath + ext)];
+      ? [resolve(basePath, basePathWithoutExt + ext), resolve(basePath, filePath)]
+      : [resolve(basePath, filePath + ext)];
 
     for (const absolutePath of pathsToTry) {
       try {
-        const content = await fs.readFile(absolutePath, "utf-8");
+        const content = await readFile(absolutePath, "utf-8");
         return { resolvedPath: absolutePath, content };
       } catch {
         // continue
@@ -133,41 +151,41 @@ async function resolveFilePathWithExtensions(
   return null;
 }
 
-function getTypeReferenceName(node: ts.TypeReferenceNode): string | null {
-  if (ts.isIdentifier(node.typeName)) return node.typeName.text;
-  if (ts.isQualifiedName(node.typeName)) return node.typeName.right.text;
+function getTypeReferenceName(node: TypeReferenceNode): string | null {
+  if (isIdentifier(node.typeName)) return node.typeName.text;
+  if (isQualifiedName(node.typeName)) return node.typeName.right.text;
   return null;
 }
 
-function extractTypeDependencies(typeNode: ts.TypeNode): Set<string> {
+function extractTypeDependencies(typeNode: TypeNode): Set<string> {
   const dependencies = new Set<string>();
-  const visit = (node: ts.Node) => {
-    if (ts.isTypeReferenceNode(node)) {
+  const visit = (node: Node) => {
+    if (isTypeReferenceNode(node)) {
       const name = getTypeReferenceName(node);
       if (name && !isBuiltInType(name)) dependencies.add(name);
     }
-    ts.forEachChild(node, visit);
+    forEachChild(node, visit);
   };
   visit(typeNode);
   return dependencies;
 }
 
-function hasExportModifier(node: ts.Node): boolean {
-  if (!ts.canHaveModifiers(node)) return false;
-  const modifiers = ts.getModifiers(node);
-  return modifiers?.some((mod: ts.Modifier) => mod.kind === ts.SyntaxKind.ExportKeyword) ?? false;
+function hasExportModifier(node: Node): boolean {
+  if (!canHaveModifiers(node)) return false;
+  const modifiers = getModifiers(node);
+  return modifiers?.some((mod: Modifier) => mod.kind === SyntaxKind.ExportKeyword) ?? false;
 }
 
 function extractTypeDeclarationsFromFile(
-  sourceFile: ts.SourceFile,
+  sourceFile: SourceFile,
   fileContent: string
 ): Map<string, TypeDeclaration> {
   const typeDeclarations = new Map<string, TypeDeclaration>();
 
-  const visit = (node: ts.Node) => {
+  const visit = (node: Node) => {
     const isExported = hasExportModifier(node);
 
-    if (ts.isTypeAliasDeclaration(node) && node.name) {
+    if (isTypeAliasDeclaration(node) && node.name) {
       const typeName = node.name.text;
       const declaration = fileContent.substring(node.pos, node.end).trim();
       typeDeclarations.set(typeName, {
@@ -176,7 +194,7 @@ function extractTypeDeclarationsFromFile(
         isExported,
         dependencies: extractTypeDependencies(node.type)
       });
-    } else if (ts.isInterfaceDeclaration(node) && node.name) {
+    } else if (isInterfaceDeclaration(node) && node.name) {
       const typeName = node.name.text;
       const declaration = fileContent.substring(node.pos, node.end).trim();
       const dependencies = new Set<string>();
@@ -188,9 +206,9 @@ function extractTypeDeclarationsFromFile(
         }
       }
       for (const member of node.members) {
-        if (ts.isPropertySignature(member) && member.type) {
+        if (isPropertySignature(member) && member.type) {
           extractTypeDependencies(member.type).forEach(d => dependencies.add(d));
-        } else if (ts.isMethodSignature(member)) {
+        } else if (isMethodSignature(member)) {
           if (member.type) extractTypeDependencies(member.type).forEach(d => dependencies.add(d));
           for (const param of member.parameters) {
             if (param.type) extractTypeDependencies(param.type).forEach(d => dependencies.add(d));
@@ -203,7 +221,7 @@ function extractTypeDeclarationsFromFile(
         isExported,
         dependencies
       });
-    } else if (ts.isEnumDeclaration(node) && node.name) {
+    } else if (isEnumDeclaration(node) && node.name) {
       const typeName = node.name.text;
       const declaration = fileContent.substring(node.pos, node.end).trim();
       typeDeclarations.set(typeName, {
@@ -212,7 +230,7 @@ function extractTypeDeclarationsFromFile(
         isExported,
         dependencies: new Set()
       });
-    } else if (ts.isClassDeclaration(node) && node.name) {
+    } else if (isClassDeclaration(node) && node.name) {
       const typeName = node.name.text;
       const declaration = fileContent.substring(node.pos, node.end).trim();
       const dependencies = new Set<string>();
@@ -230,7 +248,7 @@ function extractTypeDeclarationsFromFile(
         dependencies
       });
     }
-    ts.forEachChild(node, visit);
+    forEachChild(node, visit);
   };
   visit(sourceFile);
   return typeDeclarations;
@@ -249,12 +267,12 @@ async function parseFilesAndExtractTypes(
   const fileTypeMap: FileTypeMap = new Map();
   for (const { filePath, resolved } of resolvedList) {
     if (!resolved) continue;
-    const sourceFile = ts.createSourceFile(
+    const sourceFile = createSourceFile(
       filePath,
       resolved.content,
-      ts.ScriptTarget.ES2022,
+      ScriptTarget.ES2022,
       true,
-      ts.ScriptKind.TS
+      ScriptKind.TS
     );
     fileTypeMap.set(filePath, extractTypeDeclarationsFromFile(sourceFile, resolved.content));
   }
@@ -327,8 +345,8 @@ export async function generateTypeDeclarationsFolder(
     allTypeNames = collectAllTypeNamesWithDependencies(importTypesMap, fileTypeMap, typeToFileMap);
   }
 
-  await fs.rm(outputDir, { recursive: true }).catch(() => {});
-  await fs.mkdir(outputDir, { recursive: true });
+  await rm(outputDir, { recursive: true }).catch(() => {});
+  await mkdir(outputDir, { recursive: true });
 
   const writes: Promise<void>[] = [];
   for (const typeName of allTypeNames) {
@@ -347,7 +365,7 @@ export async function generateTypeDeclarationsFolder(
     }
     const content = `${FILE_HEADER}${importLines}${declaration}\n`;
     writes.push(
-      fs.writeFile(path.join(outputDir, `${typeName}${FILE_EXTENSION}`), content, "utf-8")
+      writeFile(join(outputDir, `${typeName}${FILE_EXTENSION}`), content, "utf-8")
     );
   }
   await Promise.all(writes);

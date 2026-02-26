@@ -1,4 +1,15 @@
-import * as ts from "typescript";
+import type { ClassDeclaration, Decorator, MethodDeclaration, ModifierLike, ParameterDeclaration, PropertyDeclaration, SourceFile } from "typescript";
+import {
+  isArrowFunction,
+  isCallExpression,
+  isDecorator,
+  isFunctionExpression,
+  isIdentifier,
+  isMethodDeclaration,
+  isPropertyDeclaration,
+  isTypeReferenceNode,
+  SyntaxKind
+} from "typescript";
 
 import type {
   ComponentDefinitionEvent,
@@ -39,9 +50,9 @@ const LIT_LIFECYCLE_METHODS = new Set([
  * Check if a method is public (not a Lit lifecycle method, private, protected, or decorated)
  */
 const isPublicMethod = (
-  member: ts.MethodDeclaration | ts.PropertyDeclaration
+  member: MethodDeclaration | PropertyDeclaration
 ): boolean => {
-  if (!ts.isIdentifier(member.name)) {
+  if (!isIdentifier(member.name)) {
     return false;
   }
 
@@ -60,10 +71,10 @@ const isPublicMethod = (
   // Check for access modifiers
   if (member.modifiers) {
     const hasPrivateModifier = member.modifiers.some(
-      (mod: ts.ModifierLike) => mod.kind === ts.SyntaxKind.PrivateKeyword
+      (mod: ModifierLike) => mod.kind === SyntaxKind.PrivateKeyword
     );
     const hasProtectedModifier = member.modifiers.some(
-      (mod: ts.ModifierLike) => mod.kind === ts.SyntaxKind.ProtectedKeyword
+      (mod: ModifierLike) => mod.kind === SyntaxKind.ProtectedKeyword
     );
 
     if (hasPrivateModifier || hasProtectedModifier) {
@@ -78,11 +89,11 @@ const isPublicMethod = (
  * Extract property information
  */
 const extractProperty = (
-  member: ts.PropertyDeclaration,
-  decorator: ts.Decorator,
-  sourceFile: ts.SourceFile
+  member: PropertyDeclaration,
+  decorator: Decorator,
+  sourceFile: SourceFile
 ): ComponentDefinitionProperty | null => {
-  if (!ts.isIdentifier(member.name)) {
+  if (!isIdentifier(member.name)) {
     return null;
   }
 
@@ -128,10 +139,10 @@ const extractProperty = (
  * Extract event information
  */
 const extractEvent = (
-  member: ts.PropertyDeclaration,
-  sourceFile: ts.SourceFile
+  member: PropertyDeclaration,
+  sourceFile: SourceFile
 ): ComponentDefinitionEvent | null => {
-  if (!ts.isIdentifier(member.name)) {
+  if (!isIdentifier(member.name)) {
     return null;
   }
 
@@ -140,7 +151,7 @@ const extractEvent = (
 
   // Extract EventEmitter generic type for detail type
   let detailType = "void";
-  if (member.type && ts.isTypeReferenceNode(member.type)) {
+  if (member.type && isTypeReferenceNode(member.type)) {
     const typeArgs = member.type.typeArguments;
     if (typeArgs && typeArgs.length > 0) {
       detailType = sourceFile.text
@@ -160,26 +171,26 @@ const extractEvent = (
  * Extract method information
  */
 const extractMethod = (
-  member: ts.MethodDeclaration | ts.PropertyDeclaration,
-  sourceFile: ts.SourceFile
+  member: MethodDeclaration | PropertyDeclaration,
+  sourceFile: SourceFile
 ): ComponentDefinitionMethod | null => {
-  if (!ts.isIdentifier(member.name)) {
+  if (!isIdentifier(member.name)) {
     return null;
   }
 
-  let parameters: ts.ParameterDeclaration[] = [];
+  let parameters: ParameterDeclaration[] = [];
   let returnType = "void";
 
-  if (ts.isMethodDeclaration(member)) {
+  if (isMethodDeclaration(member)) {
     parameters = Array.from(member.parameters);
     returnType = member.type
       ? sourceFile.text.substring(member.type.pos, member.type.end).trim()
       : "void";
-  } else if (ts.isPropertyDeclaration(member) && member.initializer) {
+  } else if (isPropertyDeclaration(member) && member.initializer) {
     // Check if it's an arrow function or function expression
     if (
-      ts.isArrowFunction(member.initializer) ||
-      ts.isFunctionExpression(member.initializer)
+      isArrowFunction(member.initializer) ||
+      isFunctionExpression(member.initializer)
     ) {
       parameters = Array.from(member.initializer.parameters);
       returnType = member.initializer.type
@@ -198,7 +209,7 @@ const extractMethod = (
   const jsDoc = extractMemberJSDoc(member);
 
   const paramTypes = parameters.map(param => {
-    const paramName = ts.isIdentifier(param.name) ? param.name.text : "unknown";
+    const paramName = isIdentifier(param.name) ? param.name.text : "unknown";
     const paramType = param.type
       ? sourceFile.text.substring(param.type.pos, param.type.end).trim()
       : "any";
@@ -222,8 +233,8 @@ const extractMethod = (
  * Extract all class members (properties, events, methods) in a single pass for performance
  */
 export const extractClassMembers = (
-  classDeclaration: ts.ClassDeclaration,
-  sourceFile: ts.SourceFile
+  classDeclaration: ClassDeclaration,
+  sourceFile: SourceFile
 ): [
   ComponentDefinitionProperty[],
   ComponentDefinitionEvent[],
@@ -235,42 +246,42 @@ export const extractClassMembers = (
 
   classDeclaration.members.forEach(member => {
     // Get modifiers safely
-    const modifiers = (member as ts.PropertyDeclaration | ts.MethodDeclaration)
+    const modifiers = (member as PropertyDeclaration | MethodDeclaration)
       .modifiers;
 
     // Check for @property or @prop decorators
     const propertyDecorator = modifiers?.find(
-      (mod): mod is ts.Decorator =>
-        ts.isDecorator(mod) &&
-        ts.isCallExpression(mod.expression) &&
-        ts.isIdentifier(mod.expression.expression) &&
+      (mod): mod is Decorator =>
+        isDecorator(mod) &&
+        isCallExpression(mod.expression) &&
+        isIdentifier(mod.expression.expression) &&
         (mod.expression.expression.text === "property" ||
           mod.expression.expression.text === "Prop")
     );
 
     // Check for @Event decorator
     const eventDecorator = modifiers?.find(
-      (mod): mod is ts.Decorator =>
-        ts.isDecorator(mod) &&
-        ts.isCallExpression(mod.expression) &&
-        ts.isIdentifier(mod.expression.expression) &&
+      (mod): mod is Decorator =>
+        isDecorator(mod) &&
+        isCallExpression(mod.expression) &&
+        isIdentifier(mod.expression.expression) &&
         mod.expression.expression.text === "Event"
     );
 
     // Check for @Observe or @Watch decorators
     const watchDecorator = modifiers?.find(
-      (mod): mod is ts.Decorator =>
-        ts.isDecorator(mod) &&
-        ts.isCallExpression(mod.expression) &&
-        ts.isIdentifier(mod.expression.expression) &&
+      (mod): mod is Decorator =>
+        isDecorator(mod) &&
+        isCallExpression(mod.expression) &&
+        isIdentifier(mod.expression.expression) &&
         (mod.expression.expression.text === "Observe" ||
           mod.expression.expression.text === "Watch")
     );
 
     if (
       propertyDecorator &&
-      ts.isPropertyDeclaration(member) &&
-      ts.isIdentifier(member.name)
+      isPropertyDeclaration(member) &&
+      isIdentifier(member.name)
     ) {
       const property = extractProperty(member, propertyDecorator, sourceFile);
       if (property) {
@@ -278,16 +289,16 @@ export const extractClassMembers = (
       }
     } else if (
       eventDecorator &&
-      ts.isPropertyDeclaration(member) &&
-      ts.isIdentifier(member.name)
+      isPropertyDeclaration(member) &&
+      isIdentifier(member.name)
     ) {
       const event = extractEvent(member, sourceFile);
       if (event) {
         events.push(event);
       }
     } else if (
-      (ts.isMethodDeclaration(member) || ts.isPropertyDeclaration(member)) &&
-      ts.isIdentifier(member.name) &&
+      (isMethodDeclaration(member) || isPropertyDeclaration(member)) &&
+      isIdentifier(member.name) &&
       !propertyDecorator &&
       !eventDecorator &&
       !watchDecorator && // Exclude @Observe decorated methods
