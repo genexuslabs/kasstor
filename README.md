@@ -49,6 +49,10 @@
 
   - [Example component](#example-component)
 
+  - [Entry point](#entry-point)
+
+  - [Start the dev server](#start-the-dev-server)
+
 - [Requirements and best fit](#requirements-and-best-fit)
 
 - [Packages](#packages)
@@ -86,7 +90,7 @@ Setup for a **Vite** project (recommended): install dependencies, configure Vite
 
 ```bash
 npm i @genexus/kasstor-core
-npm i -D @genexus/vite-plugin-kasstor
+npm i -D @genexus/vite-plugin-kasstor vite typescript
 ```
 
 You do **not** need to install `@genexus/kasstor-build` or `@genexus/kasstor-insights` when using the Vite plugin: the plugin integrates build tooling and optional performance insights for you.
@@ -98,10 +102,11 @@ A minimal layout. Use the **`.lit.ts`** (or `.lit.js`) extension for component f
 ```
 project/
 ├── src/
-│   ├── main.ts              (or index.html entry)
-│   └── components/
-│       ├── counter.lit.ts
-│       └── counter.scss
+│   ├── components/
+│   │   ├── counter.lit.ts
+│   │   └── counter.scss
+│   └── main.ts
+├── index.html
 ├── tsconfig.json
 ├── vite.config.ts
 └── package.json
@@ -246,6 +251,55 @@ html`<app-counter
   @countChanged=${(e: CustomEvent<number>) => console.log(e.detail)}
 ></app-counter>`;
 ```
+
+### Entry point
+
+If you are starting from scratch, create an `index.html` at the project root and a `src/main.ts` that imports your component.
+
+**index.html**
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My App</title>
+    <script type="module" src="./src/main.ts"></script>
+  </head>
+  <body>
+    <app-counter count="0"></app-counter>
+  </body>
+</html>
+```
+
+**src/main.ts**
+
+Importing the component file runs `@Component`, which registers `<app-counter>` as a custom element. Without this import the browser does not know the tag and it will not render.
+
+```ts
+import "./components/counter.lit.js";
+```
+
+### Start the dev server
+
+Add a `dev` script to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "vite --open"
+  }
+}
+```
+
+Then run:
+
+```bash
+npm run dev
+```
+
+Vite will start the dev server with HMR enabled and open your browser automatically.
 
 ## Requirements and best fit
 
