@@ -143,6 +143,24 @@ export type ComponentShadowRootOptions = {
 };
 ```
 
+### `scheduleUpdate` Override
+
+`KasstorElement` overrides `scheduleUpdate()` to optimize initial render performance by reducing Total Blocking Time (TBT) when many components mount simultaneously.
+
+If you override `scheduleUpdate()`, you **must** call `await super.scheduleUpdate()` to preserve Kasstor's optimizations and allow the update to proceed:
+
+```ts
+@Component({ tag: "my-element" })
+export class MyElement extends KasstorElement {
+  protected override async scheduleUpdate(): Promise<void> {
+    await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)));
+    await super.scheduleUpdate();
+  }
+}
+```
+
+Forgetting to call `await super.scheduleUpdate()` will prevent the component from rendering.
+
 ## Event
 
 The `@Event` decorator provides an easier way to define and dispatch custom DOM events with type safety and proper event configuration.
@@ -244,11 +262,8 @@ The `@Observe` decorator executes a callback when observed properties change, e.
 ```ts
 // observe-example.lit.ts
 
-import {
-  Component,
-  KasstorElement,
-  Observe
-} from "@genexus/kasstor-core/decorators/component.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
+import { Observe } from "@genexus/kasstor-core/decorators/observe.js";
 import { html } from "lit";
 import { property, state } from "lit/decorators.js";
 
@@ -277,3 +292,4 @@ export class MyObserveExample extends KasstorElement {
   }
 }
 ```
+
