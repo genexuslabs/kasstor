@@ -48,7 +48,7 @@ Setup for a **Vite** project (recommended): install dependencies, configure Vite
 
 ```bash
 npm i @genexus/kasstor-core
-npm i -D @genexus/vite-plugin-kasstor vite typescript
+npm i -D @genexus/vite-plugin-kasstor vite typescript sass
 ```
 
 You do **not** need to install `@genexus/kasstor-build` or `@genexus/kasstor-insights` when using the Vite plugin: the plugin integrates build tooling and optional performance insights for you.
