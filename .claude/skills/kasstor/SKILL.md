@@ -245,19 +245,22 @@ Importing the component file runs `@Component`, which registers `<app-counter>` 
 import "./components/counter.lit.js";
 ```
 
-### Start the dev server
+### Project configuration
 
-Add a `dev` script to your `package.json`:
+Ensure your project is configured to use ES modules and includes a development script:
 
 ```json
 {
+  "type": "module",
   "scripts": {
     "dev": "vite --open"
   }
 }
 ```
 
-Then run:
+### Start the development server
+
+Run:
 
 ```bash
 npm run dev
