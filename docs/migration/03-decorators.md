@@ -11,6 +11,7 @@ Lit's `@property()` decorator replaces Stencil's `@Prop()`. The main differences
 - For complex types (objects, arrays), use `attribute: false` to disable attribute reflection.
 - All properties are internally mutable — there is no `mutable` option.
 - `reflect: true` works the same way.
+- **camelCase attributes:** StencilJS automatically converts camelCase property names to dash-case attributes (e.g. `welcomeCaption` → `welcome-caption`). Lit instead lowercases the name (e.g. `welcomeCaption` → `welcomecaption`). To preserve the same HTML attribute, add `attribute: "dash-case-name"` explicitly.
 
 **StencilJS:**
 
@@ -23,11 +24,15 @@ export class MySlider {
   @Prop({ reflect: true }) disabled: boolean = false;
   @Prop() value: number = 50;
   @Prop({ mutable: true }) selectedItem: string | undefined;
-  @Prop({ attribute: "max-value" }) maxValue: number = 100;
+  @Prop() maxValue: number = 100;
   @Prop() items: string[] = [];
 
   render() {
-    return <div>{this.label}: {this.value}</div>;
+    return (
+      <div>
+        {this.label}: {this.value}
+      </div>
+    );
   }
 }
 ```
@@ -44,7 +49,7 @@ export class MySlider extends KasstorElement {
   @property() label: string = "Volume";
   @property({ type: Boolean, reflect: true }) disabled: boolean = false;
   @property({ type: Number }) value: number = 50;
-  @property() selectedItem: string | undefined;
+  @property({ attribute: "selected-item" }) selectedItem: string | undefined;
   @property({ attribute: "max-value", type: Number }) maxValue: number = 100;
   @property({ attribute: false }) items: string[] = [];
 
@@ -54,7 +59,7 @@ export class MySlider extends KasstorElement {
 }
 ```
 
-> **Tip:** When the attribute is just the dash-case version of the property name (e.g. `maxValue` → `max-value`), Lit handles the conversion automatically, so `attribute: "max-value"` is optional for `maxValue`. However, explicit is often clearer.
+> **Important:** StencilJS automatically maps camelCase properties to dash-case attributes (e.g. `maxValue` → `max-value`), but Lit lowercases the property name instead (e.g. `maxValue` → `maxvalue`). When migrating camelCase properties, always add `attribute: "dash-case-name"` to preserve the original HTML attribute name.
 
 ## `@State()` → `@state()`
 
@@ -109,18 +114,21 @@ Kasstor provides its own `@Event` decorator that works similarly to Stencil's. T
 ```tsx
 import { Component, Event, EventEmitter, h } from "@stencil/core";
 
-@Component({ tag: "my-input", shadow: true })
-export class MyInput {
-  @Event() valueChanged: EventEmitter<string>;
-  @Event({ bubbles: false }) internalUpdate: EventEmitter<void>;
+@Component({ tag: "my-data-grid", shadow: true })
+export class MyDataGrid {
+  @Event() sortChange: EventEmitter<{ column: string; direction: "asc" | "desc" }>;
+  @Event({ bubbles: false }) rowSelect: EventEmitter<string>;
 
-  handleInput(e: InputEvent) {
-    this.valueChanged.emit((e.target as HTMLInputElement).value);
-    this.internalUpdate.emit();
+  handleSort(column: string) {
+    this.sortChange.emit({ column, direction: "asc" });
+  }
+
+  handleRowClick(id: string) {
+    this.rowSelect.emit(id);
   }
 
   render() {
-    return <input onInput={(e) => this.handleInput(e)} />;
+    return <div>...</div>;
   }
 }
 ```
@@ -132,24 +140,26 @@ import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/comp
 import { Event, type EventEmitter } from "@genexus/kasstor-core/decorators/event.js";
 import { html } from "lit";
 
-@Component({ tag: "my-input" })
-export class MyInput extends KasstorElement {
-  @Event() protected valueChanged!: EventEmitter<string>;
-  @Event({ bubbles: false }) protected internalUpdate!: EventEmitter<void>;
+@Component({ tag: "my-data-grid" })
+export class MyDataGrid extends KasstorElement {
+  @Event() protected sortChange!: EventEmitter<{ column: string; direction: "asc" | "desc" }>;
+  @Event({ bubbles: false }) protected rowSelect!: EventEmitter<string>;
 
-  #handleInput = (e: InputEvent) => {
-    const eventInfo = this.valueChanged.emit((e.target as HTMLInputElement).value);
+  #handleSort = (column: string) => {
+    const eventInfo = this.sortChange.emit({ column, direction: "asc" });
 
     // You can check if a listener called preventDefault()
     if (eventInfo.defaultPrevented) {
       // Handle cancellation
     }
+  };
 
-    this.internalUpdate.emit();
+  #handleRowClick = (id: string) => {
+    this.rowSelect.emit(id);
   };
 
   override render() {
-    return html`<input @input=${this.#handleInput} />`;
+    return html`<div>...</div>`;
   }
 }
 ```
@@ -173,14 +183,6 @@ import { Component, Prop, Watch, h } from "@stencil/core";
 @Component({ tag: "my-tabs", shadow: true })
 export class MyTabs {
   @Prop() selectedIndex: number = 0;
-  @Prop() items: string[] = [];
-
-  // Watch does NOT fire on the initial value in StencilJS.
-  // You must duplicate logic in connectedCallback for initialization.
-  connectedCallback() {
-    this.validateIndex(this.selectedIndex);
-  }
-
   @Watch("selectedIndex")
   validateIndex(newValue: number) {
     if (newValue < 0 || newValue >= this.items.length) {
@@ -188,9 +190,16 @@ export class MyTabs {
     }
   }
 
+  @Prop() items: string[] = [];
   @Watch("items")
   onItemsChanged() {
     this.selectedIndex = 0;
+  }
+
+  // Watch does NOT fire on the initial value in StencilJS.
+  // You must duplicate logic in connectedCallback for initialization.
+  connectedCallback() {
+    this.validateIndex(this.selectedIndex);
   }
 
   render() {
@@ -210,7 +219,6 @@ import { property } from "lit/decorators/property.js";
 @Component({ tag: "my-tabs" })
 export class MyTabs extends KasstorElement {
   @property({ type: Number }) selectedIndex: number = 0;
-  @property({ attribute: false }) items: string[] = [];
 
   // Observe fires on the initial value too — no need for connectedCallback duplication
   @Observe("selectedIndex")
@@ -221,6 +229,7 @@ export class MyTabs extends KasstorElement {
     }
   }
 
+  @property({ attribute: false }) items: string[] = [];
   @Observe("items")
   protected onItemsChanged() {
     this.selectedIndex = 0;
@@ -250,10 +259,12 @@ In Kasstor, there is no `@Method` decorator. Simply define a regular class metho
 **StencilJS:**
 
 ```tsx
-import { Component, Method, h } from "@stencil/core";
+import { Component, Method, State, h } from "@stencil/core";
 
 @Component({ tag: "my-dialog", shadow: true })
 export class MyDialog {
+  @State() isVisible: boolean = false;
+
   @Method()
   async open() {
     // Even though this is synchronous, Stencil forces it to be async
@@ -370,8 +381,6 @@ export class MyShortcuts extends KasstorElement {
 }
 ```
 
-> **Important:** Use arrow functions or private class fields for handlers so that `this` is correctly bound. Always call `super.connectedCallback()` and `super.disconnectedCallback()`.
-
 ## `ElementInternals`
 
 In StencilJS, you use the `@AttachInternals` decorator and `formAssociated: true` at the component level. In Kasstor, call `this.attachInternals()` directly and set `formAssociated` inside the `shadow` option.
@@ -379,7 +388,7 @@ In StencilJS, you use the `@AttachInternals` decorator and `formAssociated: true
 **StencilJS:**
 
 ```tsx
-import { AttachInternals, Component, Prop, h } from "@stencil/core";
+import { AttachInternals, Component, Prop, Watch, h } from "@stencil/core";
 
 @Component({
   tag: "my-checkbox",
@@ -391,7 +400,14 @@ export class MyCheckbox {
   @Prop({ mutable: true }) checked: boolean = false;
   @Prop() value: string = "on";
 
-  componentWillLoad() {
+  // Watch does NOT fire on the initial value — must duplicate in connectedCallback
+  connectedCallback() {
+    this.updateFormValue();
+  }
+
+  @Watch("checked")
+  @Watch("value")
+  updateFormValue() {
     this.internals.setFormValue(this.checked ? this.value : null);
   }
 
@@ -405,6 +421,7 @@ export class MyCheckbox {
 
 ```ts
 import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
+import { Observe } from "@genexus/kasstor-core/decorators/observe.js";
 import { html } from "lit";
 import { property } from "lit/decorators/property.js";
 
@@ -418,7 +435,9 @@ export class MyCheckbox extends KasstorElement {
   @property({ type: Boolean }) checked: boolean = false;
   @property() value: string = "on";
 
-  protected override firstWillUpdate() {
+  // Observe fires on the initial value — no connectedCallback duplication needed
+  @Observe(["checked", "value"])
+  protected updateFormValue() {
     this.#internals.setFormValue(this.checked ? this.value : null);
   }
 

@@ -44,3 +44,8 @@ This guide walks you through migrating a StencilJS project to **Kasstor**, a Lit
 | `@stencil/store` | `@genexus/kasstor-signals` | Reactive signals with `signal()`, `computed()`, `effect()` |
 | `.tsx` extension | `.lit.ts` extension | Required for HMR and build analysis |
 | Jest + Puppeteer | Vitest + Playwright | `await el.updateComplete` instead of `page.waitForChanges()` |
+
+## Best Practices
+
+- **Event handler binding:** Use arrow functions or private class fields (`#handler = () => { ... }`) for event handlers so that `this` is correctly bound. Regular methods lose their `this` context when passed as callbacks.
+- **Always call `super` in lifecycle hooks:** When overriding `connectedCallback()`, call `super.connectedCallback()` first. When overriding `disconnectedCallback()`, call `super.disconnectedCallback()` last.

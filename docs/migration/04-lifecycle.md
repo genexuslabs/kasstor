@@ -13,7 +13,7 @@ connectedCallback → componentWillLoad → componentWillRender → render → c
 ### Kasstor/Lit First Render
 
 ```
-connectedCallback → @Observe callbacks → firstWillUpdate → willUpdate → render → firstUpdated → updated
+connectedCallback → scheduleUpdate → @Observe callbacks → firstWillUpdate → shouldUpdate → willUpdate → render → firstUpdated → updated → updateComplete
 ```
 
 ### StencilJS Subsequent Updates
@@ -25,46 +25,50 @@ componentShouldUpdate → componentWillUpdate → componentWillRender → render
 ### Kasstor/Lit Subsequent Updates
 
 ```
-@Observe callbacks → shouldUpdate → willUpdate → render → updated
+scheduleUpdate → @Observe callbacks → shouldUpdate → willUpdate → render → updated → updateComplete
 ```
 
 ## Mapping Table
 
-| StencilJS | Kasstor / Lit | Key Differences |
-| --- | --- | --- |
-| `connectedCallback()` | `override connectedCallback()` | **Must call `super.connectedCallback()`** at the start |
-| `disconnectedCallback()` | `override disconnectedCallback()` | **Must call `super.disconnectedCallback()`** at the end |
-| `componentWillLoad()` | `protected override firstWillUpdate()` | Kasstor's `firstWillUpdate` is SSR-safe and runs once before the first render. Setting properties here does not trigger an extra update. |
-| `componentDidLoad()` | `override firstUpdated()` | Runs once after the first render. DOM is available. Setting properties here triggers a new update. |
-| `componentWillRender()` | `override willUpdate(changedProperties)` | Runs before every render (including the first). Receives a `PropertyValues` map. |
-| `componentDidRender()` | `override updated(changedProperties)` | Runs after every render. Receives a `PropertyValues` map. |
-| `componentWillUpdate()` | `override willUpdate(changedProperties)` | Same as `componentWillRender`. In Stencil these were separate; in Lit they are the same hook. |
-| `componentDidUpdate()` | `override updated(changedProperties)` | Same as `componentDidRender`. |
-| `componentShouldUpdate()` | `override shouldUpdate(changedProperties)` | Return `false` to skip the render. |
+| StencilJS                 | Kasstor / Lit                              | Key Differences                                                                                                                          |
+| ------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `connectedCallback()`     | `override connectedCallback()`             | **Must call `super.connectedCallback()`** at the start                                                                                   |
+| `disconnectedCallback()`  | `override disconnectedCallback()`          | **Must call `super.disconnectedCallback()`** at the end                                                                                  |
+| `componentWillLoad()`     | `protected override firstWillUpdate()`     | Kasstor's `firstWillUpdate` is SSR-safe and runs once before the first render. Setting properties here does not trigger an extra update. |
+| `componentDidLoad()`      | `override firstUpdated()`                  | Runs once after the first render. DOM is available. Setting properties here triggers a new update.                                       |
+| `componentWillRender()`   | `override willUpdate(changedProperties)`   | Runs before every render (including the first). Receives a `PropertyValues` map.                                                         |
+| `componentDidRender()`    | `override updated(changedProperties)`      | Runs after every render. Receives a `PropertyValues` map.                                                                                |
+| `componentWillUpdate()`   | `override willUpdate(changedProperties)`   | Same as `componentWillRender`. In Stencil these were separate; in Lit they are the same hook.                                            |
+| `componentDidUpdate()`    | `override updated(changedProperties)`      | Same as `componentDidRender`.                                                                                                            |
+| `componentShouldUpdate()` | `override shouldUpdate(changedProperties)` | Return `false` to skip the render. In Stencil this only runs on re-renders; in Lit it runs on **every** update including the first.      |
+| _(no equivalent)_         | `protected override scheduleUpdate()`      | Controls when the update runs. Kasstor overrides it to reduce Total Blocking Time. Must `await super.scheduleUpdate()`.                  |
+| _(no equivalent)_         | `updateComplete`                           | Promise that resolves when the update cycle finishes. Useful in tests: `await el.updateComplete`.                                        |
 
-## Critical Rule: Always Call `super`
+## When to Call `super`
 
-In Lit/Kasstor, lifecycle methods are real class methods on `KasstorElement` (which extends `LitElement`). If you override them without calling `super`, the component will not work correctly — `@Observe` callbacks, `firstWillUpdate`, rendering, and other internal mechanics depend on the parent implementation.
+Not all overrides require `super`. Kasstor injects its internal hooks (`@Observe` callbacks, `firstWillUpdate`) via monkey-patching in the constructor, so `willUpdate` and `updated` are safe to override without calling `super` — their base implementations in `LitElement` are no-ops.
+
+`connectedCallback` and `disconnectedCallback` are the exception: they do real work in `LitElement` and **must** call `super`.
 
 ```ts
-// CORRECT
+// connectedCallback: call super FIRST
 override connectedCallback() {
-  super.connectedCallback(); // Call super FIRST
+  super.connectedCallback();
   // Your logic here
 }
 
+// disconnectedCallback: call super LAST
 override disconnectedCallback() {
   // Your cleanup here
-  super.disconnectedCallback(); // Call super LAST
+  super.disconnectedCallback();
 }
 
+// willUpdate and updated: super not required (base is a no-op)
 override willUpdate(changedProperties: PropertyValues) {
-  super.willUpdate(changedProperties);
   // Your logic here
 }
 
 override updated(changedProperties: PropertyValues) {
-  super.updated(changedProperties);
   // Your logic here
 }
 
@@ -85,24 +89,23 @@ override connectedCallback() {
 
 ```ts
 protected override firstWillUpdate(): void {
-  // Initialize values, compute derived state, set form values, etc.
-  this.#internals.setFormValue(this.checked ? this.value : null);
+  // One-time setup before the first render. No need to call super.firstWillUpdate()
+  this.#uniqueId = `${this.tagName.toLowerCase()}-${crypto.randomUUID()}`;
 }
 ```
 
 ## `scheduleUpdate` — Controlling Update Timing
 
-`KasstorElement` overrides `scheduleUpdate()` to optimize initial render performance (reduces Total Blocking Time when many components mount at once).
+`KasstorElement` already overrides `scheduleUpdate()` internally to optimize render performance (reduces Total Blocking Time when many components mount at once). **You do not need to override it** for performance reasons — Kasstor handles this automatically.
 
-If you need to customize update timing, you can override `scheduleUpdate()`. **You must `await super.scheduleUpdate()`** to preserve Kasstor's optimizations and ensure the update proceeds:
+You only need to override `scheduleUpdate()` in advanced cases where you need to defer the update for a specific domain reason (e.g., synchronizing with an external animation loop). If you do, **you must `await super.scheduleUpdate()`** to preserve Kasstor's optimizations and ensure the update proceeds:
 
 ```ts
 @Component({ tag: "my-element" })
 export class MyElement extends KasstorElement {
-  // Schedule updates just before the next animation frame
   protected override async scheduleUpdate(): Promise<void> {
-    await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)));
     await super.scheduleUpdate();
+    await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)));
   }
 }
 ```
@@ -141,14 +144,14 @@ export class MyPanel {
     console.log("Will load");
   }
 
-  componentDidLoad() {
-    // Runs once after first render — DOM is ready
-    console.log("Did load:", this.el.offsetHeight);
-  }
-
   componentWillRender() {
     // Runs before every render
     console.log("Will render");
+  }
+
+  componentDidLoad() {
+    // Runs once after first render — DOM is ready
+    console.log("Did load:", this.el.offsetHeight);
   }
 
   componentDidRender() {
@@ -203,20 +206,18 @@ export class MyPanel extends KasstorElement {
     console.log("First will update");
   }
 
+  override willUpdate(changedProperties: PropertyValues): void {
+    // Runs before every render (replaces componentWillRender / componentWillUpdate)
+    console.log("Will update");
+  }
+
   override firstUpdated(): void {
     // Runs once after first render — DOM is ready (replaces componentDidLoad)
     // `this` is the host element — no need for @Element
     console.log("First updated:", this.offsetHeight);
   }
 
-  override willUpdate(changedProperties: PropertyValues): void {
-    super.willUpdate(changedProperties);
-    // Runs before every render (replaces componentWillRender / componentWillUpdate)
-    console.log("Will update");
-  }
-
   override updated(changedProperties: PropertyValues): void {
-    super.updated(changedProperties);
     // Runs after every render (replaces componentDidRender / componentDidUpdate)
     console.log("Updated");
   }
@@ -255,7 +256,7 @@ export class MyPanel extends KasstorElement {
 
 3. **`willUpdate` and `updated` receive `changedProperties`.** This `PropertyValues` map lets you check which properties changed: `changedProperties.has("title")`. Stencil's `componentShouldUpdate` received `(newValue, oldValue, propName)`.
 
-4. **All lifecycle methods that you override must call `super`.** This is the most common migration mistake. Stencil's lifecycle methods were standalone hooks; Lit's are real overrides.
+4. **`connectedCallback` and `disconnectedCallback` must call `super`** — they do real work in `LitElement`. `willUpdate` and `updated` do not require `super` (their base implementations are no-ops). This is the most common migration mistake: Stencil's lifecycle methods were standalone hooks; in Kasstor, `connectedCallback`/`disconnectedCallback` are real overrides that must chain up.
 
 ---
 
