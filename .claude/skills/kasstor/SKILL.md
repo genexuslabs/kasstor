@@ -63,7 +63,8 @@ project/
 │   ├── components/
 │   │   ├── counter.lit.ts
 │   │   └── counter.scss
-│   └── main.ts
+│   ├── main.ts
+│   └── vite-env.d.ts        ← required for ?inline imports
 ├── index.html
 ├── tsconfig.json
 ├── vite.config.ts
@@ -128,6 +129,17 @@ A working baseline (adjust paths and options to your project):
 ```
 
 If you use a different build tool or emit TypeScript yourself, keep at least `experimentalDecorators: true` and `useDefineForClassFields: false`.
+
+### Vite environment types
+
+Create `src/vite-env.d.ts` with the following content so TypeScript recognizes Vite-specific import suffixes like `?inline` (used when importing SCSS/CSS files):
+
+```ts
+// eslint-disable-next-line spaced-comment
+/// <reference types="vite/client" />
+```
+
+Without this file, TypeScript will report an error on any `import styles from './component.scss?inline'` line.
 
 ### Example component
 
