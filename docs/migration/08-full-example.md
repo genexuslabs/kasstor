@@ -178,15 +178,13 @@ export class MyFormField {
           onBlur={this.handleBlur}
         />
 
-        {this.errorMessage && (
-          <span class="error">{this.errorMessage}</span>
-        )}
+        {this.errorMessage && <span class="error">{this.errorMessage}</span>}
 
         {this.items.length > 0 && (
           <Fragment>
             <hr />
             <ul>
-              {this.items.map((item) => (
+              {this.items.map(item => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -205,14 +203,8 @@ export class MyFormField {
 **my-form-field.lit.ts**
 
 ```ts
-import {
-  Component,
-  KasstorElement
-} from "@genexus/kasstor-core/decorators/component.js";
-import {
-  Event,
-  type EventEmitter
-} from "@genexus/kasstor-core/decorators/event.js";
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
+import { Event, type EventEmitter } from "@genexus/kasstor-core/decorators/event.js";
 import { Observe } from "@genexus/kasstor-core/decorators/observe.js";
 import { html, nothing, type PropertyValues } from "lit";
 import { property } from "lit/decorators/property.js";
@@ -291,9 +283,10 @@ export class MyFormField extends KasstorElement {
   }
 
   override disconnectedCallback() {
+    super.disconnectedCallback();
+
     // Clean up listeners before calling super
     window.removeEventListener("keydown", this.#handleGlobalKeyDown);
-    super.disconnectedCallback(); // Always call super last
   }
 
   protected override firstWillUpdate(): void {
@@ -383,10 +376,7 @@ export class MyFormField extends KasstorElement {
         @blur=${this.#handleBlur}
       />
 
-      ${this.errorMessage
-        ? html`<span class="error">${this.errorMessage}</span>`
-        : nothing}
-
+      ${this.errorMessage ? html`<span class="error">${this.errorMessage}</span>` : nothing}
       ${this.items.length > 0
         ? html`
             <hr />
@@ -404,30 +394,31 @@ export class MyFormField extends KasstorElement {
 
 ## Summary of All Changes
 
-| # | What Changed | Why |
-| --- | --- | --- |
-| 1 | File extension `.tsx` → `.lit.ts` | Required for Vite plugin HMR and build analysis |
-| 2 | `extends KasstorElement` | All Kasstor components must extend this base class |
-| 3 | `import styles from "./x.scss?inline"` | Styles are imported as strings, not referenced by path |
-| 4 | `shadow: { formAssociated: true }` | `formAssociated` is inside the `shadow` option |
-| 5 | `#internals = this.attachInternals()` | No `@AttachInternals` decorator — direct call |
-| 6 | `@query("input")` | Replaces `@Element` + manual shadow DOM query |
-| 7 | `@property({ type: Number })` | Must specify `type` for non-string properties |
-| 8 | `@property({ attribute: false })` | For arrays/objects, disable attribute handling |
-| 9 | `@state() private` | Must add access modifier for strict TypeScript |
-| 10 | `@Event() protected ... !: EventEmitter<T>` | Different import, `protected`, and `!` for strict TS |
-| 11 | `@Observe("value")` replaces `@Watch("value")` | Fires on initial value too — no `connectedCallback` duplication |
-| 12 | Manual `addEventListener`/`removeEventListener` | Replaces `@Listen` decorator |
-| 13 | `super.connectedCallback()` / `super.disconnectedCallback()` | Must always call `super` on lifecycle overrides |
-| 14 | `firstWillUpdate()` | Replaces `componentWillLoad` |
-| 15 | `firstUpdated()` | Replaces `componentDidLoad` |
-| 16 | `willUpdate()` / `updated()` | Replace `componentWillRender` / `componentDidRender` |
-| 17 | Plain methods (no `@Method`) | Not async by default |
-| 18 | `html\`...\`` with `@click`, `?disabled`, `.value` | Lit bindings replace JSX |
-| 19 | `nothing` instead of conditional JSX | Avoids empty text nodes |
-| 20 | `<slot></slot>` (explicit close tag) | Self-closing `<slot />` not valid in Lit templates |
-| 21 | Host class management in `render()` or `@Observe` | No `<Host>` component — use imperative DOM API |
+| #   | What Changed                                                 | Why                                                             |
+| --- | ------------------------------------------------------------ | --------------------------------------------------------------- |
+| 1   | File extension `.tsx` → `.lit.ts`                            | Required for Vite plugin HMR and build analysis                 |
+| 2   | `extends KasstorElement`                                     | All Kasstor components must extend this base class              |
+| 3   | `import styles from "./x.scss?inline"`                       | Styles are imported as strings, not referenced by path          |
+| 4   | `shadow: { formAssociated: true }`                           | `formAssociated` is inside the `shadow` option                  |
+| 5   | `#internals = this.attachInternals()`                        | No `@AttachInternals` decorator — direct call                   |
+| 6   | `@query("input")`                                            | Replaces `@Element` + manual shadow DOM query                   |
+| 7   | `@property({ type: Number })`                                | Must specify `type` for non-string properties                   |
+| 8   | `@property({ attribute: false })`                            | For arrays/objects, disable attribute handling                  |
+| 9   | `@state() private`                                           | Must add access modifier for strict TypeScript                  |
+| 10  | `@Event() protected ... !: EventEmitter<T>`                  | Different import, `protected`, and `!` for strict TS            |
+| 11  | `@Observe("value")` replaces `@Watch("value")`               | Fires on initial value too — no `connectedCallback` duplication |
+| 12  | Manual `addEventListener`/`removeEventListener`              | Replaces `@Listen` decorator                                    |
+| 13  | `super.connectedCallback()` / `super.disconnectedCallback()` | Must always call `super` on lifecycle overrides                 |
+| 14  | `firstWillUpdate()`                                          | Replaces `componentWillLoad`                                    |
+| 15  | `firstUpdated()`                                             | Replaces `componentDidLoad`                                     |
+| 16  | `willUpdate()` / `updated()`                                 | Replace `componentWillRender` / `componentDidRender`            |
+| 17  | Plain methods (no `@Method`)                                 | Not async by default                                            |
+| 18  | `html\`...\``with`@click`, `?disabled`, `.value`             | Lit bindings replace JSX                                        |
+| 19  | `nothing` instead of conditional JSX                         | Avoids empty text nodes                                         |
+| 20  | `<slot></slot>` (explicit close tag)                         | Self-closing `<slot />` not valid in Lit templates              |
+| 21  | Host class management in `render()` or `@Observe`            | No `<Host>` component — use imperative DOM API                  |
 
 ---
 
 **Back to:** [Migration Guide](./README.md)
+

@@ -33,7 +33,7 @@ scheduleUpdate → @Observe callbacks → shouldUpdate → willUpdate → render
 | StencilJS                 | Kasstor / Lit                              | Key Differences                                                                                                                          |
 | ------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `connectedCallback()`     | `override connectedCallback()`             | **Must call `super.connectedCallback()`** at the start                                                                                   |
-| `disconnectedCallback()`  | `override disconnectedCallback()`          | **Must call `super.disconnectedCallback()`** at the end                                                                                  |
+| `disconnectedCallback()`  | `override disconnectedCallback()`          | **Must call `super.disconnectedCallback()`** at the start or end                                                                         |
 | `componentWillLoad()`     | `protected override firstWillUpdate()`     | Kasstor's `firstWillUpdate` is SSR-safe and runs once before the first render. Setting properties here does not trigger an extra update. |
 | `componentDidLoad()`      | `override firstUpdated()`                  | Runs once after the first render. DOM is available. Setting properties here triggers a new update.                                       |
 | `componentWillRender()`   | `override willUpdate(changedProperties)`   | Runs before every render (including the first). Receives a `PropertyValues` map.                                                         |
@@ -207,7 +207,7 @@ export class MyPanel extends KasstorElement {
   }
 
   override willUpdate(changedProperties: PropertyValues): void {
-    // Runs before every render (replaces componentWillRender / componentWillUpdate)
+    // Runs before every render (replaces componentWillRender)
     console.log("Will update");
   }
 
@@ -261,3 +261,4 @@ export class MyPanel extends KasstorElement {
 ---
 
 **Next:** [Templates](./05-templates.md)
+

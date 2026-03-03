@@ -59,8 +59,8 @@ export class AppHeader extends KasstorElement {
   }
 
   override disconnectedCallback(): void {
-    this.#stopEffect?.();
     super.disconnectedCallback();
+    this.#stopEffect?.();
   }
 
   override render() {
@@ -165,3 +165,4 @@ export class AppSearch extends KasstorElement {
   }
 }
 ```
+

@@ -20,15 +20,17 @@ npm i @genexus/kasstor-signals
 
 ## Core Concepts
 
-| API | Description |
-| --- | --- |
-| `signal(value)` | Creates reactive state. Read: `count()`. Write: `count(5)`. |
-| `computed(() => expr)` | Memoized derived value. Lazy — only evaluates when read. |
-| `effect(() => { ... })` | Runs immediately and re-runs when dependencies change. Returns a stop function. |
-| `batch(() => { ... })` | Defers notifications — dependents update once after the callback. |
-| `untrack(() => { ... })` | Reads signals without creating a dependency. |
+| API                          | Description                                                                                                                                                                                                                                        |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `signal(value)`              | Creates reactive state. The returned function is a getter/setter: call with no arguments to **read** (`count()`), call with one argument to **write** (`count(5)`). Reading inside `computed` or `effect` automatically tracks it as a dependency. |
+| `computed(() => expr)`       | Creates a memoized derived value (read-only). **Lazy:** the computation only runs when someone reads the value, and re-runs on the next read after dependencies change. Only signals/computeds read during execution are tracked.                  |
+| `effect(() => { ... })`      | Runs the callback immediately, then re-runs whenever any tracked dependency changes. Returns a **stop function** — you must call it to dispose the effect and avoid memory leaks (e.g., in `disconnectedCallback`).                                |
+| `effectScope(() => { ... })` | Groups multiple effects/computeds into a single scope. Returns a stop function that disposes all of them at once. Useful for modular cleanup (e.g., stop everything when a component unmounts).                                                    |
+| `trigger(signal)`            | Manually notifies dependents without changing the signal's value. Use after **in-place mutations** (e.g., `arr().push(1); trigger(arr)`). Also accepts a function to trigger multiple signals: `trigger(() => { src1(); src2(); })`.               |
+| `batch(() => { ... })`       | Defers all notifications until the callback completes — dependents update only **once** instead of once per signal write. Nested batches are supported; the outer batch flushes.                                                                   |
+| `untrack(() => { ... })`     | Reads signals **without** creating a dependency. Use inside `computed` or `effect` when you need a value but don't want it to trigger re-computation.                                                                                              |
 
-All imported from `@genexus/kasstor-signals/core.js`.
+All imported from `@genexus/kasstor-signals/core.js`. For detailed API documentation and examples, use the `kasstor` skill.
 
 ## Migration Example
 
@@ -44,7 +46,7 @@ const { state, onChange } = createStore({
   count: 0
 });
 
-onChange("theme", (value) => {
+onChange("theme", value => {
   document.body.setAttribute("data-theme", value);
 });
 
@@ -62,7 +64,11 @@ export class MyHeader {
     return (
       <header>
         <span>{state.user?.name ?? "Guest"}</span>
-        <button onClick={() => { state.theme = state.theme === "light" ? "dark" : "light"; }}>
+        <button
+          onClick={() => {
+            state.theme = state.theme === "light" ? "dark" : "light";
+          }}
+        >
           Toggle theme
         </button>
         <span>Count: {state.count}</span>
@@ -119,13 +125,13 @@ export class MyHeader extends KasstorElement {
 
 ### Key Differences
 
-| `@stencil/store` | `@genexus/kasstor-signals` |
-| --- | --- |
-| `state.count` (read) | `count()` (call the signal) |
-| `state.count = 5` (write) | `count(5)` (call with a value) |
-| `onChange("prop", cb)` | `effect(() => { prop(); /* side effect */ })` |
-| Proxy-based — reads/writes look like plain objects | Explicit getter/setter functions |
-| Re-renders the entire component | Only updates the `watch()`-wrapped template parts |
+| `@stencil/store`                                   | `@genexus/kasstor-signals`                        |
+| -------------------------------------------------- | ------------------------------------------------- |
+| `state.count` (read)                               | `count()` (read the signal value)                 |
+| `state.count = 5` (write)                          | `count(5)` (write the value)                      |
+| `onChange("prop", cb)`                             | `effect(() => { prop(); /* side effect */ })`     |
+| Proxy-based — reads/writes look like plain objects | Explicit getter/setter functions                  |
+| Re-renders the entire component                    | Only updates the `watch()`-wrapped template parts |
 
 ## The `watch` Directive
 
@@ -135,10 +141,10 @@ The `watch` directive is **essential** for connecting signals to Lit templates. 
 import { watch } from "@genexus/kasstor-signals/directives/watch.js";
 
 // Correct: template updates when count changes
-html`<span>${watch(count)}</span>`
+html`<span>${watch(count)}</span>`;
 
 // Wrong: renders the initial value and never updates
-html`<span>${count()}</span>`
+html`<span>${count()}</span>`;
 ```
 
 `watch` works with both `signal` and `computed` values.
@@ -161,7 +167,9 @@ export class AppCounter extends KasstorElement {
 
   @SignalProp count: number = 0;
 
-  #increment = () => { this.count++; };
+  #increment = () => {
+    this.count++;
+  };
 
   override render() {
     // Use watch with the $ signal for pin-point updates
@@ -176,6 +184,7 @@ export class AppCounter extends KasstorElement {
 - Read/write via `this.count` as a normal property.
 - Use `this.$count` to get the raw signal (for `watch`, `computed`, `effect`, etc.).
 - `@SignalProp` does **not** trigger Lit re-renders — use `watch(this.$count)` in the template.
+- `@SignalProp` properties are **not bound to HTML attributes**. They are class-only properties and can only be set via JavaScript (e.g., `el.count = 5`). If you need attribute binding, use Lit's `@property` decorator instead.
 
 ## Triggering Full Component Updates from Signals
 
@@ -192,11 +201,12 @@ override connectedCallback() {
 }
 
 override disconnectedCallback() {
-  this.#stopEffect?.();
   super.disconnectedCallback();
+  this.#stopEffect?.();
 }
 ```
 
 ---
 
 **Next:** [Testing](./07-testing.md)
+

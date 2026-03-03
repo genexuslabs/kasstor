@@ -294,8 +294,9 @@ import type { AppMetadata } from "./app-metadata";
 export type HeaderTranslationsSchema = { title: string };
 export type FooterTranslationsSchema = { copyright: string };
 
-export type AppTranslationsSchema<T extends AppMetadata["featureId"]> =
-  T extends "header" ? HeaderTranslationsSchema : FooterTranslationsSchema;
+export type AppTranslationsSchema<T extends AppMetadata["featureId"]> = T extends "header"
+  ? HeaderTranslationsSchema
+  : FooterTranslationsSchema;
 ```
 
 **2. Base class and optional custom decorator**
@@ -318,10 +319,7 @@ import { state } from "lit/decorators";
 import type { AppMetadata } from "./typings/app-metadata";
 import type { AppTranslationsSchema } from "./typings/translation-schemas";
 
-export const AppComponent = <
-  Metadata extends AppMetadata,
-  T extends typeof AppElement<Metadata>
->(
+export const AppComponent = <Metadata extends AppMetadata, T extends typeof AppElement<Metadata>>(
   options: ComponentOptions<"app-", Metadata> & { metadata: Metadata }
 ) => Component<"app-", Metadata, T>(options);
 
@@ -422,11 +420,11 @@ export class AppGreeting extends KasstorElement {
   }
 
   override disconnectedCallback(): void {
+    super.disconnectedCallback();
     if (this.#subscriberId !== null) {
       unsubscribeToLanguageChanges(this.#subscriberId);
       this.#subscriberId = null;
     }
-    super.disconnectedCallback();
   }
 
   override render() {
@@ -434,3 +432,4 @@ export class AppGreeting extends KasstorElement {
   }
 }
 ```
+

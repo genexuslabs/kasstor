@@ -370,9 +370,9 @@ export class MyShortcuts extends KasstorElement {
   }
 
   override disconnectedCallback() {
+    super.disconnectedCallback();
     window.removeEventListener("keydown", this.#handleKeyDown);
     this.removeEventListener("click", this.#handleClick);
-    super.disconnectedCallback(); // Always call super last
   }
 
   override render() {
@@ -456,3 +456,4 @@ Key differences:
 ---
 
 **Next:** [Lifecycle](./04-lifecycle.md)
+
