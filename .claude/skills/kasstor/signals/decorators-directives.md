@@ -15,7 +15,8 @@ For correct TypeScript types when using `this.$propName`, add a `declare` for th
 
 ### Restrictions
 
-Apply to class instance fields. Initializer value is the signal's initial value.
+- Apply to class instance fields. Initializer value is the signal's initial value.
+- `@SignalProp` properties are **not bound to HTML attributes**. They are class-only properties and can only be set via JavaScript (e.g., `el.count = 5`). If you need attribute binding, use Lit's `@property` decorator instead.
 
 ### Example
 
@@ -77,6 +78,66 @@ const stop = effect(() => {
 });
 c.count = 5; // effect runs again
 stop();
+```
+
+### Example (multiple SignalProps)
+
+```ts
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
+import { SignalProp } from "@genexus/kasstor-signals/decorators/signal-prop.js";
+import { watch } from "@genexus/kasstor-signals/directives/watch.js";
+import { html } from "lit";
+import { property } from "lit/decorators/property.js";
+import { state } from "lit/decorators/state.js";
+
+/**
+ * User profile that loads name and email by userId; uses SignalProp for reactive props.
+ * @access public
+ */
+@Component({ tag: "app-user-profile" })
+export class AppUserProfile extends KasstorElement {
+  @state() isLoading = false;
+
+  /** Id of the user to load; when set, profile data is fetched. */
+  @property() userId: string = "";
+
+  /** User full name. */
+  @SignalProp name: string = "";
+
+  /** User email address. */
+  @SignalProp email: string = "";
+
+  protected async updated(changedProperties: Map<PropertyKey, unknown>): Promise<void> {
+    if (changedProperties.has("userId") && this.userId) {
+      await this.#loadUserData();
+    }
+  }
+
+  #loadUserData = async (): Promise<void> => {
+    this.isLoading = true; // Triggers update
+    try {
+      const response = await fetch(`/api/users/${this.userId}`);
+      const data = await response.json();
+      this.name = data.name;
+      this.email = data.email;
+    } finally {
+      this.isLoading = false; // Triggers update
+    }
+  };
+
+  override render() {
+    if (this.isLoading) {
+      return html`<p>Loading...</p>`;
+    }
+
+    return html`
+      <div>
+        <p><strong>Name:</strong> ${watch(this.name)}</p>
+        <p><strong>Email:</strong> ${watch(this.email)}</p>
+      </div>
+    `;
+  }
+}
 ```
 
 ## watch
