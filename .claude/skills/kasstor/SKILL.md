@@ -1,6 +1,6 @@
 ---
 name: kasstor
-description: Build web components with Kasstor, migrate from Stencil to Lit/Kasstor, or create a library/application of web components using Lit. Use when working with Kasstor, Lit-based components, Stencil migration, or when the user mentions Kasstor, kasstor-build, kasstor-core, kasstor-insights, kasstor-signals, vite-plugin-kasstor, or kasstor-webkit.
+description: Build web components with Kasstor or create a library/application of web components using Lit. Use when working with Kasstor, Lit-based components, or when the user mentions Kasstor, kasstor-build, kasstor-core, kasstor-insights, kasstor-signals, vite-plugin-kasstor, or kasstor-webkit.
 ---
 
 # Kasstor — The natural builder for the web platform
