@@ -289,3 +289,7 @@ userName("Bob"); // Logs again (we track userName)
 theme("dark"); // Logs again (we track theme)
 logLevel("debug"); // Does not log (we don't track logLevel)
 ```
+
+## Type guards
+
+- **`isSignal`**, **`isComputed`**, **`isEffect`**, **`isEffectScope`** — Return true if the value is the corresponding reactive primitive.

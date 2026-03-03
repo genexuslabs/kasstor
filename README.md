@@ -59,6 +59,8 @@
 
 - [Development](#development)
 
+- [Migrating from StencilJS](./docs/migration/README.md)
+
 - [Contributing](#contributing)
 
 ## What is Kasstor?

@@ -15,7 +15,8 @@ For correct TypeScript types when using `this.$propName`, add a `declare` for th
 
 ### Restrictions
 
-Apply to class instance fields. Initializer value is the signal's initial value.
+- Apply to class instance fields. Initializer value is the signal's initial value.
+- `@SignalProp` properties are **not bound to HTML attributes**. They are class-only properties and can only be set via JavaScript (e.g., `el.count = 5`). If you need attribute binding, use Lit's `@property` decorator instead.
 
 ### Example
 
