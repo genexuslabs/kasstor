@@ -21,8 +21,8 @@ npm i -D vitest @vitest/browser @vitest/browser-playwright playwright vitest-bro
 Optional extras:
 
 ```bash
-npm i -D @vitest/coverage-v8   # Code coverage
-npm i -D @vitest/ui             # Interactive test UI
+npm i -D @vitest/coverage-v8     # Code coverage
+npm i -D @vitest/ui              # Interactive test UI
 npm i -D vite-plugin-static-copy # Copy static assets to the test server
 ```
 
@@ -72,32 +72,64 @@ export default defineConfig({
 If you need to copy static assets to the test server (fonts, images, etc.), install `vite-plugin-static-copy` and add it to the browser project's `plugins`:
 
 ```ts
+import { playwright } from "@vitest/browser-playwright";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import { defineConfig } from "vitest/config";
 
-// Inside the browser project config:
-plugins: [
-  viteStaticCopy({
-    targets: [
-      { src: "src/assets/fonts", dest: "fonts" }
+export default defineConfig({
+  test: {
+    pool: "threads",
+    projects: [
+      // Unit tests (Node environment)
+      {
+        extends: true,
+        test: {
+          include: ["src/tests/**/*.{test,spec}.ts"],
+          name: "unit",
+          environment: "node"
+        }
+      },
+      // E2E / browser tests
+      {
+        extends: true,
+        plugins: [
+          viteStaticCopy({
+            targets: [{ src: "src/assets/fonts", dest: "fonts" }]
+          })
+        ],
+        test: {
+          exclude: ["node_modules", "dist"],
+          include: ["**/*.e2e.ts"],
+          name: "browser",
+          maxWorkers: 16,
+          browser: {
+            provider: playwright(),
+            screenshotFailures: false,
+            enabled: true,
+            headless: true,
+            instances: [{ browser: "chromium" }]
+          }
+        }
+      }
     ]
-  })
-]
+  }
+});
 ```
 
 ## Key API Changes
 
-| StencilJS (Jest + Puppeteer) | Kasstor (Vitest + Playwright) |
-| --- | --- |
+| StencilJS (Jest + Puppeteer)                         | Kasstor (Vitest + Playwright)                          |
+| ---------------------------------------------------- | ------------------------------------------------------ |
 | `import { newE2EPage } from "@stencil/core/testing"` | `import { render, cleanup } from "vitest-browser-lit"` |
-| `const page = await newE2EPage({ html: '...' })` | `render(html\`...\`)` |
-| `const el = await page.find("my-el")` | `document.querySelector("my-el")!` |
-| `await page.waitForChanges()` | `await el.updateComplete` |
-| `el.setProperty("prop", value)` | `el.prop = value` (direct assignment) |
-| `await el.callMethod("methodName", ...args)` | `el.methodName(...args)` (direct call) |
-| `const spy = await el.spyOnEvent("eventName")` | Standard Vitest spies / `addEventListener` |
-| `expect(spy).toHaveReceivedEventDetail(val)` | Check `event.detail` directly |
-| `await page.find("my-el >>> .inner")` | `el.shadowRoot!.querySelector(".inner")` |
-| `afterEach(() => {})` | `afterEach(cleanup)` |
+| `const page = await newE2EPage({ html: '...' })`     | `render(html\`...\`)`                                  |
+| `const el = await page.find("my-el")`                | `document.querySelector("my-el")!`                     |
+| `await page.waitForChanges()`                        | `await el.updateComplete`                              |
+| `el.setProperty("prop", value)`                      | `el.prop = value` (direct assignment)                  |
+| `await el.callMethod("methodName", ...args)`         | `el.methodName(...args)` (direct call)                 |
+| `const spy = await el.spyOnEvent("eventName")`       | Standard Vitest spies / `addEventListener`             |
+| `expect(spy).toHaveReceivedEventDetail(val)`         | Check `event.detail` directly                          |
+| `await page.find("my-el >>> .inner")`                | `el.shadowRoot!.querySelector(".inner")`               |
+| `afterEach(() => {})`                                | `afterEach(cleanup)`                                   |
 
 ## Migration Examples
 
@@ -219,3 +251,4 @@ describe("my-checkbox", () => {
 ---
 
 **Next:** [Full Example](./08-full-example.md)
+

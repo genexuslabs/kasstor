@@ -345,16 +345,6 @@ this.inputEl.focus();
 this.#inputRef.value?.focus();
 ```
 
-Alternatively, use Lit's `@query` decorator for a simpler approach:
-
-```ts
-import { query } from "lit/decorators/query.js";
-
-@query("input") private inputEl!: HTMLInputElement;
-
-// Access with: this.inputEl (resolved after first render)
-```
-
 ## Migrating `<Host>`
 
 StencilJS's `<Host>` virtual component let you set attributes, classes, and event listeners on the host element declaratively in `render()`. There is no equivalent in Lit. Instead, apply these imperatively.
