@@ -1,6 +1,6 @@
 {
   "name": "@genexus/vite-plugin-kasstor",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
   "description": "Vite plugin that wires @genexus/kasstor-build and @genexus/kasstor-insights into a single entry point and adds HMR for components built with @genexus/kasstor-core.",
@@ -36,9 +36,9 @@
     "**/*": "prettier --write --ignore-unknown"
   },
   "peerDependencies": {
-    "@genexus/kasstor-build": "~0.2.0",
-    "@genexus/kasstor-core": "~0.3.0",
+    "@genexus/kasstor-build": "~0.3.0",
     "@genexus/kasstor-insights": "~0.3.0",
+    "@genexus/kasstor-core": "~0.3.0",
     "oxc-resolver": "^11.10.0",
     "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
   },
