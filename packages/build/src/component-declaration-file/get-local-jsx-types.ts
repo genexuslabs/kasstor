@@ -1,25 +1,25 @@
 import { getFullJSDocWithFiresTags } from "../global-type-declarations/get-global-type-declaration.js";
-import type {
-  ComponentDefinition,
-  LibraryComponents
-} from "../typings/library-components";
+import type { ComponentDefinition, LibraryComponents } from "../typings/library-components";
 import { COMPONENT_PROPERTIES_NAMESPACE_NAMES } from "./constants.js";
 import { getComponentEventsUnionType } from "./get-component-events-union-type.js";
 
 const LOCAL_JSX_NAMESPACE = "LocalJSX";
 const SOLID_JS_NAMESPACE = "SolidJsJSX";
 
+const classNameAndChildrenProperties = (frameworkType: "solidJs" | "jsx" | "nothing") =>
+  frameworkType === "solidJs"
+    ? "{ children?: unknown; class?: string; }"
+    : "{ children?: unknown; className?: string; }";
+
 export const getComponentLocalJSXType = (
   component: ComponentDefinition,
   frameworkType: "solidJs" | "jsx" | "nothing"
 ) =>
   component.events && component.events.length !== 0
-    ? `export type ${component.className} = ${COMPONENT_PROPERTIES_NAMESPACE_NAMES[frameworkType]}.${component.className} & ${getComponentEventsUnionType(component, frameworkType)}`
-    : `export type ${component.className} = ${COMPONENT_PROPERTIES_NAMESPACE_NAMES[frameworkType]}.${component.className};`;
+    ? `export type ${component.className} = ${COMPONENT_PROPERTIES_NAMESPACE_NAMES[frameworkType]}.${component.className} & ${classNameAndChildrenProperties(frameworkType)} & ${getComponentEventsUnionType(component, frameworkType)}`
+    : `export type ${component.className} = ${COMPONENT_PROPERTIES_NAMESPACE_NAMES[frameworkType]}.${component.className} & ${classNameAndChildrenProperties(frameworkType)};`;
 
-export const getIntrinsicElementsInterface = (
-  components: LibraryComponents
-) => `
+export const getIntrinsicElementsInterface = (components: LibraryComponents) => `
   interface IntrinsicElements {${components
     .map(
       ({
