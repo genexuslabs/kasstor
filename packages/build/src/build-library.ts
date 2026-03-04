@@ -134,13 +134,11 @@ export const buildLibrary = async (
     excludedPaths,
     excludedPublicMethods,
     generatedExportTypesFilePath:
-      fileGeneration !== false &&
-      fileGeneration?.exportTypesForTheLibrary !== false
+      fileGeneration !== false && fileGeneration?.exportTypesForTheLibrary !== false
         ? join(
             process.cwd(),
             relativeComponentsSrcPath,
-            fileGeneration?.exportTypesForTheLibrary ??
-              DEFAULT_DECLARATION_FILE_NAME
+            fileGeneration?.exportTypesForTheLibrary ?? DEFAULT_DECLARATION_FILE_NAME
           )
         : undefined,
     includedPaths: includedPaths ?? DEFAULT_INCLUDED_PATHS,
@@ -268,14 +266,10 @@ export const buildLibrary = async (
       process.cwd(),
       fileGeneration?.typeDeclarationsFolder ?? DEFAULT_TYPE_DECLARATIONS_FOLDER
     );
-    const typeDeclarationsBasePath = join(
-      process.cwd(),
-      relativeComponentsSrcPath
-    );
     promises.push(
       generateTypeDeclarationsFolder(
         allLibraryComponents,
-        typeDeclarationsBasePath,
+        relativeComponentsSrcPath,
         typeDeclarationsOutputDir
       ).then(() => {
         elapsedTimes.typeDeclarationsFolder = performance.now() - startTimeTypeDeclarationsFolder;
