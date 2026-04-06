@@ -30,17 +30,21 @@ describe("[i18n e2e] navigation and getters", () => {
     test("setting Arabic sets dir to rtl on document", async () => {
       setPathname("/en/home");
       setInitialApplicationLanguage({ locationChangeCallback: () => {} });
-      registerTranslations(FEATURE_MAIN, {
-        arabic: () => Promise.resolve({ greet: "مرحبا" }),
-        chinese: () => Promise.resolve({ greet: "zh" }),
-        english: () => Promise.resolve({ greet: "Hello" }),
-        french: () => Promise.resolve({ greet: "fr" }),
-        german: () => Promise.resolve({ greet: "de" }),
-        italian: () => Promise.resolve({ greet: "it" }),
-        japanese: () => Promise.resolve({ greet: "ja" }),
-        portuguese: () => Promise.resolve({ greet: "pt" }),
-        spanish: () => Promise.resolve({ greet: "es" })
-      });
+      registerTranslations(
+        FEATURE_MAIN,
+        {
+          arabic: () => Promise.resolve({ greet: "مرحبا" }),
+          chinese: () => Promise.resolve({ greet: "zh" }),
+          english: () => Promise.resolve({ greet: "Hello" }),
+          french: () => Promise.resolve({ greet: "fr" }),
+          german: () => Promise.resolve({ greet: "de" }),
+          italian: () => Promise.resolve({ greet: "it" }),
+          japanese: () => Promise.resolve({ greet: "ja" }),
+          portuguese: () => Promise.resolve({ greet: "pt" }),
+          spanish: () => Promise.resolve({ greet: "es" })
+        },
+        { preloadTranslations: true }
+      );
 
       setLanguage("ar");
       await languageHasBeenInitialized();
@@ -58,7 +62,9 @@ describe("[i18n e2e] navigation and getters", () => {
         locationChangeCallback,
         languageChangeCallback: () => {}
       });
-      registerTranslations(FEATURE_MAIN, createEnEsLoader({ greet: "Hello" }, { greet: "Hola" }));
+      registerTranslations(FEATURE_MAIN, createEnEsLoader({ greet: "Hello" }, { greet: "Hola" }), {
+        preloadTranslations: true
+      });
       setLanguage("en");
       await languageHasBeenInitialized();
 

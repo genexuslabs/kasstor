@@ -18,7 +18,9 @@ export const getI18nGlobals = () => {
      * loaders run once per language. Cleared on registerTranslations so new
      * features are included in the next load. Reset with globals on test teardown.
      */
-    translationLoadCache: new Map()
+    translationLoadCache: new Map(),
+    subscriberCounts: new Map(),
+    preloadFeatures: new Set()
   };
   global.kasstorWebkitI18n.internalLanguageInitializedResolver ??= languageInitializedResolver;
 

@@ -41,7 +41,8 @@ describe("[i18n e2e] register and load", () => {
         createEnEsLoader(
           { greet: "Hello", footer: "© 2024" },
           { greet: "Hola", footer: "© 2024" }
-        )
+        ),
+        { preloadTranslations: true }
       );
 
       await languageHasBeenInitialized();
@@ -61,11 +62,13 @@ describe("[i18n e2e] register and load", () => {
 
       registerTranslations(
         FEATURE_MAIN,
-        createEnEsLoader({ greet: "Hello", footer: "A" }, { greet: "Hola", footer: "A" })
+        createEnEsLoader({ greet: "Hello", footer: "A" }, { greet: "Hola", footer: "A" }),
+        { preloadTranslations: true }
       );
       registerTranslations(
         FEATURE_MAIN,
-        createEnEsLoader({ greet: "Hi", footer: "B" }, { greet: "Hola", footer: "B" })
+        createEnEsLoader({ greet: "Hi", footer: "B" }, { greet: "Hola", footer: "B" }),
+        { preloadTranslations: true }
       );
 
       await languageHasBeenInitialized();
@@ -96,7 +99,9 @@ describe("[i18n e2e] register and load", () => {
       });
 
       const lazyLoader = createSpyLoader();
-      registerTranslations<AppMainShape>(FEATURE_MAIN, lazyLoader);
+      registerTranslations<AppMainShape>(FEATURE_MAIN, lazyLoader, {
+        preloadTranslations: true
+      });
 
       setLanguage("en");
       await languageHasBeenInitialized();
@@ -136,7 +141,9 @@ describe("[i18n e2e] register and load", () => {
         portuguese: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
         spanish: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
       };
-      registerTranslations<AppMainShape>(FEATURE_MAIN, mainLoader);
+      registerTranslations<AppMainShape>(FEATURE_MAIN, mainLoader, {
+        preloadTranslations: true
+      });
 
       setLanguage("en");
       await languageHasBeenInitialized();
@@ -165,7 +172,9 @@ describe("[i18n e2e] register and load", () => {
         portuguese: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
         spanish: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
       };
-      registerTranslations<AppMainShape>(FEATURE_MAIN, loader);
+      registerTranslations<AppMainShape>(FEATURE_MAIN, loader, {
+        preloadTranslations: true
+      });
 
       setLanguage("en");
       setLanguage("en");
@@ -189,7 +198,9 @@ describe("[i18n e2e] register and load", () => {
         portuguese: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
         spanish: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
       };
-      registerTranslations<AppMainShape>(FEATURE_MAIN, loader);
+      registerTranslations<AppMainShape>(FEATURE_MAIN, loader, {
+        preloadTranslations: true
+      });
 
       setLanguage("en");
       await languageHasBeenInitialized();
@@ -214,7 +225,9 @@ describe("[i18n e2e] register and load", () => {
         portuguese: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
         spanish: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
       };
-      registerTranslations<AppMainShape>(FEATURE_MAIN, loader1);
+      registerTranslations<AppMainShape>(FEATURE_MAIN, loader1, {
+        preloadTranslations: true
+      });
       setLanguage("en");
       await languageHasBeenInitialized();
 
@@ -229,7 +242,9 @@ describe("[i18n e2e] register and load", () => {
         portuguese: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
         spanish: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
       };
-      registerTranslations<AppMainShape>(FEATURE_MAIN, loader2);
+      registerTranslations<AppMainShape>(FEATURE_MAIN, loader2, {
+        preloadTranslations: true
+      });
       setLanguage("en");
       await new Promise(r => setTimeout(r, 0));
 
@@ -264,7 +279,9 @@ describe("[i18n e2e] register and load", () => {
         portuguese: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
         spanish: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
       };
-      registerTranslations<AppMainShape>(FEATURE_MAIN, loader);
+      registerTranslations<AppMainShape>(FEATURE_MAIN, loader, {
+        preloadTranslations: true
+      });
 
       setLanguage("en");
       await languageHasBeenInitialized();
@@ -304,8 +321,12 @@ describe("[i18n e2e] register and load", () => {
         portuguese: vi.fn(() => Promise.resolve({ price: "pt", limit: "" })),
         spanish: vi.fn(() => Promise.resolve({ price: "Gratis", limit: "10" }))
       };
-      registerTranslations<AppMainShape>(FEATURE_MAIN, mainLoader);
-      registerTranslations<TrialShape>(FEATURE_TRIAL, trialLoader);
+      registerTranslations<AppMainShape>(FEATURE_MAIN, mainLoader, {
+        preloadTranslations: true
+      });
+      registerTranslations<TrialShape>(FEATURE_TRIAL, trialLoader, {
+        preloadTranslations: true
+      });
 
       setLanguage("es");
       await languageHasBeenInitialized();

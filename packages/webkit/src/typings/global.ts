@@ -62,12 +62,32 @@ declare global {
         >;
 
         /**
-         * Cache of load Promises per language. Deduplicates getTranslationsForLanguage
-         * calls so loaders run once per language; cleared when translationLoaders
-         * change (registerTranslations) so new features are loaded. Bounded by
-         * number of supported languages; no long-lived references to translation data.
+         * Cache of load Promises per language and feature. Deduplicates
+         * getTranslationsForLanguage calls so loaders run once per
+         * language+feature pair. Individual feature entries are cleared when
+         * translationLoaders change (registerTranslations) so new/replaced
+         * features are loaded on the next request.
          */
-        readonly translationLoadCache: Map<KasstorLanguage, Promise<void>>;
+        readonly translationLoadCache: Map<
+          KasstorLanguage,
+          Map<FeatureIdentifier, Promise<void>>
+        >;
+
+        /**
+         * Number of active subscribers per feature. Stored on globalThis for
+         * easy runtime debugging — inspect `kasstorWebkitI18n.subscriberCounts`
+         * in DevTools to identify bottlenecks (features with 0 subscribers that
+         * shouldn't be loading, or features with unexpectedly high counts).
+         */
+        readonly subscriberCounts: Map<FeatureIdentifier, number>;
+
+        /**
+         * Features registered with `preloadTranslations: true`. Always loaded
+         * regardless of subscriber count. Inspect
+         * `kasstorWebkitI18n.preloadFeatures` in DevTools to verify which
+         * features bypass lazy loading.
+         */
+        readonly preloadFeatures: Set<FeatureIdentifier>;
       }
     | undefined;
 }

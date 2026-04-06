@@ -1,27 +1,41 @@
 import { getI18nGlobals } from "./get-i18n-globals";
 import { setLanguage } from "./set-language";
-import type { KasstorTranslationShape, KasstorTranslationsLoader } from "./types";
+import type {
+  KasstorRegisterTranslationsOptions,
+  KasstorTranslationShape,
+  KasstorTranslationsLoader
+} from "./types";
 
 /**
  * Registers translation loaders for a feature. Each language is loaded
- * asynchronously via the loader’s promise.
+ * asynchronously via the loader's promise.
  *
  * @param featureId - Unique identifier for the feature (e.g. a component, a module, or the whole app).
  * @param loader - Object mapping each supported language to a function that
  *   returns a Promise of the translations for that language.
+ * @param options - Optional configuration for this feature's translations.
  *
  * Behavior:
  * - Replaces any existing loader for the same `featureId` (e.g. for HMR).
  * - If a loader already existed, a console warning is emitted.
- * - After registration, if a current language is set, translations for that
- *   language are requested.
+ * - Updates the preload registry based on `options.preloadTranslations`.
+ * - Performs granular cache invalidation (only this feature, not all).
+ * - After registration, if a current language is set and the feature has
+ *   active subscribers or `preloadTranslations: true`, translations for
+ *   that language are requested.
  */
 export const registerTranslations = <T extends KasstorTranslationShape>(
   featureId: string,
-  loader: KasstorTranslationsLoader<T>
+  loader: KasstorTranslationsLoader<T>,
+  options?: KasstorRegisterTranslationsOptions
 ) => {
-  // Single getI18nGlobals() call: currentLanguage and loaders for logic, cache for invalidation
-  const { currentLanguage, translationLoaders, translationLoadCache } = getI18nGlobals();
+  const {
+    currentLanguage,
+    translationLoaders,
+    translationLoadCache,
+    preloadFeatures,
+    subscriberCounts
+  } = getI18nGlobals();
 
   if (translationLoaders.has(featureId)) {
     console.warn(
@@ -32,11 +46,26 @@ export const registerTranslations = <T extends KasstorTranslationShape>(
   // To improve the DX with HMR, we replace the translations loader anyways
   translationLoaders.set(featureId, loader);
 
-  // Invalidate so the next setLanguage (below or elsewhere) runs loaders for all
-  // features, including this one. Otherwise a cached Promise would skip the new loader.
-  translationLoadCache.clear();
+  // Update preload registry
+  if (options?.preloadTranslations) {
+    preloadFeatures.add(featureId);
+  } else {
+    // HMR: handle flag removal when re-registering without preload
+    preloadFeatures.delete(featureId);
+  }
 
+  // Granular cache invalidation: only clear THIS feature's cache entries
+  // across all languages, so other features keep their cached translations.
+  for (const [, featureCache] of translationLoadCache) {
+    featureCache.delete(featureId);
+  }
+
+  // Only trigger loading if language is set AND the feature should load now
   if (currentLanguage) {
-    setLanguage(currentLanguage);
+    const hasSubscribers = (subscriberCounts.get(featureId) ?? 0) > 0;
+    if (hasSubscribers || options?.preloadTranslations) {
+      setLanguage(currentLanguage);
+    }
   }
 };
+

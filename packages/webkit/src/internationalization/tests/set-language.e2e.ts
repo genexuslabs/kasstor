@@ -13,13 +13,8 @@ import {
   setLanguage
 } from "../index.js";
 import type { KasstorLanguage } from "../types.js";
-import {
-  createEnEsLoader,
-  FEATURE_MAIN,
-  resetI18nState,
-  setPathname
-} from "./i18n-e2e-helpers.js";
 import type { AppMainShape } from "./i18n-e2e-helpers.js";
+import { createEnEsLoader, FEATURE_MAIN, resetI18nState, setPathname } from "./i18n-e2e-helpers.js";
 
 describe("[i18n e2e] setLanguage", () => {
   afterEach(() => {
@@ -30,7 +25,9 @@ describe("[i18n e2e] setLanguage", () => {
     test("accepts subtag and full name", async () => {
       setPathname("/en/home");
       setInitialApplicationLanguage({ locationChangeCallback: () => {} });
-      registerTranslations(FEATURE_MAIN, createEnEsLoader({ greet: "Hello" }, { greet: "Hola" }));
+      registerTranslations(FEATURE_MAIN, createEnEsLoader({ greet: "Hello" }, { greet: "Hola" }), {
+        preloadTranslations: true
+      });
 
       setLanguage("es");
       await languageHasBeenInitialized();
@@ -48,7 +45,9 @@ describe("[i18n e2e] setLanguage", () => {
         locationChangeCallback,
         languageChangeCallback: () => {}
       });
-      registerTranslations(FEATURE_MAIN, createEnEsLoader({ greet: "Hello" }, { greet: "Hola" }));
+      registerTranslations(FEATURE_MAIN, createEnEsLoader({ greet: "Hello" }, { greet: "Hola" }), {
+        preloadTranslations: true
+      });
 
       const newPath = setLanguage("es", true);
 
@@ -65,7 +64,9 @@ describe("[i18n e2e] setLanguage", () => {
         locationChangeCallback,
         languageChangeCallback: () => {}
       });
-      registerTranslations(FEATURE_MAIN, createEnEsLoader({ greet: "Hello" }, { greet: "Hola" }));
+      registerTranslations(FEATURE_MAIN, createEnEsLoader({ greet: "Hello" }, { greet: "Hola" }), {
+        preloadTranslations: true
+      });
 
       setLanguage("es", false);
 
@@ -102,7 +103,7 @@ describe("[i18n e2e] setLanguage", () => {
         spanish: () =>
           new Promise(r => setTimeout(() => r({ greet: "Hola", footer: "" }), delays.spanish))
       };
-      registerTranslations(FEATURE_MAIN, raceLoader);
+      registerTranslations(FEATURE_MAIN, raceLoader, { preloadTranslations: true });
 
       setLanguage("english");
       setLanguage("spanish");
@@ -117,7 +118,9 @@ describe("[i18n e2e] setLanguage", () => {
     test("resolves after first setLanguage and translations are loaded", async () => {
       setPathname("/en/home");
       setInitialApplicationLanguage({ locationChangeCallback: () => {} });
-      registerTranslations(FEATURE_MAIN, createEnEsLoader({ greet: "Hello" }, { greet: "Hola" }));
+      registerTranslations(FEATURE_MAIN, createEnEsLoader({ greet: "Hello" }, { greet: "Hola" }), {
+        preloadTranslations: true
+      });
 
       const initPromise = languageHasBeenInitialized();
       setLanguage("en");
@@ -137,3 +140,4 @@ describe("[i18n e2e] setLanguage", () => {
     });
   });
 });
+
