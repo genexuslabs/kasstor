@@ -34,11 +34,13 @@ describe("[i18n e2e] multiple features", () => {
 
       registerTranslations<AppMainShape>(
         FEATURE_MAIN,
-        createEnEsLoader({ greet: "Hello", footer: "Footer" }, { greet: "Hola", footer: "Pie" })
+        createEnEsLoader({ greet: "Hello", footer: "Footer" }, { greet: "Hola", footer: "Pie" }),
+        { preloadTranslations: true }
       );
       registerTranslations<TrialShape>(
         FEATURE_TRIAL,
-        createEnEsLoader({ price: "Free", limit: "10" }, { price: "Gratis", limit: "10" })
+        createEnEsLoader({ price: "Free", limit: "10" }, { price: "Gratis", limit: "10" }),
+        { preloadTranslations: true }
       );
 
       setLanguage("es");
@@ -91,13 +93,18 @@ describe("[i18n e2e] multiple features", () => {
       setPathname("/en/home");
       setInitialApplicationLanguage({ locationChangeCallback: () => {} });
 
-      registerTranslations(FEATURE_MAIN, createEnEsLoader({ greet: "Hello" }, { greet: "Hola" }));
+      registerTranslations(
+        FEATURE_MAIN,
+        createEnEsLoader({ greet: "Hello" }, { greet: "Hola" }),
+        { preloadTranslations: true }
+      );
       setLanguage("es");
       await languageHasBeenInitialized();
 
       registerTranslations(
         FEATURE_TRIAL,
-        createEnEsLoader({ price: "Free", limit: "10" }, { price: "Gratis", limit: "10" })
+        createEnEsLoader({ price: "Free", limit: "10" }, { price: "Gratis", limit: "10" }),
+        { preloadTranslations: true }
       );
 
       await new Promise(r => setTimeout(r, 0));

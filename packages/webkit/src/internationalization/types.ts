@@ -13,16 +13,7 @@ export type KasstorLanguage =
  * BCP 47 language tags for supported languages.
  * See: https://developer.mozilla.org/en-US/docs/Glossary/BCP_47_language_tag#bcp_47_syntax
  */
-export type KasstorLanguageSubtag =
-  | "en"
-  | "ja"
-  | "es"
-  | "fr"
-  | "de"
-  | "pt"
-  | "it"
-  | "zh"
-  | "ar";
+export type KasstorLanguageSubtag = "en" | "ja" | "es" | "fr" | "de" | "pt" | "it" | "zh" | "ar";
 
 /**
  * BCP 47 language tags for supported languages.
@@ -46,11 +37,19 @@ export type KasstorLanguageFullnameAndSubtag = {
 
 export type KasstorTranslationShape = Record<string | number, unknown>;
 
-export type KasstorTranslations<T extends KasstorTranslationShape> = Map<
+export type KasstorTranslations<T extends KasstorTranslationShape> = Map<KasstorLanguage, T>;
+
+export type KasstorTranslationsLoader<T extends KasstorTranslationShape> = Record<
   KasstorLanguage,
-  T
+  () => Promise<T>
 >;
 
-export type KasstorTranslationsLoader<T extends KasstorTranslationShape> =
-  Record<KasstorLanguage, () => Promise<T>>;
+export type KasstorRegisterTranslationsOptions = {
+  /**
+   * When `true`, translations for this feature are downloaded immediately
+   * when a language is set, regardless of whether any component has subscribed.
+   * Defaults to `false` (lazy: only load when at least one subscriber exists).
+   */
+  preloadTranslations?: boolean;
+};
 

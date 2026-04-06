@@ -1,8 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  fromLanguageFullnameToSubtag,
-  fromLanguageToFullnameAndSubtag
-} from "../index.js";
+import { fromLanguageFullnameToSubtag, fromLanguageToFullnameAndSubtag } from "../index.js";
 import type { KasstorLanguage } from "../types.js";
 import { FULLNAME_TO_SUBTAG, SUPPORTED_SUBTAGS } from "./i18n-shared-constants.js";
 
@@ -14,16 +11,14 @@ describe("[fromLanguageFullnameToSubtag]", () => {
   });
 
   test("returns undefined for a string not in the dictionary", () => {
-    expect(
-      (fromLanguageFullnameToSubtag as (x: string) => string)("invalid")
-    ).toBeUndefined();
+    expect((fromLanguageFullnameToSubtag as (x: string) => string)("invalid")).toBeUndefined();
   });
 });
 
 describe("[fromLanguageToFullnameAndSubtag]", () => {
   SUPPORTED_SUBTAGS.forEach(subtag => {
     const fullName = Object.entries(FULLNAME_TO_SUBTAG).find(
-      ([_, s]) => s === subtag
+      ([, s]) => s === subtag
     )![0] as KasstorLanguage;
 
     test(`subtag "${subtag}" returns { fullLanguageName: "${fullName}", subtag: "${subtag}" }`, () => {
@@ -43,11 +38,14 @@ describe("[fromLanguageToFullnameAndSubtag]", () => {
   });
 
   test("unsupported string yields fullLanguageName as input and undefined subtag", () => {
-    const result = (fromLanguageToFullnameAndSubtag as (x: string) => {
-      fullLanguageName: string;
-      subtag: string | undefined;
-    })("unsupported");
+    const result = (
+      fromLanguageToFullnameAndSubtag as (x: string) => {
+        fullLanguageName: string;
+        subtag: string | undefined;
+      }
+    )("unsupported");
     expect(result.fullLanguageName).toBe("unsupported");
     expect(result.subtag).toBeUndefined();
   });
 });
+

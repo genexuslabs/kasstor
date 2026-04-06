@@ -22,5 +22,5 @@ export {
   subscribeToLanguageChanges,
   unsubscribeToLanguageChanges
 } from "./subscriber.js";
-export type * from "./types";
+export type * from "./types.js";
 
