@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  addGlobalStyleSheet,
+  removeGlobalStyleSheet
+} from "@genexus/kasstor-webkit/global-stylesheets.js";
 import { LitElement, unsafeCSS, type PropertyValues } from "lit";
 
 import { DEV_MODE, IS_SERVER } from "../../development-flags.js";
 import { componentWasServerSideRendered } from "./component-was-server-side-rendered.js";
-import { addGlobalStyleSheet, removeGlobalStyleSheet } from "./global-stylesheets.js";
 import { register, replaceConstructorWithProxy } from "./hmr-for-component.js";
 import type { ComponentOptions } from "./types";
 import { getDelayForUpdate } from "./update-scheduler.js";

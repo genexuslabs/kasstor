@@ -4,6 +4,8 @@ export { SyncWithRAF } from "./sync-with-frames/index.js";
 
 export { TypeAhead } from "./type-ahead/index.js";
 
+export { addGlobalStyleSheet, removeGlobalStyleSheet } from "./global-stylesheets/index.js";
+
 // i18n
 export {
   ALL_SUPPORTED_LANGUAGE_SUBTAGS,
@@ -23,10 +25,11 @@ export {
   type KasstorLanguageFullnameAndSubtag,
   type KasstorLanguageSubtag,
   type KasstorLanguageSubtagWithRegion,
-  type KasstorTranslations,
   type KasstorTranslationShape,
+  type KasstorTranslations,
   type KasstorTranslationsLoader
 } from "./internationalization/index.js";
 
 export type { FilterObjectKeys } from "./typings/filter-keys.js";
 export type { ObjectEntries } from "./typings/object-entries.js";
+
