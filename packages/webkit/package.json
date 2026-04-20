@@ -59,6 +59,15 @@
       "development": "./dist/browser/development/array/index.js",
       "default": "./dist/browser/production/array/index.js"
     },
+    "./global-stylesheets.js": {
+      "node": {
+        "development": "./dist/node/development/global-stylesheets/index.js",
+        "default": "./dist/node/production/global-stylesheets/index.js"
+      },
+      "types": "./dist/browser/development/global-stylesheets/index.d.ts",
+      "development": "./dist/browser/development/global-stylesheets/index.js",
+      "default": "./dist/browser/production/global-stylesheets/index.js"
+    },
     "./internationalization/all-supported-languages.js": {
       "node": {
         "development": "./dist/node/development/internationalization/all-supported-languages.js",

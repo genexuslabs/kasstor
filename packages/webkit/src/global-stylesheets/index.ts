@@ -1,5 +1,12 @@
-import { removeIndex } from "@genexus/kasstor-webkit/array.js";
+import { removeIndex } from "../array/index.js";
 
+/**
+ * We need to store the root node of the element to later remove the stylesheet when
+ * the element is disconnected from the DOM. We have to store the root node,
+ * because when disconnectedCallback is called the getRootNode method does
+ * not return the actual rootNode of the element (it returns a reference to
+ * the element itself).
+ */
 const rootNodes = new WeakMap<HTMLElement, Document | ShadowRoot>();
 
 /**
@@ -11,18 +18,33 @@ const rootNodes = new WeakMap<HTMLElement, Document | ShadowRoot>();
  * in the key (Document | ShadowRoot) until there is no element that needs to
  * reference that StyleSheet.
  */
-const globalStyles = new WeakMap<
-  Document | ShadowRoot,
-  WeakMap<CSSStyleSheet, number>
->();
+const globalStyles = new WeakMap<Document | ShadowRoot, WeakMap<CSSStyleSheet, number>>();
 
-export const addGlobalStyleSheet = (
-  element: HTMLElement,
-  stylesheet: CSSStyleSheet
-) => {
+/**
+ * Tracks which (element, stylesheet) pairs have already been registered via
+ * addGlobalStyleSheet. This prevents the reference count from being inflated
+ * when add is called multiple times for the same element + stylesheet without
+ * a matching remove in between (e.g. connectedCallback firing twice).
+ */
+const registeredPairs = new WeakMap<HTMLElement, WeakSet<CSSStyleSheet>>();
+
+export const addGlobalStyleSheet = (element: HTMLElement, stylesheet: CSSStyleSheet) => {
   const rootNode = element.getRootNode();
 
-  if (rootNode instanceof ShadowRoot || rootNode instanceof Document) {
+  if (rootNode instanceof Document || rootNode instanceof ShadowRoot) {
+    // Idempotent guard: skip if this element already registered this stylesheet
+    if (registeredPairs.get(element)?.has(stylesheet)) {
+      return;
+    }
+
+    // Track this (element, stylesheet) pair as registered
+    let elementSheets = registeredPairs.get(element);
+    if (!elementSheets) {
+      elementSheets = new WeakSet();
+      registeredPairs.set(element, elementSheets);
+    }
+    elementSheets.add(stylesheet);
+
     // Store the root node of the element to later remove the stylesheet when
     // the element is disconnected from the DOM. We have to store the root node,
     // because when disconnectedCallback is called the getRootNode method does
@@ -36,8 +58,7 @@ export const addGlobalStyleSheet = (
     }
 
     const rootNodeGlobalStyles = globalStyles.get(rootNode)!;
-    const rootNodeStyleSheetReferences =
-      rootNodeGlobalStyles.get(stylesheet) ?? 0;
+    const rootNodeStyleSheetReferences = rootNodeGlobalStyles.get(stylesheet) ?? 0;
 
     // Set the StyleSheet references
     if (rootNodeStyleSheetReferences === 0) {
@@ -49,10 +70,15 @@ export const addGlobalStyleSheet = (
   }
 };
 
-export const removeGlobalStyleSheet = (
-  element: HTMLElement,
-  stylesheet: CSSStyleSheet
-) => {
+export const removeGlobalStyleSheet = (element: HTMLElement, stylesheet: CSSStyleSheet) => {
+  // Idempotent guard: skip if this element never registered this stylesheet
+  // (or already had it removed)
+  const elementSheets = registeredPairs.get(element);
+  if (!elementSheets?.has(stylesheet)) {
+    return;
+  }
+  elementSheets.delete(stylesheet);
+
   const rootNode = rootNodes.get(element);
 
   // We don't know if this case it's possible. Maybe if the rootNode is
@@ -82,9 +108,7 @@ export const removeGlobalStyleSheet = (
 
   if (mustRemoveStyleSheet) {
     // Try to find the StyleSheet in the rootNode
-    const styleSheetIndex = rootNode.adoptedStyleSheets.findIndex(
-      rootNodeStyleSheet => rootNodeStyleSheet === stylesheet
-    );
+    const styleSheetIndex = rootNode.adoptedStyleSheets.indexOf(stylesheet);
 
     if (styleSheetIndex !== -1) {
       removeIndex(rootNode.adoptedStyleSheets, styleSheetIndex);
