@@ -22,10 +22,23 @@ import { removeIndex } from "../array/index.js";
  * `node.adoptedStyleSheets` on the 0 → 1 transition and removed on the
  * 1 → 0 transition, regardless of which public API caused it.
  */
-const sheetReferences = new WeakMap<
-  Document | ShadowRoot,
-  WeakMap<CSSStyleSheet, number>
->();
+const sheetReferences = new WeakMap<Document | ShadowRoot, WeakMap<CSSStyleSheet, number>>();
+
+/**
+ * Snapshot of the root node each element is in at the moment it adopts a
+ * stylesheet. Needed because inside `disconnectedCallback`,
+ * `element.getRootNode()` no longer returns the original root (it returns the
+ * element itself), so we cannot recover it lazily on removal.
+ */
+const elementRoots = new WeakMap<HTMLElement, Document | ShadowRoot>();
+
+/**
+ * Tracks which stylesheets each element has already registered through
+ * {@link addGlobalStyleSheet}. Used to make the global API idempotent per
+ * `(element, stylesheet)` pair, so a `connectedCallback` firing more than
+ * once does not inflate the reference count and leak an extra adoption.
+ */
+const elementRegisteredSheets = new WeakMap<HTMLElement, WeakSet<CSSStyleSheet>>();
 
 /**
  * Adopts `stylesheet` directly into `node` (a `Document` or `ShadowRoot`).
@@ -93,22 +106,6 @@ export const removeStyleSheet = (node: Document | ShadowRoot, stylesheet: CSSSty
     byNode.set(stylesheet, count - 1);
   }
 };
-
-/**
- * Snapshot of the root node each element is in at the moment it adopts a
- * stylesheet. Needed because inside `disconnectedCallback`,
- * `element.getRootNode()` no longer returns the original root (it returns the
- * element itself), so we cannot recover it lazily on removal.
- */
-const elementRoots = new WeakMap<HTMLElement, Document | ShadowRoot>();
-
-/**
- * Tracks which stylesheets each element has already registered through
- * {@link addGlobalStyleSheet}. Used to make the global API idempotent per
- * `(element, stylesheet)` pair, so a `connectedCallback` firing more than
- * once does not inflate the reference count and leak an extra adoption.
- */
-const elementRegisteredSheets = new WeakMap<HTMLElement, WeakSet<CSSStyleSheet>>();
 
 /**
  * Adopts `stylesheet` into the root (`Document` or `ShadowRoot`) that
@@ -189,3 +186,4 @@ export const removeGlobalStyleSheet = (element: HTMLElement, stylesheet: CSSStyl
 
   removeStyleSheet(rootNode, stylesheet);
 };
+
