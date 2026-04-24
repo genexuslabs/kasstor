@@ -1,6 +1,6 @@
 {
   "name": "@genexus/kasstor-monorepo",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "private": true,
   "homepage": "https://github.com/genexuslabs/kasstor/",
   "description": "Ecosystem for building Lit-based web components with first-class DX: decorators, SCSS, typed events, HMR, optional signals.",
