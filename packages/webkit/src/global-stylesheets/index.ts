@@ -28,6 +28,26 @@ const globalStyles = new WeakMap<Document | ShadowRoot, WeakMap<CSSStyleSheet, n
  */
 const registeredPairs = new WeakMap<HTMLElement, WeakSet<CSSStyleSheet>>();
 
+/**
+ * Adopts `stylesheet` globally into the root that contains `element`, so the
+ * styles apply to every element under the same root.
+ *
+ * Useful when a component does not know in advance whether it will be placed
+ * in the main document or inside a `ShadowRoot`: the stylesheet is routed to
+ * whichever root the element currently lives in.
+ *
+ * Stylesheets are shared and reference-counted per root. If several elements
+ * request the same stylesheet in the same root, it is adopted only once; it
+ * stays adopted until the last referrer releases it via
+ * {@link removeGlobalStyleSheet}. Pair this call with
+ * {@link removeGlobalStyleSheet} in `connectedCallback` /
+ * `disconnectedCallback` to get automatic cleanup.
+ *
+ * @param element - The element that needs the stylesheet to be applied to its
+ *   root.
+ * @param stylesheet - The stylesheet to adopt. Can be shared across many
+ *   elements and roots.
+ */
 export const addGlobalStyleSheet = (element: HTMLElement, stylesheet: CSSStyleSheet) => {
   const rootNode = element.getRootNode();
 
@@ -70,6 +90,21 @@ export const addGlobalStyleSheet = (element: HTMLElement, stylesheet: CSSStyleSh
   }
 };
 
+/**
+ * Releases the reference that `element` holds on `stylesheet` in its root.
+ *
+ * Because stylesheets added via {@link addGlobalStyleSheet} are shared and
+ * reference-counted, the stylesheet is only actually removed from the root
+ * (`Document` or `ShadowRoot`) when the last element that was using it
+ * releases it. Other elements still referencing the same stylesheet keep
+ * seeing its styles applied.
+ *
+ * Typically called from `disconnectedCallback`, mirroring a previous call to
+ * {@link addGlobalStyleSheet} from `connectedCallback`.
+ *
+ * @param element - The element that previously requested the stylesheet.
+ * @param stylesheet - The stylesheet to release.
+ */
 export const removeGlobalStyleSheet = (element: HTMLElement, stylesheet: CSSStyleSheet) => {
   // Idempotent guard: skip if this element never registered this stylesheet
   // (or already had it removed)
