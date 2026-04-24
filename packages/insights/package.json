@@ -1,6 +1,6 @@
 {
   "name": "@genexus/kasstor-insights",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
   "description": "Utilities to visualize and inspect Lit/Kasstor component behavior at runtime in development; includes a performance-scan overlay for re-render analysis.",
@@ -38,8 +38,8 @@
     "test:e2e": "playwright install && vitest --project browser"
   },
   "peerDependencies": {
-    "@genexus/kasstor-core": "~0.3.0",
-    "@genexus/kasstor-webkit": "~0.3.0",
+    "@genexus/kasstor-core": "^0.4.0",
+    "@genexus/kasstor-webkit": "^0.4.0",
     "lit": "^3.3.1",
     "tslib": "~2.8.1"
   },
