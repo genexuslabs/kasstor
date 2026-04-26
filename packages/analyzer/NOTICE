@@ -1,0 +1,22 @@
+Kasstor Analyzer
+Copyright 2026 GeneXus / Kasstor contributors
+
+This product includes software developed by:
+
+  - Rune Mehlsen and contributors (https://github.com/runem/lit-analyzer)
+    Licensed under the MIT License. Copyright (c) 2018 Rune Mehlsen.
+    Original repository: https://github.com/runem/lit-analyzer
+
+  - Jack Robards and contributors (https://github.com/JackRobards/lit-analyzer)
+    Maintained fork of the above, also under the MIT License.
+    Repository: https://github.com/JackRobards/lit-analyzer
+
+The vendored packages (lit-analyzer, ts-lit-plugin, vscode-extension) retain their
+original MIT license. New files and modifications introduced in this fork are
+licensed Apache-2.0, consistent with the rest of the Kasstor monorepo.
+
+The web-component-analyzer package is NOT vendored. It is consumed as an npm
+dependency (`@jackolope/web-component-analyzer`) and remains under MIT.
+
+A copy of the MIT License is available in each package's LICENSE.md.
+A copy of the Apache License 2.0 is available at the root of this repository.

@@ -1,0 +1,737 @@
+{
+	"name": "kasstor-lit-vscode-plugin",
+	"private": true,
+	"displayName": "Kasstor Lit Plugin",
+	"description": "Syntax highlighting, type checking and code completion for lit-html, integrated with Kasstor.",
+	"version": "0.1.0",
+	"publisher": "genexus",
+	"icon": "docs/assets/lit-plugin@256w.png",
+	"license": "MIT",
+	"engines": {
+		"node": ">=20",
+		"vscode": "^1.63.0"
+	},
+	"categories": [
+		"Programming Languages"
+	],
+	"homepage": "https://github.com/genexuslabs/kasstor",
+	"bugs": {
+		"url": "https://github.com/genexuslabs/kasstor/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/genexuslabs/kasstor.git"
+	},
+	"main": "bundle.js",
+	"scripts": {
+		"watch": "tsc -watch -p ./",
+		"build": "tsc --build --pretty",
+		"build:clean": "tsc --build --clean",
+		"bundle": "node esbuild.script.mjs",
+		"make-built-dir": "node ./copy-to-built.js",
+		"package": "bun run build && bun run bundle && bun run make-built-dir && mkdir -p out && cd built && vsce package -o ../out/packaged.vsix",
+		"test:normal": "bun run build && node ./out/test/scripts/test-runner.js ./built",
+		"test:packaged": "bun run package && rm -rf ../../../packaged-extension/ && mkdir ../../../packaged-extension/ && unzip -qq ./out/packaged.vsix -d ../../../packaged-extension/ && node ./out/test/scripts/test-runner.js ../../../packaged-extension/extension/",
+		"test": "bun run test:normal",
+		"lint": "eslint src",
+		"publish": "cd built && vsce publish"
+	},
+	"dependencies": {
+		"typescript": "~5.9.2"
+	},
+	"devDependencies": {
+		"@genexus/kasstor-lit-analyzer": "workspace:*",
+		"@types/mocha": "^10.0.10",
+		"@types/node": "^24.12.0",
+		"@types/vscode": "1.63.0",
+		"@vscode/test-electron": "^2.4.1",
+		"@vscode/vsce": "^3.7.1",
+		"esbuild": "^0.27.3",
+		"fast-glob": "^3.2.11",
+		"mocha": "^11.7.1",
+		"vscode-css-languageservice": "6.3.10",
+		"vscode-html-languageservice": "5.6.2"
+	},
+	"activationEvents": [
+		"onCommand:kasstor-lit-vscode-plugin.analyze",
+		"onLanguage:javascript",
+		"onLanguage:javascriptreact",
+		"onLanguage:typescript",
+		"onLanguage:typescriptreact"
+	],
+	"contributors": [
+		{
+			"name": "Rune Mehlsen",
+			"url": "https://twitter.com/runemehlsen",
+			"img": "https://avatars2.githubusercontent.com/u/5372940?s=460&v=4"
+		},
+		{
+			"name": "Andreas Mehlsen",
+			"url": "https://twitter.com/andreasmehlsen",
+			"img": "https://avatars1.githubusercontent.com/u/6267397?s=460&v=4"
+		},
+		{
+			"name": "You?",
+			"img": "https://ui-avatars.com/api/?name=You&background=random&size=100",
+			"url": "https://github.com/JackRobards/lit-analyzer/blob/main/CONTRIBUTING.md"
+		}
+	],
+	"contributes": {
+		"commands": [
+			{
+				"command": "kasstor-lit-vscode-plugin.analyze",
+				"title": "Analyze lit-html templates"
+			}
+		],
+		"configuration": [
+			{
+				"id": "kasstor-lit-vscode-plugin",
+				"title": "kasstor-lit-vscode-plugin",
+				"properties": {
+					"kasstor-lit-vscode-plugin.disable": {
+						"type": "boolean",
+						"description": "Completely disable this plugin.",
+						"default": false
+					},
+					"kasstor-lit-vscode-plugin.strict": {
+						"type": "boolean",
+						"description": "Enable strict mode.",
+						"default": false
+					},
+					"kasstor-lit-vscode-plugin.maxProjectImportDepth": {
+						"type": "integer",
+						"description": "Determines how many modules deep dependencies are followed to determine whether a custom element is available in the current file. When `-1` is used, dependencies will be followed infinitely deep.",
+						"default": -1
+					},
+					"kasstor-lit-vscode-plugin.maxNodeModuleImportDepth": {
+						"type": "integer",
+						"description": "Determines how many modules deep dependencies in npm packages are followed to determine whether a custom element is available in the current file. When `-1` is used, dependencies will be followed infinitely deep.",
+						"default": 1
+					},
+					"kasstor-lit-vscode-plugin.securitySystem": {
+						"type": "string",
+						"description": "The lit-html security sanitization strategy to assume.",
+						"default": "off",
+						"enum": [
+							"off",
+							"ClosureSafeTypes"
+						]
+					},
+					"kasstor-lit-vscode-plugin.htmlTemplateTags": {
+						"type": "array",
+						"description": "List of template tags to enable html support in.",
+						"items": {
+							"type": "string",
+							"description": "Template tag function names."
+						},
+						"default": [
+							"html",
+							"raw"
+						]
+					},
+					"kasstor-lit-vscode-plugin.cssTemplateTags": {
+						"type": "array",
+						"description": "List of template tags to enable css support in.",
+						"items": {
+							"type": "string",
+							"description": "Template tag function names."
+						},
+						"default": [
+							"css"
+						]
+					},
+					"kasstor-lit-vscode-plugin.enableTaggedTemplateFolding": {
+						"type": "boolean",
+						"description": "Enables folding (code collapse) inside html, css, and svg tagged template literals. Defaults to false if editor.foldingStrategy is 'indentation'.",
+						"default": true
+					},
+					"kasstor-lit-vscode-plugin.dontShowSuggestions": {
+						"type": "boolean",
+						"description": "Don't append messages suggesting how to fix diagnostics.",
+						"default": false
+					},
+					"kasstor-lit-vscode-plugin.globalTags": {
+						"type": "array",
+						"description": "List of html tag names that you expect to be present at all times.",
+						"items": {
+							"type": "string",
+							"description": "Tag name."
+						}
+					},
+					"kasstor-lit-vscode-plugin.globalAttributes": {
+						"type": "array",
+						"description": "List of html attributes names that you expect to be present at all times. These attributes are not checked at all.",
+						"items": {
+							"type": "string",
+							"description": "Attribute name."
+						}
+					},
+					"kasstor-lit-vscode-plugin.globalEvents": {
+						"type": "array",
+						"description": "List of event names that you expect to be present at all times. These events are not checked at all.",
+						"items": {
+							"type": "string",
+							"description": "Event name."
+						}
+					},
+					"kasstor-lit-vscode-plugin.logging": {
+						"type": "string",
+						"description": "Log to a file called 'lit-plugin.log' which will be created in the root of the project.",
+						"default": "off",
+						"enum": [
+							"off",
+							"error",
+							"warn",
+							"debug",
+							"verbose"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-unknown-tag-name": {
+						"type": "string",
+						"description": "Check the existence of tag names.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-missing-import": {
+						"type": "string",
+						"description": "Check that custom elements used are imported.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-missing-element-type-definition": {
+						"type": "string",
+						"description": "This rule will ensure that custom elements are registered on the HTMLElementTagNameMap Typescript interface.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-unclosed-tag": {
+						"type": "string",
+						"description": "Check that all tags are properly closed.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-unknown-attribute": {
+						"type": "string",
+						"description": "Check the existence of attribute names.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-unknown-property": {
+						"type": "string",
+						"description": "Check the existence of property names.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-unknown-event": {
+						"type": "string",
+						"description": "Check the existence of event names.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-unknown-slot": {
+						"type": "string",
+						"description": "Check the existence of slot names (requires '@slot' jsdoc on custom element declarations).",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-invalid-boolean-binding": {
+						"type": "string",
+						"description": "Disallow boolean attribute bindings on non-boolean types.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-expressionless-property-binding": {
+						"type": "string",
+						"description": "Disallow property bindings without an expression.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-noncallable-event-binding": {
+						"type": "string",
+						"description": "Disallow event listener bindings with a noncallable type.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-boolean-in-attribute-binding": {
+						"type": "string",
+						"description": "Disallow attribute bindings with a boolean type.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-complex-attribute-binding": {
+						"type": "string",
+						"description": "Disallow attribute bindings with a complex type.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-nullable-attribute-binding": {
+						"type": "string",
+						"description": "Disallow attribute bindings with nullable types such as \"null\" or \"undefined\".",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-incompatible-type-binding": {
+						"type": "string",
+						"description": "Disallow incompatible type in bindings.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-invalid-directive-binding": {
+						"type": "string",
+						"description": "Disallow using built-in directives in unsupported bindings.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-incompatible-property-type": {
+						"type": "string",
+						"description": "Check the 'type' key of the @property decorator against the actual property type.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-invalid-attribute-name": {
+						"type": "string",
+						"description": "Check the validity of the attribute names.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-invalid-tag-name": {
+						"type": "string",
+						"description": "Check the validity of the tag name when defining custom elements.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.rules.no-invalid-css": {
+						"type": "string",
+						"description": "Check CSS within the css tagged template literal.",
+						"default": "default",
+						"enum": [
+							"default",
+							"off",
+							"warning",
+							"error"
+						]
+					},
+					"kasstor-lit-vscode-plugin.customHtmlData": {
+						"version": 1,
+						"title": "VS Code HTML Custom Data format",
+						"description": "Format for loading html data in VS Code's HTML custom data format",
+						"type": "object",
+						"required": [
+							"version"
+						],
+						"properties": {
+							"version": {
+								"const": 1,
+								"description": "The custom data version",
+								"type": "number"
+							},
+							"tags": {
+								"description": "Custom HTML tags",
+								"type": "array",
+								"items": {
+									"type": "object",
+									"required": [
+										"name"
+									],
+									"defaultSnippets": [
+										{
+											"body": {
+												"name": "$1",
+												"description": "",
+												"attributes": []
+											}
+										}
+									],
+									"properties": {
+										"name": {
+											"type": "string",
+											"description": "Name of tag"
+										},
+										"description": {
+											"type": "string",
+											"description": "Description of tag shown in completion and hover"
+										},
+										"attributes": {
+											"type": "array",
+											"description": "A list of possible attributes for the tag",
+											"items": {
+												"type": "object",
+												"required": [
+													"name"
+												],
+												"defaultSnippets": [
+													{
+														"body": {
+															"name": "$1",
+															"description": "",
+															"values": []
+														}
+													}
+												],
+												"properties": {
+													"name": {
+														"type": "string",
+														"description": "Name of attribute"
+													},
+													"description": {
+														"type": "string",
+														"description": "Description of attribute shown in completion and hover"
+													},
+													"valueSet": {
+														"type": "string",
+														"description": "Name of the matching attribute value set"
+													},
+													"values": {
+														"type": "array",
+														"description": "A list of possible values for the attribute",
+														"items": {
+															"type": "object",
+															"required": [
+																"name"
+															],
+															"defaultSnippets": [
+																{
+																	"body": {
+																		"name": "$1",
+																		"description": ""
+																	}
+																}
+															],
+															"properties": {
+																"name": {
+																	"type": "string",
+																	"description": "Name of attribute value"
+																},
+																"description": {
+																	"type": "string",
+																	"description": "Description of attribute value shown in completion and hover"
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							},
+							"globalAttributes": {
+								"description": "Custom HTML global attributes",
+								"type": "array",
+								"items": {
+									"type": "object",
+									"required": [
+										"name"
+									],
+									"defaultSnippets": [
+										{
+											"body": {
+												"name": "$1",
+												"description": "",
+												"values": []
+											}
+										}
+									],
+									"properties": {
+										"name": {
+											"type": "string",
+											"description": "Name of attribute"
+										},
+										"description": {
+											"type": "string",
+											"description": "Description of attribute shown in completion and hover"
+										},
+										"valueSet": {
+											"type": "string",
+											"description": "Name of the matching attribute value set"
+										},
+										"values": {
+											"type": "array",
+											"description": "A list of possible values for the attribute",
+											"items": {
+												"type": "object",
+												"required": [
+													"name"
+												],
+												"defaultSnippets": [
+													{
+														"body": {
+															"name": "$1",
+															"description": ""
+														}
+													}
+												],
+												"properties": {
+													"name": {
+														"type": "string",
+														"description": "Name of attribute value"
+													},
+													"description": {
+														"type": "string",
+														"description": "Description of attribute value shown in completion and hover"
+													}
+												}
+											}
+										}
+									}
+								}
+							},
+							"valueSets": {
+								"description": "A set of attribute value. When an attribute refers to an attribute set, its value completion will use valuse from that set",
+								"type": "array",
+								"items": {
+									"type": "object",
+									"required": [
+										"name"
+									],
+									"defaultSnippets": [
+										{
+											"body": {
+												"name": "$1",
+												"description": "",
+												"values": []
+											}
+										}
+									],
+									"properties": {
+										"name": {
+											"type": "string",
+											"description": "Name of attribute value in value set"
+										},
+										"values": {
+											"type": "array",
+											"description": "A list of possible values for the attribute",
+											"items": {
+												"type": "object",
+												"required": [
+													"name"
+												],
+												"defaultSnippets": [
+													{
+														"body": {
+															"name": "$1",
+															"description": ""
+														}
+													}
+												],
+												"properties": {
+													"name": {
+														"type": "string",
+														"description": "Name of attribute value"
+													},
+													"description": {
+														"type": "string",
+														"description": "Description of attribute value shown in completion and hover"
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		],
+		"typescriptServerPlugins": [
+			{
+				"name": "@genexus/kasstor-ts-lit-plugin",
+				"enableForWorkspaceTypeScriptVersions": true
+			}
+		],
+		"jsonValidation": [
+			{
+				"fileMatch": "jsconfig*.json",
+				"url": "./schemas/tsconfig.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig*.json",
+				"url": "./schemas/tsconfig.schema.json"
+			}
+		],
+		"grammars": [
+			{
+				"label": "HTML Template (Lit)",
+				"scopeName": "text.html.lit-template",
+				"path": "./syntaxes/vscode-lit-html/text.html.lit-template.json"
+			},
+			{
+				"injectTo": [
+					"source.js",
+					"source.js.jsx",
+					"source.jsx",
+					"source.ts",
+					"source.tsx",
+					"text.html.basic"
+				],
+				"scopeName": "inline.lit-html",
+				"path": "./syntaxes/vscode-lit-html/lit-html.json",
+				"embeddedLanguages": {
+					"meta.embedded.block.html": "html",
+					"meta.embedded.block.css": "css",
+					"source.css": "css"
+				}
+			},
+			{
+				"injectTo": [
+					"source.js",
+					"source.js.jsx",
+					"source.jsx",
+					"source.ts",
+					"source.tsx",
+					"text.html.basic"
+				],
+				"scopeName": "inline.lit-html.string.injection",
+				"path": "./syntaxes/vscode-lit-html/lit-html-string-injection.json",
+				"embeddedLanguages": {
+					"meta.template.expression.ts": "typescript"
+				}
+			},
+			{
+				"injectTo": [
+					"source.js",
+					"source.js.jsx",
+					"source.jsx",
+					"source.ts",
+					"source.tsx",
+					"text.html.basic"
+				],
+				"scopeName": "inline.lit-html.style.injection",
+				"path": "./syntaxes/vscode-lit-html/lit-html-style-injection.json",
+				"embeddedLanguages": {
+					"meta.template.expression.ts": "typescript"
+				}
+			},
+			{
+				"injectTo": [
+					"source.js",
+					"source.js.jsx",
+					"source.jsx",
+					"source.ts",
+					"source.tsx",
+					"text.html.basic"
+				],
+				"scopeName": "inline.lit-html-svg",
+				"path": "./syntaxes/vscode-lit-html/lit-html-svg.json",
+				"embeddedLanguages": {
+					"meta.embedded.block.svg": "xml"
+				}
+			},
+			{
+				"scopeName": "source.css.styled",
+				"path": "./syntaxes/vscode-styled-components/css.styled.json"
+			},
+			{
+				"injectTo": [
+					"source.js",
+					"source.ts",
+					"source.jsx",
+					"source.js.jsx",
+					"source.tsx"
+				],
+				"scopeName": "styled",
+				"path": "./syntaxes/vscode-styled-components/styled-components.json",
+				"embeddedLanguages": {
+					"source.css.scss": "css",
+					"meta.embedded.line.ts": "typescript"
+				}
+			}
+		]
+	}
+}

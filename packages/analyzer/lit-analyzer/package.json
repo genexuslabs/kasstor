@@ -1,0 +1,112 @@
+{
+  "name": "@genexus/kasstor-lit-analyzer",
+  "version": "0.1.0",
+  "description": "CLI and core that type-checks bindings in lit-html templates with Custom Elements Manifest and Kasstor library summary support.",
+  "license": "MIT",
+  "homepage": "https://github.com/genexuslabs/kasstor",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/genexuslabs/kasstor.git"
+  },
+  "keywords": [
+    "lit-html",
+    "lit",
+    "lit-element",
+    "kasstor",
+    "javascript",
+    "typescript",
+    "web components",
+    "custom-elements-manifest"
+  ],
+  "bin": {
+    "kasstor-lit-analyzer": "cli.mjs"
+  },
+  "scripts": {
+    "build": "tsc --build --pretty",
+    "build:clean": "tsc --build --clean",
+    "test": "bun run build && bun run test:ava && bun run test:vitest",
+    "test:ava": "ava --color",
+    "test:vitest": "vitest run --config vitest.config.ts",
+    "test:watch": "ava --watch --color",
+    "lint": "eslint src",
+    "check-version": "node scripts/check-version.js"
+  },
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "files": [
+    "/lib/",
+    "index.js",
+    "index.d.ts",
+    "index.d.ts.map",
+    "cli.mjs",
+    "LICENSE.md"
+  ],
+  "dependencies": {
+    "@jackolope/web-component-analyzer": "^4.0.4",
+    "@vscode/web-custom-data": "^0.6.3",
+    "chalk": "^5.6.2",
+    "didyoumean2": "7.0.4",
+    "fast-glob": "^3.2.11",
+    "parse5": "7.2.1",
+    "ts-simple-type": "~2.0.0-next.0",
+    "vscode-css-languageservice": "6.3.10",
+    "vscode-html-languageservice": "5.6.2"
+  },
+  "peerDependencies": {
+    "@genexus/kasstor-build": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@genexus/kasstor-build": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.0",
+    "ava": "^7.0.0",
+    "tslib": "^2.0.0",
+    "typescript": "~5.9.2",
+    "vitest": "~3.2.4",
+    "vscode-languageserver-types": "^3.17.5"
+  },
+  "ava": {
+    "cache": true,
+    "timeout": "200s",
+    "extensions": [
+      "js"
+    ],
+    "snapshotDir": "test/snapshots/results",
+    "files": [
+      "test/**/*.js",
+      "!test/helpers/**/*",
+      "!test-vitest/**/*"
+    ]
+  },
+  "contributors": [
+    {
+      "name": "Rune Mehlsen (original author)",
+      "url": "https://twitter.com/runemehlsen"
+    },
+    {
+      "name": "Andreas Mehlsen",
+      "url": "https://twitter.com/andreasmehlsen"
+    },
+    {
+      "name": "Jack Robards (fork maintainer)",
+      "url": "https://github.com/JackRobards"
+    },
+    {
+      "name": "GeneXus / Kasstor contributors",
+      "url": "https://github.com/genexuslabs/kasstor"
+    }
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "type": "commonjs"
+}

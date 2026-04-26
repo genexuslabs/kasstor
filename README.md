@@ -338,8 +338,11 @@ Vite will start the dev server with HMR enabled and open your browser automatica
 | [**@genexus/kasstor-webkit**](./packages/webkit/README.md)                           | Shared utilities: internationalization (i18n), array helpers, typeahead, and frame-sync helpers for apps and component libraries.                                                                                                         |
 | [**@genexus/kasstor-insights**](./packages/insights/README.md)                       | Performance monitoring and benchmarking for Lit apps. Included via the Vite plugin when `insights` option is enabled; no need to install separately when using Vite.                                                                      |
 | [**@genexus/kasstor-build**](./packages/build/README.md)                             | Library analysis and optional file generation (types, readmes). Used by the Vite plugin under the hood; no need to install separately when using Vite.                                                                                    |
+| [**@genexus/kasstor-lit-analyzer**](./packages/analyzer/lit-analyzer/README.md)      | CLI and core analyzer for `lit-html` templates (`kasstor-lit-analyzer`). Maintained fork-of-fork of [`runem/lit-analyzer`](https://github.com/runem/lit-analyzer)/[`JackRobards/lit-analyzer`](https://github.com/JackRobards/lit-analyzer) with Custom Elements Manifest ingestion, Kasstor library-summary integration, and a generics-aware refinement pass. |
+| [**@genexus/kasstor-ts-lit-plugin**](./packages/analyzer/ts-lit-plugin/README.md)    | TypeScript Language Service plugin built on top of `@genexus/kasstor-lit-analyzer`. Adds completions, diagnostics and quick fixes for `lit-html` templates inside any TS-aware editor.                                                    |
+| [**kasstor-lit-vscode-plugin**](./packages/analyzer/vscode-extension/README.md)      | VS Code extension that bundles the TS plugin and ships syntax highlighting for `lit-html`/`css`/`svg` template literals.                                                                                                                  |
 
-Install only what you need; `@genexus/kasstor-core` plus the Vite plugin (`@genexus/vite-plugin-kasstor`) is the usual starting point.
+Install only what you need; `@genexus/kasstor-core` plus the Vite plugin (`@genexus/vite-plugin-kasstor`) is the usual starting point. The analyzer packages under `packages/analyzer/` are an optional toolchain layer — see [`packages/analyzer/README.md`](./packages/analyzer/README.md) for the full lineage and acknowledgements (Rune Mehlsen, Andreas Mehlsen, Peter Burns, Jack Robards).
 
 ## Development
 
@@ -405,7 +408,17 @@ bun run test
 - E2E only: `bun run test:e2e`
 - For tests that run in both browser and Node, use the `.shared-test.ts` extension.
 
+For the analyzer subtree (`packages/analyzer/*`):
+
+```bash
+bun analyzer:build           # tsc --build for the 3 analyzer packages
+bun analyzer:test            # AVA (legacy) + Vitest (new sources)
+bun analyzer:test:ava        # only AVA
+bun analyzer:test:vitest     # only Vitest
+bun analyzer:test:vscode     # opt-in: Mocha + @vscode/test-electron (display required)
+bun analyzer:lint
+```
+
 ## Contributing
 
 Kasstor is open source and we appreciate issue reports and pull requests. See [CONTRIBUTING.md](./CONTRIBUTING.md) for more information.
-

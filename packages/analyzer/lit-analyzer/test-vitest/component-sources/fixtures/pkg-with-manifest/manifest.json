@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "2.1.0",
+  "modules": [
+    {
+      "kind": "javascript-module",
+      "path": "src/fake-button.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "FakeButton",
+          "customElement": true,
+          "tagName": "fake-button",
+          "description": "A button used in tests.",
+          "attributes": [
+            { "name": "label", "type": { "text": "string" }, "description": "Button label" },
+            { "name": "disabled", "type": { "text": "boolean" } }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "size",
+              "type": { "text": "'small' | 'medium' | 'large'" },
+              "default": "'medium'",
+              "attribute": "size"
+            },
+            {
+              "kind": "method",
+              "name": "focus",
+              "return": { "type": { "text": "void" } }
+            }
+          ],
+          "events": [
+            {
+              "name": "fake-click",
+              "type": { "text": "CustomEvent<{ id: string }>" },
+              "description": "Fired on click."
+            }
+          ],
+          "slots": [
+            { "name": "", "description": "Default slot" },
+            { "name": "icon", "description": "Icon slot" }
+          ],
+          "cssParts": [{ "name": "base" }],
+          "cssProperties": [{ "name": "--fake-color", "default": "red", "syntax": "<color>" }]
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/internal-helper.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "name": "InternalHelper",
+          "description": "Not a custom element, should be ignored."
+        }
+      ]
+    }
+  ]
+}

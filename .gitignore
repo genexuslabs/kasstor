@@ -61,6 +61,32 @@ www/
 loader/
 components.d.ts
 
+# Auto-generated artifacts in the analyzer subtree.
+# Mirrors upstream `JackRobards/lit-analyzer`'s `.gitignore` patterns, scoped
+# to our `packages/analyzer/*` layout. `tsc --build` writes:
+#   - `lit-analyzer/`: rootDir=./src, outDir=./   (so `lib/`, `test/`, `scripts/`
+#                                                  and `index.*` mirror `src/**`
+#                                                  at the package root)
+#   - `ts-lit-plugin/`: outDir=./lib              (note: `index.js` here is the
+#                                                  hand-written CJS bridge —
+#                                                  do NOT ignore)
+#   - `vscode-extension/`: outDir=out, plus `built/` from esbuild + copy-to-built
+/packages/analyzer/lit-analyzer/lib/
+/packages/analyzer/lit-analyzer/test/
+/packages/analyzer/lit-analyzer/scripts/
+/packages/analyzer/lit-analyzer/index.js
+/packages/analyzer/lit-analyzer/index.js.map
+/packages/analyzer/lit-analyzer/index.d.ts
+/packages/analyzer/lit-analyzer/index.d.ts.map
+
+/packages/analyzer/ts-lit-plugin/lib/
+
+/packages/analyzer/vscode-extension/out/
+/packages/analyzer/vscode-extension/built/
+
+# Library summary emitted by `@genexus/kasstor-build` alongside the TS artifact.
+**/library-summary.json
+
 *~
 *.sw[mnpcod]
 *.log

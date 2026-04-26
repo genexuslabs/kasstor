@@ -1,0 +1,5 @@
+{
+  "name": "fake-pkg-with-manifest",
+  "version": "1.0.0",
+  "customElements": "manifest.json"
+}

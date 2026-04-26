@@ -1,0 +1,72 @@
+{
+  "name": "@genexus/kasstor-ts-lit-plugin",
+  "version": "0.1.0",
+  "description": "TypeScript Language Service plugin that adds type checking and code completion for lit-html templates, integrated with Kasstor.",
+  "license": "MIT",
+  "homepage": "https://github.com/genexuslabs/kasstor",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/genexuslabs/kasstor.git"
+  },
+  "keywords": [
+    "lit-html",
+    "lit",
+    "lit-element",
+    "kasstor",
+    "typescript-plugin",
+    "language-service",
+    "web components"
+  ],
+  "scripts": {
+    "watch": "tsc --watch",
+    "build": "tsc --build --pretty",
+    "build:clean": "tsc --build --clean",
+    "lint": "eslint src",
+    "test": "echo 'ts-lit-plugin has no own tests; coverage comes via vscode-extension'"
+  },
+  "main": "index.js",
+  "types": "lib/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/src/index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "files": [
+    "/lib/",
+    "/html-documentation/",
+    "index.js",
+    "LICENSE.md"
+  ],
+  "dependencies": {
+    "@genexus/kasstor-lit-analyzer": "workspace:*",
+    "@jackolope/web-component-analyzer": "^4.0.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.0",
+    "esbuild": "^0.27.3",
+    "typescript": "~5.9.2"
+  },
+  "contributors": [
+    {
+      "name": "Rune Mehlsen (original author)",
+      "url": "https://twitter.com/runemehlsen"
+    },
+    {
+      "name": "Andreas Mehlsen",
+      "url": "https://twitter.com/andreasmehlsen"
+    },
+    {
+      "name": "Jack Robards (fork maintainer)",
+      "url": "https://github.com/JackRobards"
+    },
+    {
+      "name": "GeneXus / Kasstor contributors",
+      "url": "https://github.com/genexuslabs/kasstor"
+    }
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "type": "commonjs"
+}

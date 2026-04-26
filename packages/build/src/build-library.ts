@@ -24,6 +24,7 @@ const librarySummaryTypes = await readFile(
 const DEFAULT_DECLARATION_FILE_NAME = "components.ts";
 // const DEFAULT_DECLARATION_FOR_ALL_COPIED_TYPES = "component-copied-types.ts";
 const DEFAULT_LIBRARY_SUMMARY_FILE_NAME = "library-summary.ts";
+const DEFAULT_LIBRARY_SUMMARY_JSON_FILE_NAME = "library-summary.json";
 const DEFAULT_TYPE_DECLARATIONS_FOLDER = "docs/types";
 const DEFAULT_COMPONENT_ACCESS = "public" satisfies ComponentDefinition["access"];
 const DEFAULT_INCLUDED_PATHS = /\.lit\.(ts|js)$/;
@@ -45,13 +46,24 @@ const writeLibrarySummary = async (
   libraryComponents: LibraryComponents,
   relativeComponentsSrcPath: string,
   fileName: string
-) =>
-  format(
+) => {
+  const tsArtifact = format(
     `export const librarySummary = ${JSON.stringify(libraryComponents, undefined, 2)} as const satisfies LibraryComponents;\n\n${librarySummaryTypes}`,
     { parser: "typescript", trailingComma: "none" }
   ).then(formattedLibrarySummary =>
     writeFile(join(process.cwd(), relativeComponentsSrcPath, fileName), formattedLibrarySummary)
   );
+
+  // Emit a sibling JSON artifact for tooling that does not want to parse TS
+  // (e.g. `@genexus/kasstor-lit-analyzer`). The JSON file is a pure data
+  // mirror — no `as const`, no type annotations, no comments.
+  const jsonArtifact = writeFile(
+    join(process.cwd(), relativeComponentsSrcPath, DEFAULT_LIBRARY_SUMMARY_JSON_FILE_NAME),
+    JSON.stringify(libraryComponents, undefined, 2) + "\n"
+  );
+
+  return Promise.all([tsArtifact, jsonArtifact]);
+};
 
 const writeReadmes = (libraryComponentAndContents: KasstorBuildComponentData[]): Promise<void[]> =>
   Promise.all(
