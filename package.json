@@ -15,7 +15,8 @@
   ],
   "workspaces": [
     "packages/*",
-    "packages/plugins/*"
+    "packages/plugins/*",
+    "packages/analyzer/*"
   ],
   "scripts": {
     "start": "cd packages/showcase && bun start",
@@ -37,7 +38,13 @@
     "test": "bun dev && playwright install && vitest",
     "test.ci": "bun run test --watch=false --browser.headless",
     "test:unit": "bun dev && vitest --project unit",
-    "test:e2e": "bun dev && playwright install && vitest --project browser"
+    "test:e2e": "bun dev && playwright install && vitest --project browser",
+    "analyzer:build": "bun --filter=@genexus/kasstor-lit-analyzer --filter=@genexus/kasstor-ts-lit-plugin --filter=kasstor-lit-vscode-plugin run build",
+    "analyzer:test": "bun --filter=@genexus/kasstor-lit-analyzer run test",
+    "analyzer:test:watch": "bun --filter=@genexus/kasstor-lit-analyzer run test:watch",
+    "analyzer:test:bench": "bun --filter=@genexus/kasstor-lit-analyzer run test:bench",
+    "analyzer:test:vscode": "bun --filter=kasstor-lit-vscode-plugin run test",
+    "analyzer:lint": "bun --filter=@genexus/kasstor-lit-analyzer --filter=@genexus/kasstor-ts-lit-plugin --filter=kasstor-lit-vscode-plugin run lint"
   },
   "license": "Apache-2.0",
   "devDependencies": {
@@ -71,6 +78,8 @@
     "@genexus/kasstor-core": "workspace:*",
     "@genexus/kasstor-insights": "workspace:*",
     "@genexus/kasstor-webkit": "workspace:*",
+    "@genexus/kasstor-lit-analyzer": "workspace:*",
+    "@genexus/kasstor-ts-lit-plugin": "workspace:*",
     "vite": "7.3.0"
   }
 }
