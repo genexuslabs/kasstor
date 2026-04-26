@@ -44,6 +44,10 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./library-summary": {
+      "import": "./dist/library-summary/load-library-summary.js",
+      "types": "./dist/library-summary/load-library-summary.d.ts"
     }
   }
 }

@@ -24,18 +24,18 @@
     "lint": "eslint src",
     "test": "echo 'ts-lit-plugin has no own tests; coverage comes via vscode-extension'"
   },
-  "main": "index.js",
+  "main": "index.cjs",
   "types": "lib/src/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/src/index.d.ts",
-      "default": "./index.js"
+      "default": "./index.cjs"
     }
   },
   "files": [
     "/lib/",
     "/html-documentation/",
-    "index.js",
+    "index.cjs",
     "LICENSE.md"
   ],
   "dependencies": {
@@ -66,7 +66,7 @@
     }
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=20.13"
   },
-  "type": "commonjs"
+  "type": "module"
 }
