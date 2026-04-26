@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import { red } from "./format/ansi.js";
 import { appendFileSync, writeFileSync } from "fs";
 import type { Program, SourceFile } from "typescript";
 import { DefaultLitAnalyzerContext } from "../analyze/default-lit-analyzer-context.js";
@@ -74,7 +74,7 @@ export async function analyzeCommand(globs: string[], cliConfig: LitAnalyzerCliC
 		didExpandGlobs(filePaths: string[]): void {
 			if (filePaths.length === 0) {
 				// eslint-disable-next-line no-console
-				console.log(`\n${chalk.red("  ✖ Couldn't find any files to analyze")}`);
+				console.log(`\n${red("  ✖ Couldn't find any files to analyze")}`);
 			} else {
 				// eslint-disable-next-line no-console
 				console.log(`Analyzing ${filePaths.length} file${filePaths.length === 1 ? "" : "s"}...`);

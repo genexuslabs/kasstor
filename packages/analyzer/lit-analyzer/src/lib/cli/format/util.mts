@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import { bgRedBright, bold, green, red, yellow } from "./ansi.js";
 import type { TextSpan } from "typescript";
 import type { AnalysisStats } from "./diagnostic-formatter.mjs";
 
@@ -14,12 +14,12 @@ export function generalReport(stats: AnalysisStats): string {
 		)}, ${numberStatText(stats.warnings, "warning")})`;
 
 		if (stats.errors > 0) {
-			return `\n${chalk.red(message)}`;
+			return `\n${red(message)}`;
 		} else {
-			return `\n${chalk.yellow(message)}`;
+			return `\n${yellow(message)}`;
 		}
 	} else {
-		return `\n${chalk.green(`  ✓ Found 0 problems in ${numberStatText(stats.totalFiles, "file")}`)}`;
+		return `\n${green(`  ✓ Found 0 problems in ${numberStatText(stats.totalFiles, "file")}`)}`;
 	}
 }
 
@@ -27,9 +27,9 @@ export function relativeFileName(fileName: string): string {
 	return fileName.replace(process.cwd(), ".");
 }
 
-export function markText(text: string, range: TextSpan, colorFunction: (str: string) => string = chalk.bgRedBright): string {
+export function markText(text: string, range: TextSpan, colorFunction: (str: string) => string = bgRedBright): string {
 	return (
-		text.substring(0, range.start) + chalk.bold(colorFunction(text.substr(range.start, range.length))) + text.substring(range.start + range.length)
+		text.substring(0, range.start) + bold(colorFunction(text.substr(range.start, range.length))) + text.substring(range.start + range.length)
 	);
 }
 

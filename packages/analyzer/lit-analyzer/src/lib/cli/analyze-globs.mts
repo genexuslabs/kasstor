@@ -1,6 +1,6 @@
-import fastGlob from "fast-glob";
-import { existsSync, lstatSync } from "fs";
-import { join } from "path";
+import { glob as tinyGlob } from "tinyglobby";
+import { existsSync, lstatSync } from "node:fs";
+import { join } from "node:path";
 import type { Diagnostic, Program, SourceFile } from "typescript";
 import { arrayFlat } from "../analyze/util/array-util.js";
 import type { CompileResult } from "./compile.mjs";
@@ -67,7 +67,7 @@ async function expandGlobs(globs: string | string[]): Promise<string[]> {
 					// If so, return the result of a new glob that searches for files in the directory excluding node_modules..
 					const dirExists = existsSync(g) && lstatSync(g).isDirectory();
 					if (dirExists) {
-						return fastGlob([...IGNORE_GLOBS, join(g, DEFAULT_DIR_GLOB)], {
+						return tinyGlob([...IGNORE_GLOBS, join(g, DEFAULT_DIR_GLOB)], {
 							absolute: true,
 							followSymbolicLinks: true
 						});
@@ -77,7 +77,7 @@ async function expandGlobs(globs: string | string[]): Promise<string[]> {
 				}
 
 				// Return the result of globbing
-				return fastGlob([...IGNORE_GLOBS, g], {
+				return tinyGlob([...IGNORE_GLOBS, g], {
 					absolute: true,
 					followSymbolicLinks: false
 				});

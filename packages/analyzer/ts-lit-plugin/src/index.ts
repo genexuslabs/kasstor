@@ -49,7 +49,11 @@ export function init({ typescript }: { typescript: typeof ts }): tsServer.server
 			// Extend existing language service with the plugin functions
 			try {
 				context = new LitPluginContext({
-					ts: typescript,
+					// CJS↔ESM interop: this package is CJS (TS plugin loader
+					// contract), but `LitPluginContextHandler["ts"]` expects
+					// the ESM-shaped namespace from the analyzer. The runtime
+					// value is identical in both views.
+					ts: typescript as never,
 					getProgram: () => {
 						return info.languageService.getProgram()!;
 					},

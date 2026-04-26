@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import { red, underline, yellow } from "./ansi.js";
 import type { SourceFile } from "typescript";
 import type { LitDiagnostic } from "../../analyze/types/lit-diagnostic.js";
 import type { AnalysisStats, DiagnosticFormatter } from "./diagnostic-formatter.mjs";
@@ -20,7 +20,7 @@ function diagnosticTextForFile(file: SourceFile, diagnostics: LitDiagnostic[]): 
 	const diagnosticText = diagnostics.map(diagnostic => litDiagnosticToErrorText(file, diagnostic)).join("\n");
 
 	return `
-${chalk.underline(`${relativeFileName(file.fileName)}`)}
+${underline(`${relativeFileName(file.fileName)}`)}
 ${diagnosticText}`;
 }
 
@@ -30,7 +30,7 @@ function litDiagnosticToErrorText(file: SourceFile, diagnostic: LitDiagnostic): 
 		width: 4,
 		dir: "right"
 	})}`;
-	const severityPart = `${textPad(diagnostic.severity === "warning" ? chalk.yellow("warning") : chalk.red("error"), {
+	const severityPart = `${textPad(diagnostic.severity === "warning" ? yellow("warning") : red("error"), {
 		width: 18,
 		dir: "right"
 	})}`;

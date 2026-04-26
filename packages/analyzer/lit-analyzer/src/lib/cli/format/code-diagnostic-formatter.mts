@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import { bgRedBright, bgYellow, black, bold, gray, underline } from "./ansi.js";
 import type { SourceFile } from "typescript";
 import type { LitDiagnostic } from "../../analyze/types/lit-diagnostic.js";
 import type { AnalysisStats, DiagnosticFormatter } from "./diagnostic-formatter.mjs";
@@ -15,7 +15,7 @@ export class CodeDiagnosticFormatter implements DiagnosticFormatter {
 		const diagnosticText = diagnostics.map(diagnostic => diagnosticTextForFile(file, diagnostic)).join("\n");
 
 		return `
-${chalk.underline(`${relativeFileName(file.fileName)}`)}
+${underline(`${relativeFileName(file.fileName)}`)}
 ${diagnosticText}`;
 	}
 }
@@ -50,7 +50,7 @@ function diagnosticTextForFile(file: SourceFile, diagnostic: LitDiagnostic) {
 
 	// Highlight the error in the text
 	// The highlighting range is offsetted by subtracting the line start position
-	const highlightingColorFunction = (str: string) => chalk.black(diagnostic.severity === "error" ? chalk.bgRedBright(str) : chalk.bgYellow(str));
+	const highlightingColorFunction = (str: string) => black(diagnostic.severity === "error" ? bgRedBright(str) : bgYellow(str));
 
 	const markedLine = markText(
 		lineText,
@@ -62,9 +62,9 @@ function diagnosticTextForFile(file: SourceFile, diagnostic: LitDiagnostic) {
 	).replace(/^\s*/, " ");
 
 	const block = [
-		chalk.bold(`${diagnostic.message}${diagnostic.fixMessage ? ` ${diagnostic.fixMessage}` : ""}`),
-		`${chalk.gray(`${lineContext.line + 1}:`)} ${markedLine}`,
-		diagnostic.source == null ? undefined : chalk.gray(`${diagnostic.source}`)
+		bold(`${diagnostic.message}${diagnostic.fixMessage ? ` ${diagnostic.fixMessage}` : ""}`),
+		`${gray(`${lineContext.line + 1}:`)} ${markedLine}`,
+		diagnostic.source == null ? undefined : gray(`${diagnostic.source}`)
 	]
 		.filter(line => line != null)
 		.map(line => `    ${line}`)
