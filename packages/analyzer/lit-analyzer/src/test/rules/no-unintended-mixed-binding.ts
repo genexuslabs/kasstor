@@ -1,38 +1,38 @@
 import { getDiagnostics } from "../helpers/analyze.js";
 import { hasDiagnostic, hasNoDiagnostics } from "../helpers/assert.js";
-import { tsTest } from "../helpers/ts-test.js";
+import { it } from "vitest";
 
-tsTest('Report mixed binding with expression and "', t => {
+it('Report mixed binding with expression and "', () => {
 	const { diagnostics } = getDiagnostics('html`<input value=${"foo"}" />`');
-	hasDiagnostic(t, diagnostics, "no-unintended-mixed-binding");
+	hasDiagnostic(diagnostics, "no-unintended-mixed-binding");
 });
 
-tsTest("Report mixed binding with expression and '", t => {
+it("Report mixed binding with expression and '", () => {
 	const { diagnostics } = getDiagnostics("html`<input value=${'foo'}' />`");
-	hasDiagnostic(t, diagnostics, "no-unintended-mixed-binding");
+	hasDiagnostic(diagnostics, "no-unintended-mixed-binding");
 });
 
-tsTest("Report mixed binding with expression and }", t => {
+it("Report mixed binding with expression and }", () => {
 	const { diagnostics } = getDiagnostics("html`<input value=${'foo'}} />`");
-	hasDiagnostic(t, diagnostics, "no-unintended-mixed-binding");
+	hasDiagnostic(diagnostics, "no-unintended-mixed-binding");
 });
 
-tsTest("Report mixed binding with expression and /", t => {
+it("Report mixed binding with expression and /", () => {
 	const { diagnostics } = getDiagnostics("html`<input value=${'foo'}/>`");
-	hasDiagnostic(t, diagnostics, "no-unintended-mixed-binding");
+	hasDiagnostic(diagnostics, "no-unintended-mixed-binding");
 });
 
-tsTest("Don't report mixed binding with expression and %", t => {
+it("Don't report mixed binding with expression and %", () => {
 	const { diagnostics } = getDiagnostics("html`<input value=${42}% />`");
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Don't report mixed event listener binding directly followed by /", t => {
+it("Don't report mixed event listener binding directly followed by /", () => {
 	const { diagnostics } = getDiagnostics("html`<input @input=${console.log}/>`");
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Report mixed binding with expression and } inside quotes", t => {
+it("Report mixed binding with expression and } inside quotes", () => {
 	const { diagnostics } = getDiagnostics('html`<input value="${"foo"}}" />`');
-	hasDiagnostic(t, diagnostics, "no-unintended-mixed-binding");
+	hasDiagnostic(diagnostics, "no-unintended-mixed-binding");
 });

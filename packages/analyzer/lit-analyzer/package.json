@@ -24,10 +24,9 @@
   "scripts": {
     "build": "tsc --build --pretty",
     "build:clean": "tsc --build --clean",
-    "test": "bun run build && bun run test:ava && bun run test:vitest",
-    "test:ava": "ava --color",
-    "test:vitest": "vitest run --config vitest.config.ts",
-    "test:watch": "ava --watch --color",
+    "test": "bun run build && vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "test:bench": "vitest bench --config vitest.config.ts",
     "lint": "eslint src",
     "check-version": "node scripts/check-version.js"
   },
@@ -68,24 +67,10 @@
   },
   "devDependencies": {
     "@types/node": "^24.12.0",
-    "ava": "^7.0.0",
     "tslib": "^2.0.0",
     "typescript": "~5.9.2",
-    "vitest": "~3.2.4",
+    "vitest": "~4.0.18",
     "vscode-languageserver-types": "^3.17.5"
-  },
-  "ava": {
-    "cache": true,
-    "timeout": "200s",
-    "extensions": [
-      "js"
-    ],
-    "snapshotDir": "test/snapshots/results",
-    "files": [
-      "test/**/*.js",
-      "!test/helpers/**/*",
-      "!test-vitest/**/*"
-    ]
   },
   "contributors": [
     {

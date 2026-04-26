@@ -1,10 +1,37 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import * as tsModule from "typescript";
-import type { SourceFile } from "typescript";
+import {
+  createSourceFile,
+  forEachChild,
+  isArrayLiteralExpression,
+  isAsExpression,
+  isIdentifier,
+  isNoSubstitutionTemplateLiteral,
+  isNumericLiteral,
+  isObjectLiteralExpression,
+  isParenthesizedExpression,
+  isPrefixUnaryExpression,
+  isPropertyAssignment,
+  isSatisfiesExpression,
+  isStringLiteralLike,
+  isVariableStatement,
+  ScriptTarget,
+  SyntaxKind
+} from "typescript";
+import type {
+  ArrayLiteralExpression,
+  Expression,
+  Node as TsNode,
+  PropertyName,
+  SourceFile
+} from "typescript";
 import type { ComponentDefinition } from "@genexus/kasstor-build";
 import { convertKasstorSummaryToCem } from "../parse/parse-kasstor-summary.js";
-import type { ExternalManifestSource, ExternalManifestSourceContext, ResolvedManifest } from "./external-manifest-source.js";
+import type {
+  ExternalManifestSource,
+  ExternalManifestSourceContext,
+  ResolvedManifest
+} from "./external-manifest-source.js";
 import { PackageRootIndex } from "./package-root-index.js";
 
 const KASSTOR_SUMMARY_MARKER = "<kasstor-summary>";
@@ -14,215 +41,230 @@ const KASSTOR_SUMMARY_MARKER = "<kasstor-summary>";
  * `ResolvedManifest`.
  *
  * Loading strategy (first match wins):
- *
- *  1. If `mode` is `{ srcPath }` and the path ends in `.json`, the JSON is
- *     parsed directly. Useful for tests and explicit overrides.
- *  2. `<srcPath>/library-summary.json` — emitted by `@genexus/kasstor-build`
- *     since 0.2.0 alongside the TS artifact. This is the preferred path: a
- *     single sync read + `JSON.parse`, zero TS parsing.
- *  3. `<srcPath>/library-summary.ts` — emitted by `@genexus/kasstor-build`
- *     for TS consumers. We use the TS API to walk the exported array literal
- *     and evaluate it as JSON-compatible data. Strictly a fallback for
- *     projects on a kasstor-build version that pre-dates the JSON emit.
+ *   1. `{ srcPath }` pointing at a `.json` file → JSON parse.
+ *   2. `<srcPath>/library-summary.json` (kasstor-build ≥ 0.2.0).
+ *   3. `<srcPath>/library-summary.ts` (older emit format, parsed via TS AST).
  *
  * Failures degrade to "no manifest" with a warning, never a thrown error.
+ *
+ * Why the loader lives here AND in `@genexus/kasstor-build`:
+ * `kasstor-build` is an ESM-only package (`"type": "module"`) and the
+ * analyzer is CJS-compiled (the TS compiler plugin loader requires
+ * `module.exports = require(...).init`). Static `require()` of an
+ * ESM-only package is not supported by Node's CJS loader, and a dynamic
+ * `import()` cannot be awaited inside the analyzer's synchronous
+ * `findInvalidatedComponents` path. Maintaining a small parallel copy of
+ * the loader (this file) keeps the analyzer hot path sync while
+ * `kasstor-build` exposes the canonical implementation for ESM consumers.
+ * The two implementations share the `ComponentDefinition` type, so the
+ * shape contract has a single source of truth.
  */
 export class KasstorSummarySource implements ExternalManifestSource {
-	readonly name = "kasstor-summary";
+  readonly name = "kasstor-summary";
 
-	private manifests: ResolvedManifest[] = [];
-	private readonly index = new PackageRootIndex();
+  private manifests: ResolvedManifest[] = [];
+  private readonly index = new PackageRootIndex();
 
-	constructor(private readonly mode: "auto" | { srcPath: string }) {}
+  constructor(private readonly mode: "auto" | { srcPath: string }) {}
 
-	load(ctx: ExternalManifestSourceContext): readonly ResolvedManifest[] {
-		const srcPath = this.resolveSrcPath(ctx);
-		if (srcPath == null) return [];
+  load(ctx: ExternalManifestSourceContext): readonly ResolvedManifest[] {
+    const srcPath = this.resolveSrcPath(ctx);
+    if (srcPath == null) return [];
 
-		const summary = this.tryLoadSummary(srcPath, ctx);
-		if (summary == null) return [];
+    const summary = this.tryLoadSummary(srcPath, ctx);
+    if (summary == null) return [];
 
-		const manifest = convertKasstorSummaryToCem(summary);
-		const packageRoot = this.findPackageRoot(srcPath);
+    const manifest = convertKasstorSummaryToCem(summary);
+    const packageRoot = this.findPackageRoot(srcPath);
 
-		const resolved: ResolvedManifest = {
-			sourceName: KASSTOR_SUMMARY_MARKER,
-			packageRoot,
-			manifest
-		};
+    const resolved: ResolvedManifest = {
+      sourceName: KASSTOR_SUMMARY_MARKER,
+      packageRoot,
+      manifest
+    };
 
-		this.manifests = [resolved];
-		this.index.clear();
-		this.index.add(packageRoot, KASSTOR_SUMMARY_MARKER);
-		return this.manifests;
-	}
+    this.manifests = [resolved];
+    this.index.clear();
+    this.index.add(packageRoot, KASSTOR_SUMMARY_MARKER);
+    return this.manifests;
+  }
 
-	coversSourceFile(sourceFile: SourceFile): string | undefined {
-		return this.index.cover(sourceFile);
-	}
+  coversSourceFile(sourceFile: SourceFile): string | undefined {
+    return this.index.cover(sourceFile);
+  }
 
-	private resolveSrcPath(ctx: ExternalManifestSourceContext): string | null {
-		if (this.mode === "auto") {
-			const candidate = resolve(ctx.programRoot, "src");
-			return existsSync(candidate) ? candidate : null;
-		}
-		return resolve(ctx.programRoot, this.mode.srcPath);
-	}
+  private resolveSrcPath(ctx: ExternalManifestSourceContext): string | null {
+    if (this.mode === "auto") {
+      const candidate = resolve(ctx.programRoot, "src");
+      return existsSync(candidate) ? candidate : null;
+    }
+    return resolve(ctx.programRoot, this.mode.srcPath);
+  }
 
-	private tryLoadSummary(srcPath: string, ctx: ExternalManifestSourceContext): ComponentDefinition[] | null {
-		// 1. Caller pointed `srcPath` directly at a JSON file.
-		if (srcPath.endsWith(".json") && existsSync(srcPath)) {
-			return parseJsonSummary(srcPath, ctx);
-		}
+  private tryLoadSummary(
+    srcPath: string,
+    ctx: ExternalManifestSourceContext
+  ): ComponentDefinition[] | null {
+    if (srcPath.endsWith(".json") && existsSync(srcPath)) {
+      return parseJsonSummary(srcPath, ctx);
+    }
+    const jsonAtSrc = resolve(srcPath, "library-summary.json");
+    if (existsSync(jsonAtSrc)) {
+      return parseJsonSummary(jsonAtSrc, ctx);
+    }
+    const tsAtSrc = resolve(srcPath, "library-summary.ts");
+    if (existsSync(tsAtSrc)) {
+      return parseTsLiteralSummary(tsAtSrc, ctx);
+    }
+    return null;
+  }
 
-		// 2. Preferred: `<srcPath>/library-summary.json` (emitted by kasstor-build >= 0.2.0).
-		const jsonAtSrc = resolve(srcPath, "library-summary.json");
-		if (existsSync(jsonAtSrc)) {
-			return parseJsonSummary(jsonAtSrc, ctx);
-		}
+  private findPackageRoot(srcPath: string): string {
+    let dir = resolve(srcPath);
+    while (true) {
+      if (existsSync(resolve(dir, "package.json"))) return dir;
+      const parent = resolve(dir, "..");
+      if (parent === dir) return dirname(srcPath);
+      dir = parent;
+    }
+  }
 
-		// 3. Fallback: `<srcPath>/library-summary.ts` (older kasstor-build).
-		const tsAtSrc = resolve(srcPath, "library-summary.ts");
-		if (existsSync(tsAtSrc)) {
-			return parseTsLiteralSummary(tsAtSrc, ctx);
-		}
-
-		return null;
-	}
-
-	private findPackageRoot(srcPath: string): string {
-		let dir = resolve(srcPath);
-		while (true) {
-			if (existsSync(resolve(dir, "package.json"))) return dir;
-			const parent = resolve(dir, "..");
-			if (parent === dir) return dirname(srcPath);
-			dir = parent;
-		}
-	}
-
-	getLoadedManifests(): readonly ResolvedManifest[] {
-		return this.manifests;
-	}
+  getLoadedManifests(): readonly ResolvedManifest[] {
+    return this.manifests;
+  }
 }
 
-function parseJsonSummary(filePath: string, ctx: ExternalManifestSourceContext): ComponentDefinition[] | null {
-	try {
-		const data: unknown = JSON.parse(readFileSync(filePath, "utf8"));
-		if (Array.isArray(data)) return data as ComponentDefinition[];
-		ctx.logger.warn(`[kasstor-summary] ${filePath} did not contain a top-level array; ignoring.`);
-		return null;
-	} catch (err) {
-		ctx.logger.error(`[kasstor-summary] failed to parse ${filePath}`, err);
-		return null;
-	}
+// -----------------------------------------------------------------------------
+// File parsers — duplicated from `@genexus/kasstor-build/library-summary/load-library-summary.ts`
+// for the CJS/ESM reasons documented on the class.
+// Keep the two files in sync when changing the loader contract.
+// -----------------------------------------------------------------------------
+
+function parseJsonSummary(
+  filePath: string,
+  ctx: ExternalManifestSourceContext
+): ComponentDefinition[] | null {
+  try {
+    const data: unknown = JSON.parse(readFileSync(filePath, "utf8"));
+    if (Array.isArray(data)) return data as ComponentDefinition[];
+    ctx.logger.warn(`[kasstor-summary] ${filePath} did not contain a top-level array; ignoring.`);
+    return null;
+  } catch (err) {
+    ctx.logger.error(`[kasstor-summary] failed to parse ${filePath}`, err);
+    return null;
+  }
 }
 
-/**
- * Parse a `library-summary.ts` of the form:
- *
- *   export const librarySummary = [ {...}, {...} ] as const satisfies LibraryComponents;
- *
- * We use the TS API to walk the first exported array literal and evaluate it
- * as JSON-compatible data. Anything non-literal (function calls, identifiers,
- * template literals with substitutions) becomes `null` for that node — the
- * consumer sees `undefined` fields rather than a crash.
- *
- * Kept as a fallback for projects on `@genexus/kasstor-build` versions older
- * than 0.2.0 that don't yet emit a sibling `.json`.
- */
-function parseTsLiteralSummary(filePath: string, ctx: ExternalManifestSourceContext): ComponentDefinition[] | null {
-	try {
-		const text = readFileSync(filePath, "utf8");
-		const sf = tsModule.createSourceFile(filePath, text, tsModule.ScriptTarget.Latest, /* setParentNodes */ true);
+function parseTsLiteralSummary(
+  filePath: string,
+  ctx: ExternalManifestSourceContext
+): ComponentDefinition[] | null {
+  try {
+    const text = readFileSync(filePath, "utf8");
+    const sf = createSourceFile(
+      filePath,
+      text,
+      ScriptTarget.Latest,
+      /* setParentNodes */ true
+    );
 
-		const arrayLiteral = findFirstArrayLiteralExport(sf);
-		if (!arrayLiteral) {
-			ctx.logger.warn(`[kasstor-summary] ${filePath} has no exported array literal; ignoring.`);
-			return null;
-		}
+    const arrayLiteral = findFirstArrayLiteralExport(sf);
+    if (!arrayLiteral) {
+      ctx.logger.warn(`[kasstor-summary] ${filePath} has no exported array literal; ignoring.`);
+      return null;
+    }
 
-		const value = evalLiteral(arrayLiteral);
-		if (!Array.isArray(value)) {
-			ctx.logger.warn(`[kasstor-summary] ${filePath} top-level export is not an array; ignoring.`);
-			return null;
-		}
-		return value as ComponentDefinition[];
-	} catch (err) {
-		ctx.logger.error(`[kasstor-summary] failed to parse ${filePath}`, err);
-		return null;
-	}
+    const value = evalLiteral(arrayLiteral);
+    if (!Array.isArray(value)) {
+      ctx.logger.warn(`[kasstor-summary] ${filePath} top-level export is not an array; ignoring.`);
+      return null;
+    }
+    return value as ComponentDefinition[];
+  } catch (err) {
+    ctx.logger.error(`[kasstor-summary] failed to parse ${filePath}`, err);
+    return null;
+  }
 }
 
-function findFirstArrayLiteralExport(sf: tsModule.SourceFile): tsModule.ArrayLiteralExpression | undefined {
-	let result: tsModule.ArrayLiteralExpression | undefined;
-	function visit(node: tsModule.Node): void {
-		if (result) return;
-		if (tsModule.isVariableStatement(node) && node.modifiers?.some(m => m.kind === tsModule.SyntaxKind.ExportKeyword)) {
-			for (const decl of node.declarationList.declarations) {
-				if (decl.initializer) {
-					const init = stripWrappingExpressions(decl.initializer);
-					if (tsModule.isArrayLiteralExpression(init)) {
-						result = init;
-						return;
-					}
-				}
-			}
-		}
-		tsModule.forEachChild(node, visit);
-	}
-	visit(sf);
-	return result;
+function findFirstArrayLiteralExport(
+  sf: SourceFile
+): ArrayLiteralExpression | undefined {
+  let result: ArrayLiteralExpression | undefined;
+  function visit(node: TsNode): void {
+    if (result) return;
+    if (
+      isVariableStatement(node) &&
+      node.modifiers?.some(m => m.kind === SyntaxKind.ExportKeyword)
+    ) {
+      for (const decl of node.declarationList.declarations) {
+        if (decl.initializer) {
+          const init = stripWrappingExpressions(decl.initializer);
+          if (isArrayLiteralExpression(init)) {
+            result = init;
+            return;
+          }
+        }
+      }
+    }
+    forEachChild(node, visit);
+  }
+  visit(sf);
+  return result;
 }
 
-function stripWrappingExpressions(node: tsModule.Expression): tsModule.Expression {
-	let cur: tsModule.Expression = node;
-	while (
-		tsModule.isAsExpression(cur) ||
-		tsModule.isParenthesizedExpression(cur) ||
-		tsModule.isSatisfiesExpression(cur)
-	) {
-		cur = cur.expression;
-	}
-	return cur;
+function stripWrappingExpressions(node: Expression): Expression {
+  let cur: Expression = node;
+  while (
+    isAsExpression(cur) ||
+    isParenthesizedExpression(cur) ||
+    isSatisfiesExpression(cur)
+  ) {
+    cur = cur.expression;
+  }
+  return cur;
 }
 
-function evalLiteral(node: tsModule.Node): unknown {
-	if (tsModule.isStringLiteral(node) || tsModule.isNoSubstitutionTemplateLiteral(node)) {
-		return node.text;
-	}
-	if (tsModule.isNumericLiteral(node)) {
-		return Number(node.text);
-	}
-	if (node.kind === tsModule.SyntaxKind.TrueKeyword) return true;
-	if (node.kind === tsModule.SyntaxKind.FalseKeyword) return false;
-	if (node.kind === tsModule.SyntaxKind.NullKeyword) return null;
-	if (tsModule.isArrayLiteralExpression(node)) {
-		return node.elements.map(evalLiteral);
-	}
-	if (tsModule.isObjectLiteralExpression(node)) {
-		const obj: Record<string, unknown> = {};
-		for (const prop of node.properties) {
-			if (tsModule.isPropertyAssignment(prop)) {
-				const key = propertyName(prop.name);
-				if (key != null) obj[key] = evalLiteral(prop.initializer);
-			}
-		}
-		return obj;
-	}
-	if (tsModule.isAsExpression(node) || tsModule.isParenthesizedExpression(node) || tsModule.isSatisfiesExpression(node)) {
-		return evalLiteral(node.expression);
-	}
-	if (tsModule.isPrefixUnaryExpression(node) && tsModule.isNumericLiteral(node.operand)) {
-		const sign = node.operator === tsModule.SyntaxKind.MinusToken ? -1 : 1;
-		return sign * Number(node.operand.text);
-	}
-	// Anything else (call expressions, identifiers, template literals with
-	// substitutions) is unrepresentable as a JSON value; surface as null.
-	return null;
+function evalLiteral(node: TsNode): unknown {
+  if (isStringLiteralLike(node) || isNoSubstitutionTemplateLiteral(node)) {
+    return node.text;
+  }
+  if (isNumericLiteral(node)) {
+    return Number(node.text);
+  }
+  if (node.kind === SyntaxKind.TrueKeyword) return true;
+  if (node.kind === SyntaxKind.FalseKeyword) return false;
+  if (node.kind === SyntaxKind.NullKeyword) return null;
+  if (isArrayLiteralExpression(node)) {
+    return node.elements.map(evalLiteral);
+  }
+  if (isObjectLiteralExpression(node)) {
+    const obj: Record<string, unknown> = {};
+    for (const prop of node.properties) {
+      if (isPropertyAssignment(prop)) {
+        const key = propertyName(prop.name);
+        if (key != null) obj[key] = evalLiteral(prop.initializer);
+      }
+    }
+    return obj;
+  }
+  if (
+    isAsExpression(node) ||
+    isParenthesizedExpression(node) ||
+    isSatisfiesExpression(node)
+  ) {
+    return evalLiteral(node.expression);
+  }
+  if (isPrefixUnaryExpression(node) && isNumericLiteral(node.operand)) {
+    const sign = node.operator === SyntaxKind.MinusToken ? -1 : 1;
+    return sign * Number(node.operand.text);
+  }
+  return null;
 }
 
-function propertyName(name: tsModule.PropertyName): string | undefined {
-	if (tsModule.isIdentifier(name)) return name.text;
-	if (tsModule.isStringLiteral(name) || tsModule.isNoSubstitutionTemplateLiteral(name)) return name.text;
-	return undefined;
+function propertyName(name: PropertyName): string | undefined {
+  if (isIdentifier(name)) return name.text;
+  if (isStringLiteralLike(name) || isNoSubstitutionTemplateLiteral(name)) {
+    return name.text;
+  }
+  return undefined;
 }

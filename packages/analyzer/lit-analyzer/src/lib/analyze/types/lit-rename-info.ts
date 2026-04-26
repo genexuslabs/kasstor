@@ -1,4 +1,4 @@
-import type { ComponentDefinition } from "@jackolope/web-component-analyzer";
+import type { ComponentDefinition } from "../../kasstor-analyzer/types.js";
 import type { HtmlDocument } from "../parse/document/text-document/html-document/html-document.js";
 import type { HtmlNode } from "./html-node/html-node-types.js";
 import type { LitTargetKind } from "./lit-target-kind.js";

@@ -1,5 +1,5 @@
 import type { SourceFile } from "typescript";
-import type { ComponentDefinition } from "@jackolope/web-component-analyzer";
+import type { ComponentDefinition } from "../../../kasstor-analyzer/types.js";
 import type { AnalyzerDependencyStore } from "../analyzer-dependency-store.js";
 
 export class DefaultAnalyzerDependencyStore implements AnalyzerDependencyStore {

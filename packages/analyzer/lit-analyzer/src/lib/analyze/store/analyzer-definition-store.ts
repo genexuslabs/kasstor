@@ -1,5 +1,5 @@
 import type { SourceFile } from "typescript";
-import type { AnalyzerResult, ComponentDeclaration, ComponentDefinition } from "@jackolope/web-component-analyzer";
+import type { AnalyzerResult, ComponentDeclaration, ComponentDefinition } from "../../kasstor-analyzer/types.js";
 
 export interface AnalyzerDefinitionStore {
 	getAnalysisResultForFile(sourceFile: SourceFile): AnalyzerResult | undefined;

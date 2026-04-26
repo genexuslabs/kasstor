@@ -1,4 +1,4 @@
-import type { ComponentDeclaration, ComponentDefinition } from "@jackolope/web-component-analyzer";
+import type { ComponentDeclaration, ComponentDefinition } from "../kasstor-analyzer/types.js";
 import type { LitAnalyzerRuleId } from "./lit-analyzer-config.js";
 import { isRuleEnabled } from "./lit-analyzer-config.js";
 import type { LitAnalyzerContext } from "./lit-analyzer-context.js";

@@ -1,14 +1,13 @@
-import type { ExecutionContext } from "ava";
 import type { Node, SourceFile } from "typescript";
 
-import { getCurrentTsModule, tsTest } from "../helpers/ts-test.js";
+import { getCurrentTsModule, it, expect } from "../helpers/ts-test.js";
 import { getIndexEntries } from "../helpers/analyze.js";
 
 import type { LitIndexEntry } from "../../lib/analyze/document-analyzer/html/lit-html-document-analyzer.js";
 import { HtmlNodeKind } from "../../lib/analyze/types/html-node/html-node-types.js";
 import { HtmlNodeAttrKind } from "../../lib/analyze/types/html-node/html-node-attr-types.js";
 
-tsTest("No entries are created for HTML-like template strings if the template tags are not named `html`.", t => {
+it("No entries are created for HTML-like template strings if the template tags are not named `html`.", () => {
 	const { indexEntries } = getIndexEntries([
 		{
 			fileName: "main.js",
@@ -24,10 +23,10 @@ tsTest("No entries are created for HTML-like template strings if the template ta
 	]);
 
 	const entries = Array.from(indexEntries);
-	t.is(entries.length, 0);
+	expect(entries.length).toBe(0);
 });
 
-tsTest("No entries are created for elements that are not defined with `customElements`.", t => {
+it("No entries are created for elements that are not defined with `customElements`.", () => {
 	const { indexEntries } = getIndexEntries([
 		{
 			fileName: "main.js",
@@ -42,10 +41,10 @@ tsTest("No entries are created for elements that are not defined with `customEle
 	]);
 
 	const entries = Array.from(indexEntries);
-	t.is(entries.length, 0);
+	expect(entries.length).toBe(0);
 });
 
-tsTest("No entries are created for tags that don't match any definition.", t => {
+it("No entries are created for tags that don't match any definition.", () => {
 	const { indexEntries } = getIndexEntries([
 		{
 			fileName: "main.js",
@@ -67,7 +66,7 @@ tsTest("No entries are created for tags that don't match any definition.", t => 
 	]);
 
 	const entries = Array.from(indexEntries);
-	t.is(entries.length, 0);
+	expect(entries.length).toBe(0);
 });
 
 /**
@@ -75,12 +74,10 @@ tsTest("No entries are created for tags that don't match any definition.", t => 
  * in the file `sourceFile`.
  */
 const assertIdentifiesClass = ({
-	t,
 	identifier,
 	sourceFile,
 	className
 }: {
-	t: ExecutionContext;
 	identifier: Node;
 	sourceFile: SourceFile;
 	className: string;
@@ -91,15 +88,15 @@ const assertIdentifiesClass = ({
 		throw new Error("The definition target's node should be an identifier.");
 	}
 
-	t.is(identifier.getSourceFile(), sourceFile, "The identifier is not in the expected source file.");
-	t.is(identifier.text, className, `The identifier's text should be \`${className}\`.`);
+	expect(identifier.getSourceFile(), "The identifier is not in the expected source file.").toBe(sourceFile);
+	expect(identifier.text, `The identifier's text should be \`${className}\`.`).toBe(className);
 
 	const { parent: identParent } = identifier;
 	if (!isClassDeclaration(identParent)) {
 		throw new Error("The target node's parent should be a class declaration.");
 	}
 
-	t.is(identParent.name, identifier, "The target node should be it's class definition's name.");
+	expect(identParent.name, "The target node should be it's class definition's name.").toBe(identifier);
 };
 
 /**
@@ -108,13 +105,11 @@ const assertIdentifiesClass = ({
  * `sourceFile`.
  */
 const assertEntryTargetsClass = ({
-	t,
 	entry,
 	sourceFile,
 	tagName,
 	className
 }: {
-	t: ExecutionContext;
 	entry: LitIndexEntry;
 	sourceFile: SourceFile;
 	tagName: string;
@@ -125,21 +120,21 @@ const assertEntryTargetsClass = ({
 	}
 
 	const { node: entryNode } = entry;
-	t.is(entryNode.kind, HtmlNodeKind.NODE, "The entry should not originate from an `<svg>` or `<style>`.");
-	t.is(entryNode.tagName, tagName, `The origin element is not a \`<${tagName}>\`.`);
+	expect(entryNode.kind, "The entry should not originate from an `<svg>` or `<style>`.").toBe(HtmlNodeKind.NODE);
+	expect(entryNode.tagName, `The origin element is not a \`<${tagName}>\`.`).toBe(tagName);
 
 	const { targets } = entry.definition;
-	t.is(targets.length, 1, "The definition should have a single target.");
+	expect(targets.length, "The definition should have a single target.").toBe(1);
 
 	const [target] = targets;
 	if (target.kind !== "node") {
 		throw new Error("The definition target should be a `LitDefinitionTargetNode`.");
 	}
 
-	assertIdentifiesClass({ t, identifier: target.node, sourceFile, className });
+	assertIdentifiesClass({ identifier: target.node, sourceFile, className });
 };
 
-tsTest("Element references can reference elements defined in the same file. (JS)", t => {
+it("Element references can reference elements defined in the same file. (JS)", () => {
 	const { indexEntries, sourceFile } = getIndexEntries([
 		{
 			fileName: "main.js",
@@ -155,10 +150,9 @@ tsTest("Element references can reference elements defined in the same file. (JS)
 	]);
 
 	const entries = Array.from(indexEntries);
-	t.is(entries.length, 1);
+	expect(entries.length).toBe(1);
 
 	assertEntryTargetsClass({
-		t,
 		entry: entries[0],
 		sourceFile,
 		tagName: "some-element",
@@ -166,7 +160,7 @@ tsTest("Element references can reference elements defined in the same file. (JS)
 	});
 });
 
-tsTest("Element references can reference elements defined in the same file. (TS)", t => {
+it("Element references can reference elements defined in the same file. (TS)", () => {
 	const { indexEntries, sourceFile } = getIndexEntries([
 		{
 			fileName: "main.ts",
@@ -188,10 +182,9 @@ tsTest("Element references can reference elements defined in the same file. (TS)
 	]);
 
 	const entries = Array.from(indexEntries);
-	t.is(entries.length, 1);
+	expect(entries.length).toBe(1);
 
 	assertEntryTargetsClass({
-		t,
 		entry: entries[0],
 		sourceFile,
 		tagName: "some-element",
@@ -199,7 +192,7 @@ tsTest("Element references can reference elements defined in the same file. (TS)
 	});
 });
 
-tsTest("An entry is created for elements that are not defined with `customElements` if they are added to `HTMLElementTagNameMap` in TS.", t => {
+it("An entry is created for elements that are not defined with `customElements` if they are added to `HTMLElementTagNameMap` in TS.", () => {
 	const { indexEntries, sourceFile } = getIndexEntries([
 		{
 			fileName: "main.ts",
@@ -220,10 +213,9 @@ tsTest("An entry is created for elements that are not defined with `customElemen
 	]);
 
 	const entries = Array.from(indexEntries);
-	t.is(entries.length, 1);
+	expect(entries.length).toBe(1);
 
 	assertEntryTargetsClass({
-		t,
 		entry: entries[0],
 		sourceFile,
 		tagName: "some-element",
@@ -231,7 +223,7 @@ tsTest("An entry is created for elements that are not defined with `customElemen
 	});
 });
 
-tsTest("Element references can reference elements defined in a different file.", t => {
+it("Element references can reference elements defined in a different file.", () => {
 	const { indexEntries, program } = getIndexEntries([
 		{
 			fileName: "main.js",
@@ -259,14 +251,13 @@ tsTest("Element references can reference elements defined in a different file.",
 	]);
 
 	const entries = Array.from(indexEntries);
-	t.is(entries.length, 1);
+	expect(entries.length).toBe(1);
 
 	const sourceFile = program.getSourceFile("some-element.ts");
 
-	t.assert(sourceFile, "some-element.ts source file does not exist.");
+	expect(sourceFile, "some-element.ts source file does not exist.").toBeTruthy();
 
 	assertEntryTargetsClass({
-		t,
 		entry: entries[0],
 		sourceFile: sourceFile!,
 		tagName: "some-element",
@@ -274,7 +265,7 @@ tsTest("Element references can reference elements defined in a different file.",
 	});
 });
 
-tsTest("Attribute references are not created for attributes that don't map to known properties.", t => {
+it("Attribute references are not created for attributes that don't map to known properties.", () => {
 	const { indexEntries } = getIndexEntries([
 		{
 			fileName: "main.ts",
@@ -298,7 +289,7 @@ tsTest("Attribute references are not created for attributes that don't map to kn
 	]);
 
 	const entries = Array.from(indexEntries).filter(entry => entry.kind === "ATTRIBUTE-REFERENCE");
-	t.is(entries.length, 0);
+	expect(entries.length).toBe(0);
 });
 
 /**
@@ -306,12 +297,10 @@ tsTest("Attribute references are not created for attributes that don't map to kn
  * `kind` that has a single target `LitDefinitionTargetNode`.
  */
 const assertIsAttrRefAndGetTarget = ({
-	t,
 	entry,
 	name,
 	kind
 }: {
-	t: ExecutionContext;
 	entry: LitIndexEntry;
 	name: string;
 	kind: HtmlNodeAttrKind;
@@ -321,11 +310,11 @@ const assertIsAttrRefAndGetTarget = ({
 	}
 
 	const { attribute: entryAttr } = entry;
-	t.is(entryAttr.name, name, `The attribute name should be \`${name}\`.`);
-	t.is(entryAttr.kind, kind, `The attribute kind should be \`${kind}\`.`);
+	expect(entryAttr.name, `The attribute name should be \`${name}\`.`).toBe(name);
+	expect(entryAttr.kind, `The attribute kind should be \`${kind}\`.`).toBe(kind);
 
 	const { targets } = entry.definition;
-	t.is(targets.length, 1, "The definition should have a single target.");
+	expect(targets.length, "The definition should have a single target.").toBe(1);
 
 	const [target] = targets;
 	if (target.kind !== "node") {
@@ -336,14 +325,12 @@ const assertIsAttrRefAndGetTarget = ({
 };
 
 const assertIsAttrRefTargetingClass = ({
-	t,
 	entry,
 	name,
 	kind,
 	sourceFile,
 	className
 }: {
-	t: ExecutionContext;
 	entry: LitIndexEntry;
 	name: string;
 	kind: HtmlNodeAttrKind;
@@ -353,13 +340,12 @@ const assertIsAttrRefTargetingClass = ({
 	const { isClassDeclaration } = getCurrentTsModule();
 
 	const { node: targetNode, name: targetName } = assertIsAttrRefAndGetTarget({
-		t,
 		entry,
 		name,
 		kind
 	});
 
-	t.is(targetNode.getSourceFile(), sourceFile, "The target node is not in the expected source file.");
+	expect(targetNode.getSourceFile(), "The target node is not in the expected source file.").toBe(sourceFile);
 	if (targetName !== name) {
 		throw new Error(`The target node's name should be \`${name}\`.`);
 	}
@@ -375,14 +361,13 @@ const assertIsAttrRefTargetingClass = ({
 	}
 
 	assertIdentifiesClass({
-		t,
 		identifier: ancestor.name,
 		sourceFile,
 		className: className
 	});
 };
 
-tsTest("Attribute references can reference properties defined in the static `properties` getter.", t => {
+it("Attribute references can reference properties defined in the static `properties` getter.", () => {
 	const { indexEntries, sourceFile } = getIndexEntries([
 		{
 			fileName: "main.ts",
@@ -410,10 +395,9 @@ tsTest("Attribute references can reference properties defined in the static `pro
 	]);
 
 	const entries = Array.from(indexEntries).filter(entry => entry.kind === "ATTRIBUTE-REFERENCE");
-	t.is(entries.length, 1);
+	expect(entries.length).toBe(1);
 
 	assertIsAttrRefTargetingClass({
-		t,
 		entry: entries[0],
 		name: "prop",
 		kind: HtmlNodeAttrKind.PROPERTY,
@@ -422,7 +406,7 @@ tsTest("Attribute references can reference properties defined in the static `pro
 	});
 });
 
-tsTest("Attribute references can reference properties defined with a class field.", t => {
+it("Attribute references can reference properties defined with a class field.", () => {
 	const { indexEntries, sourceFile } = getIndexEntries([
 		{
 			fileName: "main.ts",
@@ -446,10 +430,9 @@ tsTest("Attribute references can reference properties defined with a class field
 	]);
 
 	const entries = Array.from(indexEntries).filter(entry => entry.kind === "ATTRIBUTE-REFERENCE");
-	t.is(entries.length, 1);
+	expect(entries.length).toBe(1);
 
 	assertIsAttrRefTargetingClass({
-		t,
 		entry: entries[0],
 		name: "prop",
 		kind: HtmlNodeAttrKind.PROPERTY,
@@ -458,7 +441,7 @@ tsTest("Attribute references can reference properties defined with a class field
 	});
 });
 
-tsTest("Attribute references can reference properties defined with a setter.", t => {
+it("Attribute references can reference properties defined with a setter.", () => {
 	const { indexEntries, sourceFile } = getIndexEntries([
 		{
 			fileName: "main.ts",
@@ -482,10 +465,9 @@ tsTest("Attribute references can reference properties defined with a setter.", t
 	]);
 
 	const entries = Array.from(indexEntries).filter(entry => entry.kind === "ATTRIBUTE-REFERENCE");
-	t.is(entries.length, 1);
+	expect(entries.length).toBe(1);
 
 	assertIsAttrRefTargetingClass({
-		t,
 		entry: entries[0],
 		name: "prop",
 		kind: HtmlNodeAttrKind.PROPERTY,
@@ -494,7 +476,7 @@ tsTest("Attribute references can reference properties defined with a setter.", t
 	});
 });
 
-tsTest("Attribute references can reference properties defined by assignment in the constructor.", t => {
+it("Attribute references can reference properties defined by assignment in the constructor.", () => {
 	const { indexEntries, sourceFile } = getIndexEntries([
 		{
 			fileName: "main.ts",
@@ -521,10 +503,9 @@ tsTest("Attribute references can reference properties defined by assignment in t
 	]);
 
 	const entries = Array.from(indexEntries).filter(entry => entry.kind === "ATTRIBUTE-REFERENCE");
-	t.is(entries.length, 1);
+	expect(entries.length).toBe(1);
 
 	assertIsAttrRefTargetingClass({
-		t,
 		entry: entries[0],
 		name: "prop",
 		kind: HtmlNodeAttrKind.PROPERTY,
@@ -533,7 +514,7 @@ tsTest("Attribute references can reference properties defined by assignment in t
 	});
 });
 
-tsTest("Attribute references can reference properties defined in `observedAttributes`.", t => {
+it("Attribute references can reference properties defined in `observedAttributes`.", () => {
 	const { indexEntries, sourceFile } = getIndexEntries([
 		{
 			fileName: "main.ts",
@@ -559,10 +540,9 @@ tsTest("Attribute references can reference properties defined in `observedAttrib
 	]);
 
 	const entries = Array.from(indexEntries).filter(entry => entry.kind === "ATTRIBUTE-REFERENCE");
-	t.is(entries.length, 1);
+	expect(entries.length).toBe(1);
 
 	assertIsAttrRefTargetingClass({
-		t,
 		entry: entries[0],
 		name: "some-attr",
 		kind: HtmlNodeAttrKind.ATTRIBUTE,
@@ -571,7 +551,7 @@ tsTest("Attribute references can reference properties defined in `observedAttrib
 	});
 });
 
-tsTest("Attribute references can reference properties defined with a @property decorator", t => {
+it("Attribute references can reference properties defined with a @property decorator", () => {
 	const { indexEntries, sourceFile } = getIndexEntries([
 		{
 			fileName: "main.ts",
@@ -593,10 +573,9 @@ tsTest("Attribute references can reference properties defined with a @property d
 	]);
 
 	const entries = Array.from(indexEntries).filter(entry => entry.kind === "ATTRIBUTE-REFERENCE");
-	t.is(entries.length, 1);
+	expect(entries.length).toBe(1);
 
 	assertIsAttrRefTargetingClass({
-		t,
 		entry: entries[0],
 		name: "some-attr",
 		kind: HtmlNodeAttrKind.ATTRIBUTE,
@@ -605,7 +584,7 @@ tsTest("Attribute references can reference properties defined with a @property d
 	});
 });
 
-tsTest("Boolean attribute references have the right kind.", t => {
+it("Boolean attribute references have the right kind.", () => {
 	const { indexEntries, sourceFile } = getIndexEntries([
 		{
 			fileName: "main.ts",
@@ -633,10 +612,9 @@ tsTest("Boolean attribute references have the right kind.", t => {
 	]);
 
 	const entries = Array.from(indexEntries).filter(entry => entry.kind === "ATTRIBUTE-REFERENCE");
-	t.is(entries.length, 1);
+	expect(entries.length).toBe(1);
 
 	assertIsAttrRefTargetingClass({
-		t,
 		entry: entries[0],
 		name: "prop",
 		kind: HtmlNodeAttrKind.BOOLEAN_ATTRIBUTE,
@@ -645,7 +623,7 @@ tsTest("Boolean attribute references have the right kind.", t => {
 	});
 });
 
-tsTest("Attribute references have the right kind.", t => {
+it("Attribute references have the right kind.", () => {
 	const { indexEntries, sourceFile } = getIndexEntries([
 		{
 			fileName: "main.ts",
@@ -675,10 +653,9 @@ tsTest("Attribute references have the right kind.", t => {
 	]);
 
 	const entries = Array.from(indexEntries).filter(entry => entry.kind === "ATTRIBUTE-REFERENCE");
-	t.is(entries.length, 1);
+	expect(entries.length).toBe(1);
 
 	assertIsAttrRefTargetingClass({
-		t,
 		entry: entries[0],
 		name: "prop",
 		kind: HtmlNodeAttrKind.ATTRIBUTE,
@@ -687,7 +664,7 @@ tsTest("Attribute references have the right kind.", t => {
 	});
 });
 
-tsTest("Event listeners do not produce entries.", t => {
+it("Event listeners do not produce entries.", () => {
 	const { indexEntries } = getIndexEntries([
 		{
 			fileName: "main.ts",
@@ -730,5 +707,5 @@ tsTest("Event listeners do not produce entries.", t => {
 	]);
 
 	const entries = Array.from(indexEntries).filter(entry => entry.kind === "ATTRIBUTE-REFERENCE");
-	t.is(entries.length, 0);
+	expect(entries.length).toBe(0);
 });

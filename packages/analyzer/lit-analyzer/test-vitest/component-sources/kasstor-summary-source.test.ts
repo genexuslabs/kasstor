@@ -77,7 +77,10 @@ describe("KasstorSummarySource", () => {
   it("warns and returns [] on a malformed library-summary.ts", async () => {
     const dir = mkdtempSync(join(tmpdir(), "kasstor-bad-"));
     mkdirSync(join(dir, "src"), { recursive: true });
-    writeFileSync(join(dir, "src/library-summary.ts"), "export const notAnArray = { foo: 1 } as const;");
+    writeFileSync(
+      join(dir, "src/library-summary.ts"),
+      "export const notAnArray = { foo: 1 } as const;"
+    );
     writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "x" }));
 
     const ctx = fakeCtx(dir);

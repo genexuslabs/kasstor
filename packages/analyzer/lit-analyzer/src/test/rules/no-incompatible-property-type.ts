@@ -1,8 +1,8 @@
 import { getDiagnostics } from "../helpers/analyze.js";
 import { hasDiagnostic, hasNoDiagnostics } from "../helpers/assert.js";
-import { tsTest } from "../helpers/ts-test.js";
+import { it } from "vitest";
 
-tsTest("'no-incompatible-property-type' is not emitted for string types without configuration", t => {
+it("'no-incompatible-property-type' is not emitted for string types without configuration", () => {
 	const { diagnostics } = getDiagnostics(
 		`
   /**
@@ -15,10 +15,10 @@ tsTest("'no-incompatible-property-type' is not emitted for string types without 
 		{ rules: { "no-incompatible-property-type": "on" } }
 	);
 
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("'no-incompatible-property-type' is not emitted for string types with String configuration", t => {
+it("'no-incompatible-property-type' is not emitted for string types with String configuration", () => {
 	const { diagnostics } = getDiagnostics(
 		`
   /**
@@ -31,10 +31,10 @@ tsTest("'no-incompatible-property-type' is not emitted for string types with Str
 		{ rules: { "no-incompatible-property-type": "on" } }
 	);
 
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("'no-incompatible-property-type' is emitted for string types with non-String configuration", t => {
+it("'no-incompatible-property-type' is emitted for string types with non-String configuration", () => {
 	const { diagnostics } = getDiagnostics(
 		`
   /**
@@ -47,10 +47,10 @@ tsTest("'no-incompatible-property-type' is emitted for string types with non-Str
 		{ rules: { "no-incompatible-property-type": "on" } }
 	);
 
-	hasDiagnostic(t, diagnostics, "no-incompatible-property-type");
+	hasDiagnostic(diagnostics, "no-incompatible-property-type");
 });
 
-tsTest("'no-incompatible-property-type' is emitted for non-string types with no configuration", t => {
+it("'no-incompatible-property-type' is emitted for non-string types with no configuration", () => {
 	const { diagnostics } = getDiagnostics(
 		`
   /**
@@ -63,10 +63,10 @@ tsTest("'no-incompatible-property-type' is emitted for non-string types with no 
 		{ rules: { "no-incompatible-property-type": "on" } }
 	);
 
-	hasDiagnostic(t, diagnostics, "no-incompatible-property-type");
+	hasDiagnostic(diagnostics, "no-incompatible-property-type");
 });
 
-tsTest("'no-incompatible-property-type' is emitted for number types with non-Number configuration", t => {
+it("'no-incompatible-property-type' is emitted for number types with non-Number configuration", () => {
 	const { diagnostics } = getDiagnostics(
 		`
   /**
@@ -79,10 +79,10 @@ tsTest("'no-incompatible-property-type' is emitted for number types with non-Num
 		{ rules: { "no-incompatible-property-type": "on" } }
 	);
 
-	hasDiagnostic(t, diagnostics, "no-incompatible-property-type");
+	hasDiagnostic(diagnostics, "no-incompatible-property-type");
 });
 
-tsTest("'no-incompatible-property-type' is not emitted for number types with Number configuration", t => {
+it("'no-incompatible-property-type' is not emitted for number types with Number configuration", () => {
 	const { diagnostics } = getDiagnostics(
 		`
   /**
@@ -95,10 +95,10 @@ tsTest("'no-incompatible-property-type' is not emitted for number types with Num
 		{ rules: { "no-incompatible-property-type": "on" } }
 	);
 
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("'no-incompatible-property-type' is not emitted for non-string types with attribute: false", t => {
+it("'no-incompatible-property-type' is not emitted for non-string types with attribute: false", () => {
 	const { diagnostics } = getDiagnostics(
 		`
   /**
@@ -111,10 +111,10 @@ tsTest("'no-incompatible-property-type' is not emitted for non-string types with
 		{ rules: { "no-incompatible-property-type": "on" } }
 	);
 
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("'no-incompatible-property-type' is emitted for non-string types with attribute: true", t => {
+it("'no-incompatible-property-type' is emitted for non-string types with attribute: true", () => {
 	const { diagnostics } = getDiagnostics(
 		`
   /**
@@ -127,10 +127,10 @@ tsTest("'no-incompatible-property-type' is emitted for non-string types with att
 		{ rules: { "no-incompatible-property-type": "on" } }
 	);
 
-	hasDiagnostic(t, diagnostics, "no-incompatible-property-type");
+	hasDiagnostic(diagnostics, "no-incompatible-property-type");
 });
 
-tsTest("'no-incompatible-property-type' is emitted for non-string types with custom attribute name configured", t => {
+it("'no-incompatible-property-type' is emitted for non-string types with custom attribute name configured", () => {
 	const { diagnostics } = getDiagnostics(
 		`
   /**
@@ -143,10 +143,10 @@ tsTest("'no-incompatible-property-type' is emitted for non-string types with cus
 		{ rules: { "no-incompatible-property-type": "on" } }
 	);
 
-	hasDiagnostic(t, diagnostics, "no-incompatible-property-type");
+	hasDiagnostic(diagnostics, "no-incompatible-property-type");
 });
 
-tsTest("'no-incompatible-property-type' is not emitted for non-string types with state: true", t => {
+it("'no-incompatible-property-type' is not emitted for non-string types with state: true", () => {
 	const { diagnostics } = getDiagnostics(
 		`
   /**
@@ -159,10 +159,10 @@ tsTest("'no-incompatible-property-type' is not emitted for non-string types with
 		{ rules: { "no-incompatible-property-type": "on" } }
 	);
 
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("'no-incompatible-property-type' is emitted for non-string types with state: false", t => {
+it("'no-incompatible-property-type' is emitted for non-string types with state: false", () => {
 	const { diagnostics } = getDiagnostics(
 		`
   /**
@@ -175,5 +175,5 @@ tsTest("'no-incompatible-property-type' is emitted for non-string types with sta
 		{ rules: { "no-incompatible-property-type": "on" } }
 	);
 
-	hasDiagnostic(t, diagnostics, "no-incompatible-property-type");
+	hasDiagnostic(diagnostics, "no-incompatible-property-type");
 });

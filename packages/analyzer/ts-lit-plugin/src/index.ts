@@ -4,7 +4,6 @@ import { LitAnalyzerLoggerLevel, makeConfig, VERSION } from "@genexus/kasstor-li
 import type * as ts from "typescript";
 import type { CompilerOptions } from "typescript";
 import type * as tsServer from "typescript/lib/tsserverlibrary.js";
-import { VERSION as WCA_VERSION } from "@jackolope/web-component-analyzer";
 import { decorateLanguageService } from "./decorate-language-service.js";
 import { logger } from "./logger.js";
 import { LitPluginContext } from "./ts-lit-plugin/lit-plugin-context.js";
@@ -30,7 +29,6 @@ export function init({ typescript }: { typescript: typeof ts }): tsServer.server
 	let printDebugOnce: (() => void) | undefined = () => {
 		if (logger.level >= LitAnalyzerLoggerLevel.DEBUG) {
 			logger.debug(`Lit Analyzer: ${VERSION}`);
-			logger.debug(`Web Component Analyzer: ${WCA_VERSION}`);
 			logger.debug(`Running Typescript: ${typescript.version}`);
 			logger.debug(`DIRNAME: ${__dirname}`);
 			printDebugOnce = undefined;

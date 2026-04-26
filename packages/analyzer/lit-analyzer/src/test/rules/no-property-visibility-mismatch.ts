@@ -1,6 +1,6 @@
 import { getDiagnostics } from "../helpers/analyze.js";
 import { hasDiagnostic, hasNoDiagnostics } from "../helpers/assert.js";
-import { tsTest } from "../helpers/ts-test.js";
+import { it } from "vitest";
 import type { TestFile } from "../helpers/compile-files.js";
 import { makeElement } from "../helpers/generate-test-file.js";
 
@@ -16,7 +16,7 @@ function makeTestElement({ properties }: { properties?: Array<{ visibility: stri
 	};
 }
 
-tsTest("Report public @state properties", t => {
+it("Report public @state properties", () => {
 	const { diagnostics } = getDiagnostics(
 		makeTestElement({
 			properties: [{ name: "foo", visibility: "public", internal: true }]
@@ -25,10 +25,10 @@ tsTest("Report public @state properties", t => {
 			rules: { "no-property-visibility-mismatch": true }
 		}
 	);
-	hasDiagnostic(t, diagnostics, "no-property-visibility-mismatch");
+	hasDiagnostic(diagnostics, "no-property-visibility-mismatch");
 });
 
-tsTest("Report private @property properties", t => {
+it("Report private @property properties", () => {
 	const { diagnostics } = getDiagnostics(
 		makeTestElement({
 			properties: [{ name: "foo", visibility: "private", internal: false }]
@@ -37,10 +37,10 @@ tsTest("Report private @property properties", t => {
 			rules: { "no-property-visibility-mismatch": true }
 		}
 	);
-	hasDiagnostic(t, diagnostics, "no-property-visibility-mismatch");
+	hasDiagnostic(diagnostics, "no-property-visibility-mismatch");
 });
 
-tsTest("Don't report regular public properties", t => {
+it("Don't report regular public properties", () => {
 	const { diagnostics } = getDiagnostics(
 		makeTestElement({
 			properties: [{ name: "foo", visibility: "public", internal: false }]
@@ -49,10 +49,10 @@ tsTest("Don't report regular public properties", t => {
 			rules: { "no-property-visibility-mismatch": true }
 		}
 	);
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Don't report private @property properties with `state` true", t => {
+it("Don't report private @property properties with `state` true", () => {
 	const { diagnostics } = getDiagnostics(
 		[
 			makeElement({
@@ -69,10 +69,10 @@ tsTest("Don't report private @property properties with `state` true", t => {
 			}
 		}
 	);
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Don't report @state properties with '#' prefix", t => {
+it("Don't report @state properties with '#' prefix", () => {
 	const { diagnostics } = getDiagnostics(
 		makeTestElement({
 			properties: [{ name: "#foo", visibility: "", internal: true }]
@@ -83,10 +83,10 @@ tsTest("Don't report @state properties with '#' prefix", t => {
 			}
 		}
 	);
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Report @property properties with '#' prefix", t => {
+it("Report @property properties with '#' prefix", () => {
 	const { diagnostics } = getDiagnostics(
 		makeTestElement({
 			properties: [{ name: "#foo", visibility: "", internal: false }]
@@ -97,5 +97,5 @@ tsTest("Report @property properties with '#' prefix", t => {
 			}
 		}
 	);
-	hasDiagnostic(t, diagnostics, "no-property-visibility-mismatch");
+	hasDiagnostic(diagnostics, "no-property-visibility-mismatch");
 });

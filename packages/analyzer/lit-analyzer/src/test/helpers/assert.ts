@@ -1,22 +1,30 @@
-import type { ExecutionContext } from "ava";
+import { expect } from "vitest";
 import type { LitAnalyzerRuleId } from "../../lib/analyze/lit-analyzer-config.js";
 import type { LitDiagnostic } from "../../lib/analyze/types/lit-diagnostic.js";
 
-export function hasDiagnostic(t: ExecutionContext, diagnostics: LitDiagnostic[], ruleName: LitAnalyzerRuleId): void {
-	if (diagnostics.length !== 1) {
-		prettyLogDiagnostics(t, diagnostics);
-	}
-	t.is(diagnostics.length, 1);
-	t.is(diagnostics[0].source, ruleName);
+/**
+ * Assert that exactly one diagnostic was emitted by the rule named
+ * `ruleName`. The diagnostics array is dumped to the console when the
+ * length does not match so the failure message is useful in CI logs
+ * without re-running the test in verbose mode.
+ */
+export function hasDiagnostic(diagnostics: LitDiagnostic[], ruleName: LitAnalyzerRuleId): void {
+  if (diagnostics.length !== 1) {
+    prettyLogDiagnostics(diagnostics);
+  }
+  expect(diagnostics).toHaveLength(1);
+  expect(diagnostics[0]?.source).toBe(ruleName);
 }
 
-export function hasNoDiagnostics(t: ExecutionContext, diagnostics: LitDiagnostic[]): void {
-	if (diagnostics.length !== 0) {
-		prettyLogDiagnostics(t, diagnostics);
-	}
-	t.is(diagnostics.length, 0);
+/** Assert that no diagnostics were emitted. */
+export function hasNoDiagnostics(diagnostics: LitDiagnostic[]): void {
+  if (diagnostics.length !== 0) {
+    prettyLogDiagnostics(diagnostics);
+  }
+  expect(diagnostics).toHaveLength(0);
 }
 
-function prettyLogDiagnostics(t: ExecutionContext, diagnostics: LitDiagnostic[]) {
-	t.log(diagnostics.map(diagnostic => `${diagnostic.source}: ${diagnostic.message}`));
+function prettyLogDiagnostics(diagnostics: LitDiagnostic[]): void {
+  // eslint-disable-next-line no-console
+  console.log(diagnostics.map(diagnostic => `${diagnostic.source}: ${diagnostic.message}`));
 }

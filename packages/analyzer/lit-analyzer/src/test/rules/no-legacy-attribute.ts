@@ -1,28 +1,28 @@
 import { getDiagnostics } from "../helpers/analyze.js";
 import { hasDiagnostic, hasNoDiagnostics } from "../helpers/assert.js";
-import { tsTest } from "../helpers/ts-test.js";
+import { it } from "vitest";
 
-tsTest("Don't report legacy attributes when 'no-legacy-attribute' is turned off", t => {
+it("Don't report legacy attributes when 'no-legacy-attribute' is turned off", () => {
 	const { diagnostics } = getDiagnostics("html`<input required?=${true} />`", { rules: { "no-legacy-attribute": false } });
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Report legacy attributes on known element", t => {
+it("Report legacy attributes on known element", () => {
 	const { diagnostics } = getDiagnostics("html`<input required?=${true} />`", { rules: { "no-legacy-attribute": true } });
-	hasDiagnostic(t, diagnostics, "no-legacy-attribute");
+	hasDiagnostic(diagnostics, "no-legacy-attribute");
 });
 
-tsTest("Report legacy attribute values on known element", t => {
+it("Report legacy attribute values on known element", () => {
 	const { diagnostics } = getDiagnostics('html`<input value="{{foo}}" />`', { rules: { "no-legacy-attribute": true } });
-	hasDiagnostic(t, diagnostics, "no-legacy-attribute");
+	hasDiagnostic(diagnostics, "no-legacy-attribute");
 });
 
-tsTest("Don't report non-legacy boolean attributes", t => {
+it("Don't report non-legacy boolean attributes", () => {
 	const { diagnostics } = getDiagnostics("html`<input ?required=${true} />`", { rules: { "no-legacy-attribute": true } });
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Don't report non-legacy attributes", t => {
+it("Don't report non-legacy attributes", () => {
 	const { diagnostics } = getDiagnostics("html`<input required />`", { rules: { "no-legacy-attribute": true } });
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });

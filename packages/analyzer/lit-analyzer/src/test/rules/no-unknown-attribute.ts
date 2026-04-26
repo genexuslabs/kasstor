@@ -1,35 +1,35 @@
 import { getDiagnostics } from "../helpers/analyze.js";
 import { hasDiagnostic, hasNoDiagnostics } from "../helpers/assert.js";
-import { tsTest } from "../helpers/ts-test.js";
+import { it } from "vitest";
 
-tsTest("Don't report unknown attributes when 'no-unknown-attribute' is turned off", t => {
+it("Don't report unknown attributes when 'no-unknown-attribute' is turned off", () => {
 	const { diagnostics } = getDiagnostics("html`<input foo='' />`", { rules: { "no-unknown-attribute": false } });
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Report unknown attributes on known element", t => {
+it("Report unknown attributes on known element", () => {
 	const { diagnostics } = getDiagnostics("html`<input foo='' />`", { rules: { "no-unknown-attribute": true } });
-	hasDiagnostic(t, diagnostics, "no-unknown-attribute");
+	hasDiagnostic(diagnostics, "no-unknown-attribute");
 });
 
-tsTest("Don't report unknown attributes", t => {
+it("Don't report unknown attributes", () => {
 	const { diagnostics } = getDiagnostics("html`<input required />`", { rules: { "no-unknown-attribute": true } });
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Don't report unknown attributes on unknown element", t => {
+it("Don't report unknown attributes on unknown element", () => {
 	const { diagnostics } = getDiagnostics("html`<unknown-element foo=''></unknown-element>`", {
 		rules: { "no-unknown-attribute": true, "no-unknown-tag-name": false }
 	});
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Don't report unknown data- attributes", t => {
+it("Don't report unknown data- attributes", () => {
 	const { diagnostics } = getDiagnostics("html`<input data-foo='' />`", { rules: { "no-unknown-attribute": true } });
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Don't report element expressions", t => {
+it("Don't report element expressions", () => {
 	const { diagnostics } = getDiagnostics("html`<input ${x} />`", { rules: { "no-unknown-attribute": true } });
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });

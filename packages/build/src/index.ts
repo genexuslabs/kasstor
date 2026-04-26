@@ -1,4 +1,9 @@
 export { buildLibrary } from "./build-library.js";
+export { loadLibrarySummary } from "./library-summary/load-library-summary.js";
+export type {
+  LoadedLibrarySummary,
+  LoadLibrarySummaryOptions
+} from "./library-summary/load-library-summary.js";
 
 export type * from "./typings/build-options.js";
 export type {

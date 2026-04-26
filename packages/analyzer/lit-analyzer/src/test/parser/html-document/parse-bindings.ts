@@ -4,61 +4,61 @@ import type {
 } from "../../../lib/analyze/types/html-node/html-node-attr-assignment-types.js";
 import { HtmlNodeAttrAssignmentKind } from "../../../lib/analyze/types/html-node/html-node-attr-assignment-types.js";
 import { parseHtml } from "../../helpers/parse-html.js";
-import { tsTest } from "../../helpers/ts-test.js";
+import { it, expect } from "vitest";
 
 // https://github.com/runem/lit-analyzer/issues/44
-tsTest("Correctly parses binding without a missing start quote", t => {
+it("Correctly parses binding without a missing start quote", () => {
 	const res = parseHtml('<button @tap=${console.log}"></button>');
 	const attr = res.findAttr(attr => attr.name === "tap")!;
 	const assignment = attr.assignment!;
 
-	t.is(assignment.kind, HtmlNodeAttrAssignmentKind.MIXED);
-	t.is(typeof (assignment as IHtmlNodeAttrAssignmentMixed).values[0], "object");
-	t.is((assignment as IHtmlNodeAttrAssignmentMixed).values[1], '"');
+	expect(assignment.kind).toBe(HtmlNodeAttrAssignmentKind.MIXED);
+	expect(typeof (assignment as IHtmlNodeAttrAssignmentMixed).values[0]).toBe("object");
+	expect((assignment as IHtmlNodeAttrAssignmentMixed).values[1]).toBe('"');
 });
 
-tsTest("Parses element binding", t => {
+it("Parses element binding", () => {
 	const res = parseHtml("<input ${ref(testRef)} />");
 	const attr = res.findAttr(attr => attr.name.startsWith("_"))!;
-	t.is(attr.assignment!.kind, HtmlNodeAttrAssignmentKind.ELEMENT_EXPRESSION);
+	expect(attr.assignment!.kind).toBe(HtmlNodeAttrAssignmentKind.ELEMENT_EXPRESSION);
 });
 
-tsTest("Parses multiple element bindings", t => {
+it("Parses multiple element bindings", () => {
 	const res = parseHtml("<input ${x} ${y}/>");
 	const input = res.rootNodes[0];
 	// Make sure we have two attributes even though the expression
 	// length is the same
-	t.is(input.attributes.length, 2);
+	expect(input.attributes.length).toBe(2);
 });
 
-tsTest("Parses more than 10 element bindings", t => {
+it("Parses more than 10 element bindings", () => {
 	const res = parseHtml("<input ${a} ${b} ${c} ${d} ${e} ${f} ${g} ${h} ${i} ${j} ${k}/>");
 	const input = res.rootNodes[0];
-	t.is(input.attributes.length, 11);
-	t.is(input.attributes[10].assignment!.kind, HtmlNodeAttrAssignmentKind.ELEMENT_EXPRESSION);
+	expect(input.attributes.length).toBe(11);
+	expect(input.attributes[10].assignment!.kind).toBe(HtmlNodeAttrAssignmentKind.ELEMENT_EXPRESSION);
 });
 
-tsTest("Correctly parses binding with no quotes", t => {
+it("Correctly parses binding with no quotes", () => {
 	const res = parseHtml('<input value=${"text"} />');
 	const attr = res.findAttr(attr => attr.name === "value")!;
-	t.is(attr.assignment!.kind, HtmlNodeAttrAssignmentKind.EXPRESSION);
+	expect(attr.assignment!.kind).toBe(HtmlNodeAttrAssignmentKind.EXPRESSION);
 });
 
-tsTest("Correctly parses binding with no expression and no quotes", t => {
+it("Correctly parses binding with no expression and no quotes", () => {
 	const res = parseHtml("<input value=text />");
 	const attr = res.findAttr(attr => attr.name === "value")!;
-	t.is(attr.assignment!.kind, HtmlNodeAttrAssignmentKind.STRING);
-	t.is((attr.assignment as IHtmlNodeAttrAssignmentString).value, "text");
+	expect(attr.assignment!.kind).toBe(HtmlNodeAttrAssignmentKind.STRING);
+	expect((attr.assignment as IHtmlNodeAttrAssignmentString).value).toBe("text");
 });
 
-tsTest("Correctly parses binding with single quotes", t => {
+it("Correctly parses binding with single quotes", () => {
 	const res = parseHtml("<input value='text' />");
 	const attr = res.findAttr(attr => attr.name === "value")!;
-	t.is(attr.assignment!.kind, HtmlNodeAttrAssignmentKind.STRING);
+	expect(attr.assignment!.kind).toBe(HtmlNodeAttrAssignmentKind.STRING);
 });
 
-tsTest("Correctly parses boolean binding", t => {
+it("Correctly parses boolean binding", () => {
 	const res = parseHtml("<input required />");
 	const attr = res.findAttr(attr => attr.name === "required")!;
-	t.is(attr.assignment!.kind, HtmlNodeAttrAssignmentKind.BOOLEAN);
+	expect(attr.assignment!.kind).toBe(HtmlNodeAttrAssignmentKind.BOOLEAN);
 });

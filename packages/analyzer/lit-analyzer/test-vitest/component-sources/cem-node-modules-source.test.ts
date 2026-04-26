@@ -36,7 +36,9 @@ describe("CemNodeModulesSource", () => {
 
   beforeEach(() => {
     projectRoot = makeProject({ "fake-pkg-with-manifest": "1.0.0" });
-    cpSync(FIXTURES, join(projectRoot, "node_modules", "fake-pkg-with-manifest"), { recursive: true });
+    cpSync(FIXTURES, join(projectRoot, "node_modules", "fake-pkg-with-manifest"), {
+      recursive: true
+    });
   });
 
   it("loads CEM from a direct dep with package.json#customElements", async () => {

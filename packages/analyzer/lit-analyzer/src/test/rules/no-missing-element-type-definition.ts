@@ -1,8 +1,8 @@
 import { getDiagnostics } from "../helpers/analyze.js";
 import { hasDiagnostic, hasNoDiagnostics } from "../helpers/assert.js";
-import { tsTest } from "../helpers/ts-test.js";
+import { it } from "vitest";
 
-tsTest("'no-missing-element-type-definition' reports diagnostic when element is not in HTMLElementTagNameMap", t => {
+it("'no-missing-element-type-definition' reports diagnostic when element is not in HTMLElementTagNameMap", () => {
 	const { diagnostics } = getDiagnostics(
 		`
 		class MyElement extends HTMLElement { }; 
@@ -13,10 +13,10 @@ tsTest("'no-missing-element-type-definition' reports diagnostic when element is 
 		}
 	);
 
-	hasDiagnostic(t, diagnostics, "no-missing-element-type-definition");
+	hasDiagnostic(diagnostics, "no-missing-element-type-definition");
 });
 
-tsTest("'no-missing-element-type-definition' reports no diagnostic when element is in HTMLElementTagNameMap", t => {
+it("'no-missing-element-type-definition' reports no diagnostic when element is in HTMLElementTagNameMap", () => {
 	const { diagnostics } = getDiagnostics(
 		`
 		class MyElement extends HTMLElement { }; 
@@ -32,10 +32,10 @@ tsTest("'no-missing-element-type-definition' reports no diagnostic when element 
 		}
 	);
 
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("'no-missing-element-type-definition' reports no diagnostic when element is in HTMLElementTagNameMap using class property", t => {
+it("'no-missing-element-type-definition' reports no diagnostic when element is in HTMLElementTagNameMap using class property", () => {
 	const { diagnostics } = getDiagnostics(
 		`
 		class MyElement extends HTMLElement { 
@@ -53,10 +53,10 @@ tsTest("'no-missing-element-type-definition' reports no diagnostic when element 
 		}
 	);
 
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("'no-missing-element-type-definition' reports no diagnostic when element is in HTMLElementTagNameMap variable", t => {
+it("'no-missing-element-type-definition' reports no diagnostic when element is in HTMLElementTagNameMap variable", () => {
 	const { diagnostics } = getDiagnostics(
 		`
 		const TAG_NAME = "my-element"
@@ -74,5 +74,5 @@ tsTest("'no-missing-element-type-definition' reports no diagnostic when element 
 		}
 	);
 
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });

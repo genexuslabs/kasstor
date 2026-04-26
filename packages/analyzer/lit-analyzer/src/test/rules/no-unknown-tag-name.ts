@@ -1,34 +1,34 @@
 import { getDiagnostics } from "../helpers/analyze.js";
 import { hasDiagnostic, hasNoDiagnostics } from "../helpers/assert.js";
 import { makeElement } from "../helpers/generate-test-file.js";
-import { tsTest } from "../helpers/ts-test.js";
+import { it } from "vitest";
 
-tsTest("Report unknown custom elements", t => {
+it("Report unknown custom elements", () => {
 	const { diagnostics } = getDiagnostics("html`<unknown-element></unknown-element>`", { rules: { "no-unknown-tag-name": true } });
-	hasDiagnostic(t, diagnostics, "no-unknown-tag-name");
+	hasDiagnostic(diagnostics, "no-unknown-tag-name");
 });
 
-tsTest("Don't report known built in elements", t => {
+it("Don't report known built in elements", () => {
 	const { diagnostics } = getDiagnostics("html`<div></div>`", { rules: { "no-unknown-tag-name": true } });
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Report unknown built in elements", t => {
+it("Report unknown built in elements", () => {
 	const { diagnostics } = getDiagnostics("html`<element></element>`", { rules: { "no-unknown-tag-name": true } });
-	hasDiagnostic(t, diagnostics, "no-unknown-tag-name");
+	hasDiagnostic(diagnostics, "no-unknown-tag-name");
 });
 
-tsTest("Don't report known custom elements found in other file", t => {
+it("Don't report known custom elements found in other file", () => {
 	const { diagnostics } = getDiagnostics([makeElement({}), "html`<my-element></my-element>`"], { rules: { "no-unknown-tag-name": true } });
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Don't report known custom element", t => {
+it("Don't report known custom element", () => {
 	const { diagnostics } = getDiagnostics(
 		"class MyElement extends HTMLElement {}; customElements.define('my-element', MyElement); html`<my-element></my-element>`",
 		{
 			rules: { "no-unknown-tag-name": true }
 		}
 	);
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });

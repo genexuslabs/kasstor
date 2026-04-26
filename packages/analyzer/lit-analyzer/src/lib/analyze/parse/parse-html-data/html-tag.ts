@@ -7,7 +7,7 @@ import type {
 	ComponentEvent,
 	ComponentMember,
 	ComponentSlot
-} from "@jackolope/web-component-analyzer";
+} from "../../../kasstor-analyzer/types.js";
 import {
 	LIT_HTML_BOOLEAN_ATTRIBUTE_MODIFIER,
 	LIT_HTML_EVENT_LISTENER_ATTRIBUTE_MODIFIER,

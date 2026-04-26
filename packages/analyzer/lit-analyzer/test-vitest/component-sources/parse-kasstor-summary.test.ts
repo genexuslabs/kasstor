@@ -18,9 +18,7 @@ const SAMPLE: ComponentDefinition[] = [
       { name: "label", type: "string", attribute: "label", default: "" },
       { name: "internal", type: "string", attribute: false, default: "" }
     ],
-    events: [
-      { name: "kst-change", detailType: "number", bubbles: true, composed: true }
-    ],
+    events: [{ name: "kst-change", detailType: "number", bubbles: true, composed: true }],
     methods: [{ name: "focus", paramTypes: [], returnType: "void" }],
     parts: [{ name: "base" }],
     slots: [{ name: "" }],

@@ -1,8 +1,6 @@
 import type { SimpleType, SimpleTypeFunctionParameter } from "ts-simple-type";
 import { toSimpleType } from "ts-simple-type";
-import type { Node, SourceFile, Symbol as TsSymbol, TypeChecker } from "typescript";
-import * as tsModule from "typescript";
-import type { HtmlAttr, HtmlEvent, HtmlMember, HtmlProp, HtmlTag } from "./parse-html-data/html-tag.js";
+import type { Node, SourceFile, Symbol as TsSymbol, SymbolFlags, Type, TypeChecker } from "typescript";
 
 /**
  * Internal TypeScript API used to look up `HTMLElementTagNameMap` in scope.
@@ -14,7 +12,23 @@ import type { HtmlAttr, HtmlEvent, HtmlMember, HtmlProp, HtmlTag } from "./parse
  * the public `TypeChecker` interface intentionally hides it.
  */
 interface ResolvableTypeChecker extends TypeChecker {
-	resolveName(name: string, location: Node | undefined, meaning: tsModule.SymbolFlags, excludeGlobals: boolean): TsSymbol | undefined;
+  resolveName(
+    name: string,
+    location: Node | undefined,
+    meaning: SymbolFlags,
+    excludeGlobals: boolean
+  ): TsSymbol | undefined;
+}
+
+// `SymbolFlags.Interface = 64`. We hardcode the value so the module can avoid
+// a namespace import of `typescript` (the namespace pulls a property bag and
+// every access resolves through it). The flags enum is part of the public
+// stable API and has not changed across the analyzer's supported TS range.
+const SYMBOL_FLAGS_INTERFACE = 64;
+
+interface HtmlMemberLike {
+  readonly name: string;
+  getType: () => SimpleType;
 }
 
 /**
@@ -22,14 +36,14 @@ interface ResolvableTypeChecker extends TypeChecker {
  * declaration site. Falls back to `getDeclaredTypeOfSymbol` when the symbol
  * has no declaration (e.g. synthetic symbols).
  */
-function typeOfSymbol(checker: TypeChecker, symbol: TsSymbol): tsModule.Type | undefined {
-	const decl = symbol.valueDeclaration ?? symbol.declarations?.[0];
-	if (decl != null) return checker.getTypeOfSymbolAtLocation(symbol, decl);
-	try {
-		return checker.getDeclaredTypeOfSymbol(symbol);
-	} catch {
-		return undefined;
-	}
+function typeOfSymbol(checker: TypeChecker, symbol: TsSymbol): Type | undefined {
+  const decl = symbol.valueDeclaration ?? symbol.declarations?.[0];
+  if (decl != null) return checker.getTypeOfSymbolAtLocation(symbol, decl);
+  try {
+    return checker.getDeclaredTypeOfSymbol(symbol);
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -40,44 +54,66 @@ function typeOfSymbol(checker: TypeChecker, symbol: TsSymbol): tsModule.Type | u
  * is non-fatal: the unsubstituted type still compiles, the user just doesn't
  * get the refined error message.
  */
-function substituteSimpleType(type: SimpleType, bindings: ReadonlyMap<string, SimpleType>): SimpleType {
-	switch (type.kind) {
-		case "GENERIC_PARAMETER":
-			return bindings.get(type.name) ?? type;
-		case "UNION":
-		case "INTERSECTION":
-			return { ...type, types: type.types.map(t => substituteSimpleType(t, bindings)) };
-		case "ARRAY":
-			return { ...type, type: substituteSimpleType(type.type, bindings) };
-		case "PROMISE":
-			return { ...type, type: substituteSimpleType(type.type, bindings) };
-		case "GENERIC_ARGUMENTS":
-			return {
-				...type,
-				target: substituteSimpleType(type.target, bindings),
-				typeArguments: type.typeArguments.map(t => substituteSimpleType(t, bindings))
-			};
-		case "FUNCTION":
-			return {
-				...type,
-				returnType: type.returnType ? substituteSimpleType(type.returnType, bindings) : undefined,
-				parameters: type.parameters?.map((p: SimpleTypeFunctionParameter) => ({
-					...p,
-					type: substituteSimpleType(p.type, bindings)
-				}))
-			};
-		case "METHOD":
-			return {
-				...type,
-				returnType: substituteSimpleType(type.returnType, bindings),
-				parameters: type.parameters.map((p: SimpleTypeFunctionParameter) => ({
-					...p,
-					type: substituteSimpleType(p.type, bindings)
-				}))
-			};
-		default:
-			return type;
-	}
+function substituteSimpleType(
+  type: SimpleType,
+  bindings: ReadonlyMap<string, SimpleType>
+): SimpleType {
+  switch (type.kind) {
+    case "GENERIC_PARAMETER":
+      return bindings.get(type.name) ?? type;
+    case "UNION":
+    case "INTERSECTION": {
+      const src = type.types;
+      const len = src.length;
+      const out = new Array<SimpleType>(len);
+      for (let i = 0; i < len; i++) out[i] = substituteSimpleType(src[i]!, bindings);
+      return { ...type, types: out };
+    }
+    case "ARRAY":
+      return { ...type, type: substituteSimpleType(type.type, bindings) };
+    case "PROMISE":
+      return { ...type, type: substituteSimpleType(type.type, bindings) };
+    case "GENERIC_ARGUMENTS": {
+      const src = type.typeArguments;
+      const len = src.length;
+      const out = new Array<SimpleType>(len);
+      for (let i = 0; i < len; i++) out[i] = substituteSimpleType(src[i]!, bindings);
+      return { ...type, target: substituteSimpleType(type.target, bindings), typeArguments: out };
+    }
+    case "FUNCTION": {
+      const params = type.parameters;
+      let mapped: SimpleTypeFunctionParameter[] | undefined;
+      if (params) {
+        const len = params.length;
+        mapped = new Array<SimpleTypeFunctionParameter>(len);
+        for (let i = 0; i < len; i++) {
+          const p = params[i]!;
+          mapped[i] = { ...p, type: substituteSimpleType(p.type, bindings) };
+        }
+      }
+      return {
+        ...type,
+        returnType: type.returnType ? substituteSimpleType(type.returnType, bindings) : undefined,
+        parameters: mapped
+      };
+    }
+    case "METHOD": {
+      const params = type.parameters;
+      const len = params.length;
+      const mapped = new Array<SimpleTypeFunctionParameter>(len);
+      for (let i = 0; i < len; i++) {
+        const p = params[i]!;
+        mapped[i] = { ...p, type: substituteSimpleType(p.type, bindings) };
+      }
+      return {
+        ...type,
+        returnType: substituteSimpleType(type.returnType, bindings),
+        parameters: mapped
+      };
+    }
+    default:
+      return type;
+  }
 }
 
 /**
@@ -85,17 +121,21 @@ function substituteSimpleType(type: SimpleType, bindings: ReadonlyMap<string, Si
  * like `MyEl<{ id: number }>`. Returns `undefined` when the type is not a
  * generic instantiation or arity does not match.
  */
-function bindingsForElementType(elementType: SimpleType): ReadonlyMap<string, SimpleType> | undefined {
-	if (elementType.kind !== "GENERIC_ARGUMENTS") return undefined;
-	if (elementType.target.kind !== "CLASS") return undefined;
-	const params = elementType.target.typeParameters;
-	const args = elementType.typeArguments;
-	if (!params || params.length !== args.length) return undefined;
-	const map = new Map<string, SimpleType>();
-	for (let i = 0; i < params.length; i++) {
-		map.set(params[i]!.name, args[i]!);
-	}
-	return map;
+function bindingsForElementType(
+  elementType: SimpleType
+): ReadonlyMap<string, SimpleType> | undefined {
+  if (elementType.kind !== "GENERIC_ARGUMENTS") return undefined;
+  if (elementType.target.kind !== "CLASS") return undefined;
+  const params = elementType.target.typeParameters;
+  const args = elementType.typeArguments;
+  if (!params) return undefined;
+  const len = params.length;
+  if (len !== args.length) return undefined;
+  const map = new Map<string, SimpleType>();
+  for (let i = 0; i < len; i++) {
+    map.set(params[i]!.name, args[i]!);
+  }
+  return map;
 }
 
 /**
@@ -104,22 +144,22 @@ function bindingsForElementType(elementType: SimpleType): ReadonlyMap<string, Si
  * replacement to keep references stable for downstream consumers.
  */
 function refineMemberType(
-	member: HtmlMember | HtmlEvent,
-	checker: TypeChecker,
-	elementType: tsModule.Type,
-	bindings: ReadonlyMap<string, SimpleType>
+  member: HtmlMemberLike,
+  checker: TypeChecker,
+  elementType: Type,
+  bindings: ReadonlyMap<string, SimpleType>
 ): void {
-	const propSymbol = checker.getPropertyOfType(elementType, member.name);
-	if (!propSymbol) return;
+  const propSymbol = checker.getPropertyOfType(elementType, member.name);
+  if (!propSymbol) return;
 
-	const propType = typeOfSymbol(checker, propSymbol);
-	if (!propType) return;
+  const propType = typeOfSymbol(checker, propSymbol);
+  if (!propType) return;
 
-	const original = member.getType;
-	member.getType = () => {
-		const baseSimple = toSimpleType(propType, checker);
-		return substituteSimpleType(baseSimple, bindings) ?? original();
-	};
+  const original = member.getType;
+  member.getType = () => {
+    const baseSimple = toSimpleType(propType, checker);
+    return substituteSimpleType(baseSimple, bindings) ?? original();
+  };
 }
 
 /**
@@ -149,6 +189,11 @@ function refineMemberType(
  * declared type arguments. Lookups against `htmlStore` after this pass return
  * tags whose properties yield the refined types.
  *
+ * Hot-path: this runs once per analyzed source file. The loop body bails
+ * before calling `getPropertyOfType` on the (small) common case where a
+ * registered tag is not generic, so the steady-state cost is dominated by
+ * `getPropertiesOfType` on `HTMLElementTagNameMap`.
+ *
  * @param getTag       Lookup for an existing tag by its registered name.
  *                     Returns `undefined` to signal "no such tag" — the pass
  *                     skips the entry without creating new tags.
@@ -157,45 +202,69 @@ function refineMemberType(
  * @param checker      The active `TypeChecker`.
  */
 export function refineGenericTagTypesInScope(
-	getTag: (tagName: string) => HtmlTag | undefined,
-	sourceFile: SourceFile,
-	checker: TypeChecker
+  getTag: (tagName: string) => HtmlMemberLike[] | undefined,
+  sourceFile: SourceFile,
+  checker: TypeChecker
+): void;
+export function refineGenericTagTypesInScope(
+  getTag: (tagName: string) =>
+    | { properties: HtmlMemberLike[]; attributes: HtmlMemberLike[]; events: HtmlMemberLike[] }
+    | undefined,
+  sourceFile: SourceFile,
+  checker: TypeChecker
+): void;
+export function refineGenericTagTypesInScope(
+  getTag: (tagName: string) => unknown,
+  sourceFile: SourceFile,
+  checker: TypeChecker
 ): void {
-	const resolvableChecker = checker as ResolvableTypeChecker;
-	if (typeof resolvableChecker.resolveName !== "function") return;
+  const resolvableChecker = checker as ResolvableTypeChecker;
+  if (typeof resolvableChecker.resolveName !== "function") return;
 
-	const mapSymbol = resolvableChecker.resolveName(
-		"HTMLElementTagNameMap",
-		sourceFile,
-		tsModule.SymbolFlags.Interface,
-		/* excludeGlobals */ false
-	);
-	if (!mapSymbol) return;
+  const mapSymbol = resolvableChecker.resolveName(
+    "HTMLElementTagNameMap",
+    sourceFile,
+    SYMBOL_FLAGS_INTERFACE as SymbolFlags,
+    /* excludeGlobals */ false
+  );
+  if (!mapSymbol) return;
 
-	const mapType = checker.getDeclaredTypeOfSymbol(mapSymbol);
-	const mapProperties = checker.getPropertiesOfType(mapType);
+  const mapType = checker.getDeclaredTypeOfSymbol(mapSymbol);
+  const mapProperties = checker.getPropertiesOfType(mapType);
+  const mapPropsLen = mapProperties.length;
 
-	for (const tagSymbol of mapProperties) {
-		const tagName = tagSymbol.getName();
-		const tag = getTag(tagName);
-		if (!tag) continue;
+  for (let i = 0; i < mapPropsLen; i++) {
+    const tagSymbol = mapProperties[i]!;
+    const tagName = tagSymbol.getName();
+    const tag = getTag(tagName) as
+      | { properties: HtmlMemberLike[]; attributes: HtmlMemberLike[]; events: HtmlMemberLike[] }
+      | undefined;
+    if (!tag) continue;
 
-		const declaration = tagSymbol.valueDeclaration ?? tagSymbol.declarations?.[0];
-		if (!declaration) continue;
+    const declaration = tagSymbol.valueDeclaration ?? tagSymbol.declarations?.[0];
+    if (!declaration) continue;
 
-		const elementType = checker.getTypeOfSymbolAtLocation(tagSymbol, declaration);
-		const elementSimple = toSimpleType(elementType, checker);
-		const bindings = bindingsForElementType(elementSimple);
-		if (!bindings) continue; // Not a generic instantiation: nothing to refine.
+    const elementType = checker.getTypeOfSymbolAtLocation(tagSymbol, declaration);
+    const elementSimple = toSimpleType(elementType, checker);
+    const bindings = bindingsForElementType(elementSimple);
+    if (!bindings) continue; // Not a generic instantiation: nothing to refine.
 
-		for (const prop of tag.properties as HtmlProp[]) {
-			refineMemberType(prop, checker, elementType, bindings);
-		}
-		for (const attr of tag.attributes as HtmlAttr[]) {
-			refineMemberType(attr, checker, elementType, bindings);
-		}
-		for (const evt of tag.events) {
-			refineMemberType(evt, checker, elementType, bindings);
-		}
-	}
+    const properties = tag.properties;
+    const propsLen = properties.length;
+    for (let j = 0; j < propsLen; j++) {
+      refineMemberType(properties[j]!, checker, elementType, bindings);
+    }
+
+    const attributes = tag.attributes;
+    const attrsLen = attributes.length;
+    for (let j = 0; j < attrsLen; j++) {
+      refineMemberType(attributes[j]!, checker, elementType, bindings);
+    }
+
+    const events = tag.events;
+    const eventsLen = events.length;
+    for (let j = 0; j < eventsLen; j++) {
+      refineMemberType(events[j]!, checker, elementType, bindings);
+    }
+  }
 }

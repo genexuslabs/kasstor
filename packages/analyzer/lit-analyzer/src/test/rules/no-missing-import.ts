@@ -1,29 +1,29 @@
 import { getDiagnostics, getCodeFixesAtRange } from "../helpers/analyze.js";
 import { hasDiagnostic, hasNoDiagnostics } from "../helpers/assert.js";
 import { makeElement } from "../helpers/generate-test-file.js";
-import { tsTest } from "../helpers/ts-test.js";
+import { it, expect } from "vitest";
 import type { TestFile } from "../helpers/compile-files.js";
 
-tsTest("Report missing imports of custom elements", t => {
+it("Report missing imports of custom elements", () => {
 	const { diagnostics } = getDiagnostics([makeElement({}), "html`<my-element></my-element>`"], { rules: { "no-missing-import": true } });
-	hasDiagnostic(t, diagnostics, "no-missing-import");
+	hasDiagnostic(diagnostics, "no-missing-import");
 });
 
-tsTest("Report missing imports of custom elements with a type-only import", t => {
+it("Report missing imports of custom elements with a type-only import", () => {
 	const { diagnostics } = getDiagnostics([makeElement({}), "import type {} from './my-element'; html`<my-element></my-element>`"], {
 		rules: { "no-missing-import": true }
 	});
-	hasDiagnostic(t, diagnostics, "no-missing-import");
+	hasDiagnostic(diagnostics, "no-missing-import");
 });
 
-tsTest("Don't report missing imports when the custom element has been imported 1", t => {
+it("Don't report missing imports when the custom element has been imported 1", () => {
 	const { diagnostics } = getDiagnostics([makeElement({}), "import './my-element'; html`<my-element></my-element>`"], {
 		rules: { "no-missing-import": true }
 	});
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Don't report missing imports when the custom element has been imported 2", t => {
+it("Don't report missing imports when the custom element has been imported 2", () => {
 	const { diagnostics } = getDiagnostics(
 		[
 			makeElement({}),
@@ -35,18 +35,18 @@ tsTest("Don't report missing imports when the custom element has been imported 2
 		],
 		{ rules: { "no-missing-import": true } }
 	);
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Don't report missing imports when the custom element is included in the globalTags config", t => {
+it("Don't report missing imports when the custom element is included in the globalTags config", () => {
 	const { diagnostics } = getDiagnostics([makeElement({}), "html`<my-element></my-element>`"], {
 		rules: { "no-missing-import": true },
 		globalTags: ["my-element"]
 	});
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Suggest adding correct import statement", t => {
+it("Suggest adding correct import statement", () => {
 	const fileContentWithMissingImport = "html`<my-element></my-element>`";
 	const elementTagWithoutImport = "my-element";
 
@@ -67,10 +67,10 @@ tsTest("Suggest adding correct import statement", t => {
 		litCodeFix.actions.some(litCodeFixAction => litCodeFixAction.newText === '\nimport "./my-element";')
 	);
 
-	t.true(correctCodeFixCreated);
+	expect(correctCodeFixCreated);
 });
 
-tsTest("Suggest adding correct import statement for element in nested folder", t => {
+it("Suggest adding correct import statement for element in nested folder", () => {
 	const fileContentWithMissingImport = "html`<my-element></my-element>`";
 	const elementTagWithoutImport = "my-element";
 
@@ -95,5 +95,5 @@ tsTest("Suggest adding correct import statement for element in nested folder", t
 		litCodeFix.actions.some(litCodeFixAction => litCodeFixAction.newText === '\nimport "./1/2/3/4/5/my-element";')
 	);
 
-	t.true(correctCodeFixCreated);
+	expect(correctCodeFixCreated);
 });

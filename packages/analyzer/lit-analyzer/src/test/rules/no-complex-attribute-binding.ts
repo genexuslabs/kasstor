@@ -1,44 +1,44 @@
 import { getDiagnostics } from "../helpers/analyze.js";
 import { hasDiagnostic, hasNoDiagnostics } from "../helpers/assert.js";
 import { makeElement } from "../helpers/generate-test-file.js";
-import { tsTest } from "../helpers/ts-test.js";
+import { it } from "vitest";
 
-tsTest("Complex types are not assignable using an attribute binding", t => {
+it("Complex types are not assignable using an attribute binding", () => {
 	const { diagnostics } = getDiagnostics('html`<input placeholder="${{foo: "bar"}}" />`');
-	hasDiagnostic(t, diagnostics, "no-complex-attribute-binding");
+	hasDiagnostic(diagnostics, "no-complex-attribute-binding");
 });
 
-tsTest("Complex types are assignable using a property binding", t => {
+it("Complex types are assignable using a property binding", () => {
 	const { diagnostics } = getDiagnostics('html`<input .onclick="${() => {}}" />`');
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Primitives are not assignable to complex type using an attribute binding", t => {
+it("Primitives are not assignable to complex type using an attribute binding", () => {
 	const { diagnostics } = getDiagnostics([makeElement({ properties: ["complex = {foo: string}"] }), 'html`<my-element complex="bar"></my-element>`']);
-	hasDiagnostic(t, diagnostics, "no-complex-attribute-binding");
+	hasDiagnostic(diagnostics, "no-complex-attribute-binding");
 });
 
-tsTest("Complex types are assignable using property binding", t => {
+it("Complex types are assignable using property binding", () => {
 	const { diagnostics } = getDiagnostics([
 		makeElement({ properties: ["complex = {foo: string}"] }),
 		'html`<my-element .complex="${{foo: "bar"}}"></my-element>`'
 	]);
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Don't check for the assignability of complex types in attribute bindings if the type is a custom lit directive", t => {
+it("Don't check for the assignability of complex types in attribute bindings if the type is a custom lit directive", () => {
 	const { diagnostics } = getDiagnostics(
 		'type Part = {}; type ifExists = (val: any) => (part: Part) => void; html`<input maxlength="${ifExists(123)}" />`'
 	);
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Ignore element expressions", t => {
+it("Ignore element expressions", () => {
 	const { diagnostics } = getDiagnostics("html`<input ${{x: 1}} />`", { rules: { "no-incompatible-type-binding": false } });
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Complex types are assignable to attributes using converters", t => {
+it("Complex types are assignable to attributes using converters", () => {
 	const { diagnostics } = getDiagnostics(
 		[
 			makeElement({
@@ -59,5 +59,5 @@ tsTest("Complex types are assignable to attributes using converters", t => {
 			}
 		}
 	);
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });

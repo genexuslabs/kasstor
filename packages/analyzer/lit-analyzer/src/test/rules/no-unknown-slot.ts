@@ -1,32 +1,32 @@
 import { getDiagnostics } from "../helpers/analyze.js";
 import { hasDiagnostic, hasNoDiagnostics } from "../helpers/assert.js";
 import { makeElement } from "../helpers/generate-test-file.js";
-import { tsTest } from "../helpers/ts-test.js";
+import { it } from "vitest";
 
-tsTest("Report unknown slot name", t => {
+it("Report unknown slot name", () => {
 	const { diagnostics } = getDiagnostics([makeElement({ slots: ["foo"] }), "html`<my-element><div slot='bar'></div></my-element>`"], {
 		rules: { "no-unknown-slot": true }
 	});
-	hasDiagnostic(t, diagnostics, "no-unknown-slot");
+	hasDiagnostic(diagnostics, "no-unknown-slot");
 });
 
-tsTest("Don't report known slot name", t => {
+it("Don't report known slot name", () => {
 	const { diagnostics } = getDiagnostics([makeElement({ slots: ["foo"] }), "html`<my-element><div slot='foo'></div></my-element>`"], {
 		rules: { "no-unknown-slot": true }
 	});
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Don't report known, unnamed slot name", t => {
+it("Don't report known, unnamed slot name", () => {
 	const { diagnostics } = getDiagnostics([makeElement({ slots: [""] }), "html`<my-element><div slot=''></div></my-element>`"], {
 		rules: { "no-unknown-slot": true }
 	});
-	hasNoDiagnostics(t, diagnostics);
+	hasNoDiagnostics(diagnostics);
 });
 
-tsTest("Report missing slot attribute", t => {
+it("Report missing slot attribute", () => {
 	const { diagnostics } = getDiagnostics([makeElement({ slots: ["foo"] }), "html`<my-element><div></div></my-element>`"], {
 		rules: { "no-unknown-slot": true }
 	});
-	hasDiagnostic(t, diagnostics, "no-unknown-slot");
+	hasDiagnostic(diagnostics, "no-unknown-slot");
 });
