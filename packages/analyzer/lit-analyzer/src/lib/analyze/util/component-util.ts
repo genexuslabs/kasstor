@@ -1,6 +1,6 @@
 import type { SourceFile } from "typescript";
 import type { ComponentDeclaration, ComponentDefinition } from "../../kasstor-analyzer/types.js";
-import { visitAllHeritageClauses } from "@jackolope/web-component-analyzer";
+import { visitAllHeritageClauses } from "./heritage.js";
 
 export function getDeclarationsInFile(definition: ComponentDefinition, sourceFile: SourceFile): ComponentDeclaration[] {
 	const declarations = new Set<ComponentDeclaration>();

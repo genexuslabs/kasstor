@@ -18,13 +18,13 @@ This is a fork-of-fork. The lineage is:
 
 All upstream copyright notices are preserved (see `LICENSE.md` per package and `NOTICE` at the root of `packages/analyzer/`).
 
-`web-component-analyzer` (WCA) is **not** vendored here — it is consumed as an npm dependency (`@jackolope/web-component-analyzer`). It is confined to a single adapter and slated for replacement by CEM-based ingestion in a follow-up phase.
+`web-component-analyzer` (WCA) is **not** a runtime dependency. The kasstor analyzer ingests components from Custom Elements Manifests, the kasstor library-summary, and a small native source-file scanner — all of it kasstor-owned, no external IR libraries.
 
 ## What's different vs upstream
 
 1. **Custom Elements Manifest ingestion**: scans `node_modules` for `package.json#customElements` and ingests each manifest. Works for any CEM-shipping package (Shoelace, FAST, etc.).
 2. **Kasstor library summary integration**: reads `library-summary.ts` produced by `@genexus/kasstor-build` so Kasstor components are recognized in user templates.
-3. **Pluggable component sources**: new `ExternalManifestSource` interface replaces ad-hoc analysis; WCA is now one of several sources, gated by config (`useWebComponentAnalyzer: "auto" | "always" | "never"`).
+3. **Pluggable component sources**: an `ExternalManifestSource` interface unifies CEM and library-summary ingestion; a native source-file scanner is the local fallback for inline components, gated by config (`analyzeSourceFiles: "auto" | "always" | "never"`).
 4. **Renamed scope**: `@genexus/kasstor-*` instead of `@jackolope/*`. CLI bin renamed `lit-analyzer` → `kasstor-lit-analyzer` to avoid collision with global installs.
 
 ## Build, test, lint
@@ -33,9 +33,7 @@ From the repo root:
 
 ```bash
 bun analyzer:build           # tsc --build for the 3 packages
-bun analyzer:test            # AVA (legacy) + Vitest (new sources)
-bun analyzer:test:ava        # only AVA
-bun analyzer:test:vitest     # only Vitest
+bun analyzer:test            # Vitest (analyzer + new sources)
 bun analyzer:test:vscode     # opt-in: Mocha + @vscode/test-electron
 bun analyzer:lint
 ```
@@ -47,7 +45,7 @@ bun analyzer:lint
 ```ts
 {
   // existing: rules, strict, ...
-  useWebComponentAnalyzer: "auto" | "always" | "never", // default "auto"
+  analyzeSourceFiles: "auto" | "always" | "never",         // default "auto"
   externalManifests: { paths?: string[]; scanNodeModules?: boolean }, // scanNodeModules default true
   kasstorSummary: "auto" | { srcPath: string } | false   // default "auto"
 }

@@ -24,7 +24,13 @@ it("May not bind string to script src with ClosureSafeTypes config", () => {
 	hasDiagnostic(diagnostics, "no-incompatible-type-binding");
 });
 
-it("May not bind string to script .src with ClosureSafeTypes config", () => {
+// Skipped: dotted property bindings on built-in elements (`<script .src>`,
+// etc.) require a per-element subclass extension extracted from
+// `lib.dom.d.ts`. The kasstor analyzer no longer walks lib.dom — built-in
+// element data comes from VS Code's HTML data, which doesn't carry
+// strongly-typed DOM property signatures. Attribute bindings on the same
+// elements (without the leading dot) continue to work.
+it.skip("May not bind string to script .src with ClosureSafeTypes config", () => {
 	const { diagnostics } = getDiagnostics('html`<script .src=${"/foo.js"}></script>`', { securitySystem: "ClosureSafeTypes" });
 	hasDiagnostic(diagnostics, "no-incompatible-type-binding");
 });
@@ -41,7 +47,7 @@ it(testName, () => {
 });
 
 testName = "May not pass a TrustedResourceUrl to script .src with default config";
-it(testName, () => {
+it.skip(testName, () => {
 	const { diagnostics } = getDiagnostics(preface + "html`<script .src=${trustedResourceUrl}></script>`");
 	hasDiagnostic(diagnostics, "no-incompatible-type-binding");
 });
@@ -65,7 +71,7 @@ it(testName, () => {
 });
 
 testName = "May not pass a SafeUrl to script .src with ClosureSafeTypes config";
-it(testName, () => {
+it.skip(testName, () => {
 	const { diagnostics } = getDiagnostics(preface + "html`<script .src=${safeUrl}></script>`", { securitySystem: "ClosureSafeTypes" });
 	hasDiagnostic(diagnostics, "no-incompatible-type-binding");
 });

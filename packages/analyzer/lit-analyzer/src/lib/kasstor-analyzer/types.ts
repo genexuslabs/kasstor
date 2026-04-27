@@ -1,17 +1,13 @@
 /**
- * Kasstor analyzer — vendored type contract.
+ * Kasstor analyzer — IR contract.
  *
- * The types here mirror the public surface that `web-component-analyzer`
- * (WCA) used to expose; the analyzer's rules and converters were typed
- * against them long before this fork existed. We vendor the shapes here so
- * the rest of the codebase keeps a single, stable IR even after WCA itself
- * has been removed as an npm dependency.
- *
- * Origin: types extracted from `web-component-analyzer` v4.0.4 by
- * Rune Mehlsen (MIT, © 2018). The runtime implementation that populates
- * these shapes is provided by `@jackolope/web-component-analyzer`,
- * re-exported through `./index.ts` so source files have a single point of
- * contact for both the values and the types.
+ * Stable, kasstor-owned shapes that every component source (CEM ingest,
+ * library-summary ingest, native source-file scanner) populates and every
+ * rule, store, and converter consumes. The shapes were originally derived
+ * from the public surface of `web-component-analyzer` v4.0.4 (MIT,
+ * © 2018 Rune Mehlsen) so existing rules could keep their typings, but
+ * the runtime that fills them in is now native — the npm package is no
+ * longer a dependency.
  */
 
 import type {

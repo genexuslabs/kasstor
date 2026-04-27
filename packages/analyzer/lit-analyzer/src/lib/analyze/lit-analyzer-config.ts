@@ -130,7 +130,7 @@ export type LitSecuritySystem = "off" | "ClosureSafeTypes";
  * - `"never"`: WCA is disabled entirely. Use this when all components are
  *   exposed through manifests.
  */
-export type LitUseWebComponentAnalyzer = "auto" | "always" | "never";
+export type LitAnalyzeSourceFiles = "auto" | "always" | "never";
 
 export interface LitExternalManifestsConfig {
 	/** Explicit paths (absolute or relative to programRoot) of CEM files to ingest. */
@@ -170,16 +170,16 @@ export interface LitAnalyzerConfig {
 	customHtmlData: (string | HTMLDataV1)[] | string | HTMLDataV1;
 
 	/**
-	 * Kasstor extension: WCA usage policy.
+	 * Source-file component discovery policy.
 	 *
 	 * Default is `"auto"`: manifests (CEM in `node_modules`, Kasstor library
 	 * summary, explicit paths) are the primary source of component metadata;
-	 * WCA is invoked only on user-project files that no manifest covers, and
-	 * is skipped on external libraries entirely (their CEM, if any, is
-	 * authoritative). Set to `"always"` for the original lit-analyzer
-	 * behavior, or `"never"` to force manifest-only operation.
+	 * the native source-file scanner is invoked only on user-project files
+	 * that no manifest covers, and is skipped on external libraries (their
+	 * CEM, if any, is authoritative). Set to `"always"` to scan every file
+	 * regardless, or `"never"` to force manifest-only operation.
 	 */
-	useWebComponentAnalyzer: LitUseWebComponentAnalyzer;
+	analyzeSourceFiles: LitAnalyzeSourceFiles;
 
 	/** Kasstor extension: external CEM ingestion. */
 	externalManifests: LitExternalManifestsConfig;
@@ -236,12 +236,12 @@ export function makeConfig(userOptions: Partial<LitAnalyzerConfig> = {}): LitAna
 		customHtmlData: userOptions.customHtmlData || [],
 
 		// Kasstor extensions. New defaults:
-		//   - WCA "auto" so manifests (CEM, library-summary) take precedence and
-		//     WCA is the fallback only for files no manifest covers. The user
-		//     can revert to legacy behavior with "always".
+		//   - source-file scanning "auto" so manifests (CEM, library-summary)
+		//     take precedence and inline classes are discovered only when no
+		//     manifest covers them. Override with "always" or "never".
 		//   - manifest scanning ON (no impact unless deps actually ship CEM).
 		//   - kasstor summary "auto" (no impact unless a library-summary.ts exists).
-		useWebComponentAnalyzer: userOptions.useWebComponentAnalyzer ?? "auto",
+		analyzeSourceFiles: userOptions.analyzeSourceFiles ?? "auto",
 		externalManifests: {
 			paths: userOptions.externalManifests?.paths,
 			scanNodeModules: userOptions.externalManifests?.scanNodeModules ?? true

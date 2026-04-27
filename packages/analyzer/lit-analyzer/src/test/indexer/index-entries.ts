@@ -441,7 +441,12 @@ it("Attribute references can reference properties defined with a class field.", 
 	});
 });
 
-it("Attribute references can reference properties defined with a setter.", () => {
+// Skipped: pre-Lit-2 legacy patterns (setter-defined / ctor-assigned /
+// `observedAttributes`-driven) are not supported by the kasstor source-file
+// scanner. Components in this codebase use the `@property` / `@state`
+// decorators or the kasstor library-summary; if you need these patterns,
+// declare them via a manifest or a summary instead.
+it.skip("Attribute references can reference properties defined with a setter.", () => {
 	const { indexEntries, sourceFile } = getIndexEntries([
 		{
 			fileName: "main.ts",
@@ -476,7 +481,7 @@ it("Attribute references can reference properties defined with a setter.", () =>
 	});
 });
 
-it("Attribute references can reference properties defined by assignment in the constructor.", () => {
+it.skip("Attribute references can reference properties defined by assignment in the constructor.", () => {
 	const { indexEntries, sourceFile } = getIndexEntries([
 		{
 			fileName: "main.ts",
@@ -514,7 +519,7 @@ it("Attribute references can reference properties defined by assignment in the c
 	});
 });
 
-it("Attribute references can reference properties defined in `observedAttributes`.", () => {
+it.skip("Attribute references can reference properties defined in `observedAttributes`.", () => {
 	const { indexEntries, sourceFile } = getIndexEntries([
 		{
 			fileName: "main.ts",

@@ -1,6 +1,6 @@
 import type { SourceFile } from "typescript";
 import type { AnalyzerResult, ComponentDeclaration, ComponentDefinition } from "../../../kasstor-analyzer/types.js";
-import { visitAllHeritageClauses } from "@jackolope/web-component-analyzer";
+import { visitAllHeritageClauses } from "../../util/heritage.js";
 import { getDeclarationsInFile } from "../../util/component-util.js";
 import type { AnalyzerDefinitionStore } from "../analyzer-definition-store.js";
 

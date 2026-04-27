@@ -3,8 +3,8 @@ import type { TestFile } from "./compile-files.js";
 /**
  * Allows you to configure and test options that you would provide to Lit's @property decorator by setting `fullPropertyDeclaration` to true.
  * @link https://lit.dev/docs/api/ReactiveElement/#PropertyDeclaration
- * Some of these options are used in the analyzer, and are set in the `parse-lit-property-configuration` file in the web-component-analyzer-package.
- * They are available on the `.meta` field.
+ * The relevant options are surfaced on the `.meta` field by the analyzer's
+ * native source-file scanner.
  */
 export function makeElement({
 	properties,

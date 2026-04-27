@@ -9,7 +9,6 @@ import type { HtmlAttrTarget } from "../../../parse/parse-html-data/html-tag.js"
 import { documentationForTarget, isHtmlAttr, isHtmlEvent, isHtmlProp } from "../../../parse/parse-html-data/html-tag.js";
 import type { HtmlNode } from "../../../types/html-node/html-node-types.js";
 import type { DocumentPositionContext } from "../../../util/get-position-context-in-document.js";
-import { iterableFilter, iterableMap } from "../../../util/iterable-util.js";
 import { lazy } from "../../../util/general-util.js";
 import type { LitAnalyzerContext } from "../../../lit-analyzer-context.js";
 import type { LitCompletion } from "../../../types/lit-completion.js";
@@ -17,54 +16,69 @@ import type { LitCompletion } from "../../../types/lit-completion.js";
 export function completionsForHtmlAttrs(htmlNode: HtmlNode, location: DocumentPositionContext, { htmlStore }: LitAnalyzerContext): LitCompletion[] {
 	const onTagName = htmlNode.tagName;
 
+	// All branches below build the completion list with a fused
+	// `for-of` + `if-not-used` + `push(targetToCompletion(...))` so the
+	// filter/map chain doesn't allocate intermediate iterables. Hot path on
+	// every keystroke inside a Lit template.
+
 	// Code completions for ".[...]";
 	if (location.word.startsWith(LIT_HTML_PROP_ATTRIBUTE_MODIFIER)) {
-		const alreadyUsedPropNames = htmlNode.attributes.filter(a => a.modifier === LIT_HTML_PROP_ATTRIBUTE_MODIFIER).map(a => a.name);
-		const unusedProps = iterableFilter(htmlStore.getAllPropertiesForTag(htmlNode), prop => !alreadyUsedPropNames.includes(prop.name));
-		return Array.from(
-			iterableMap(unusedProps, prop =>
-				targetToCompletion(prop, {
-					modifier: LIT_HTML_PROP_ATTRIBUTE_MODIFIER,
-					onTagName
-				})
-			)
-		);
+		const alreadyUsedPropNames = collectAttrNames(htmlNode, LIT_HTML_PROP_ATTRIBUTE_MODIFIER);
+		const out: LitCompletion[] = [];
+		for (const prop of htmlStore.getAllPropertiesForTag(htmlNode)) {
+			if (alreadyUsedPropNames.has(prop.name)) continue;
+			out.push(targetToCompletion(prop, { modifier: LIT_HTML_PROP_ATTRIBUTE_MODIFIER, onTagName }));
+		}
+		return out;
 	}
 
 	// Code completions for "?[...]";
-	else if (location.word.startsWith(LIT_HTML_BOOLEAN_ATTRIBUTE_MODIFIER)) {
-		const alreadyUsedAttrNames = htmlNode.attributes
-			.filter(a => a.modifier === LIT_HTML_BOOLEAN_ATTRIBUTE_MODIFIER || a.modifier == null)
-			.map(a => a.name);
-		const unusedAttrs = iterableFilter(htmlStore.getAllAttributesForTag(htmlNode), prop => !alreadyUsedAttrNames.includes(prop.name));
-		const booleanAttributes = iterableFilter(unusedAttrs, prop => isAssignableToBoolean(prop.getType()));
-		return Array.from(
-			iterableMap(booleanAttributes, attr =>
-				targetToCompletion(attr, {
-					modifier: LIT_HTML_BOOLEAN_ATTRIBUTE_MODIFIER,
-					onTagName
-				})
-			)
-		);
+	if (location.word.startsWith(LIT_HTML_BOOLEAN_ATTRIBUTE_MODIFIER)) {
+		const alreadyUsedAttrNames = new Set<string>();
+		for (const a of htmlNode.attributes) {
+			if (a.modifier === LIT_HTML_BOOLEAN_ATTRIBUTE_MODIFIER || a.modifier == null) {
+				alreadyUsedAttrNames.add(a.name);
+			}
+		}
+		const out: LitCompletion[] = [];
+		for (const prop of htmlStore.getAllAttributesForTag(htmlNode)) {
+			if (alreadyUsedAttrNames.has(prop.name)) continue;
+			if (!isAssignableToBoolean(prop.getType())) continue;
+			out.push(targetToCompletion(prop, { modifier: LIT_HTML_BOOLEAN_ATTRIBUTE_MODIFIER, onTagName }));
+		}
+		return out;
 	}
 
 	// Code completions for "@[...]";
-	else if (location.word.startsWith(LIT_HTML_EVENT_LISTENER_ATTRIBUTE_MODIFIER)) {
-		const alreadyUsedEventNames = htmlNode.attributes.filter(a => a.modifier === LIT_HTML_EVENT_LISTENER_ATTRIBUTE_MODIFIER).map(a => a.name);
-		const unusedEvents = iterableFilter(htmlStore.getAllEventsForTag(htmlNode), prop => !alreadyUsedEventNames.includes(prop.name));
-		return Array.from(
-			iterableMap(unusedEvents, prop =>
-				targetToCompletion(prop, {
-					modifier: LIT_HTML_EVENT_LISTENER_ATTRIBUTE_MODIFIER,
-					onTagName
-				})
-			)
-		);
+	if (location.word.startsWith(LIT_HTML_EVENT_LISTENER_ATTRIBUTE_MODIFIER)) {
+		const alreadyUsedEventNames = collectAttrNames(htmlNode, LIT_HTML_EVENT_LISTENER_ATTRIBUTE_MODIFIER);
+		const out: LitCompletion[] = [];
+		for (const prop of htmlStore.getAllEventsForTag(htmlNode)) {
+			if (alreadyUsedEventNames.has(prop.name)) continue;
+			out.push(targetToCompletion(prop, { modifier: LIT_HTML_EVENT_LISTENER_ATTRIBUTE_MODIFIER, onTagName }));
+		}
+		return out;
 	}
 
-	const alreadyUsedAttrNames = htmlNode.attributes.filter(a => a.modifier == null).map(a => a.name);
-	const unusedAttrs = iterableFilter(htmlStore.getAllAttributesForTag(htmlNode), prop => !alreadyUsedAttrNames.includes(prop.name));
-	return Array.from(iterableMap(unusedAttrs, prop => targetToCompletion(prop, { modifier: "", onTagName })));
+	const alreadyUsedAttrNames = collectAttrNames(htmlNode, undefined);
+	const out: LitCompletion[] = [];
+	for (const prop of htmlStore.getAllAttributesForTag(htmlNode)) {
+		if (alreadyUsedAttrNames.has(prop.name)) continue;
+		out.push(targetToCompletion(prop, { modifier: "", onTagName }));
+	}
+	return out;
+}
+
+function collectAttrNames(htmlNode: HtmlNode, modifier: string | undefined): Set<string> {
+	const out = new Set<string>();
+	const attrs = htmlNode.attributes;
+	for (let i = 0; i < attrs.length; i++) {
+		const a = attrs[i];
+		if (modifier === undefined ? a.modifier == null : a.modifier === modifier) {
+			out.add(a.name);
+		}
+	}
+	return out;
 }
 
 function isAssignableToBoolean(type: SimpleType, { matchAny } = { matchAny: true }): boolean {

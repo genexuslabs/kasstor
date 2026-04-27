@@ -6,7 +6,7 @@ import { CemExplicitSource } from "./component-sources/cem-explicit-source.js";
 import { CemNodeModulesSource } from "./component-sources/cem-node-modules-source.js";
 import type { ExternalManifestSource, ExternalManifestSourceContext, ResolvedManifest } from "./component-sources/external-manifest-source.js";
 import { KasstorSummarySource } from "./component-sources/kasstor-summary-source.js";
-import { WcaSourceFileAnalyzer } from "./component-sources/wca-source-file-analyzer.js";
+import { SourceFileSource } from "./component-sources/source-file-source.js";
 import { MAX_RUNNING_TIME_PER_OPERATION } from "./constants.js";
 import { getBuiltInHtmlCollection } from "./data/get-built-in-html-collection.js";
 import { getUserConfigHtmlCollection } from "./data/get-user-config-html-collection.js";
@@ -107,11 +107,8 @@ export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 	readonly definitionStore = new DefaultAnalyzerDefinitionStore();
 	readonly logger = new DefaultLitAnalyzerLogger();
 
-	/**
-	 * Adapter that confines all WCA usage to a single class.
-	 * @deprecated Slated for removal once CEM/library-summary covers everything.
-	 */
-	private wcaAdapter: WcaSourceFileAnalyzer | undefined;
+	/** Lazy native scanner for source files without a manifest/summary. */
+	private sourceFileSource: SourceFileSource | undefined;
 
 	/** Built and loaded lazily on first analysis (or eagerly on `updateConfig`). */
 	private externalSources: ExternalManifestSource[] | undefined;
@@ -172,7 +169,7 @@ export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 
 	private externalSourcesConfigChanged(prev: LitAnalyzerConfig, next: LitAnalyzerConfig): boolean {
 		return (
-			prev.useWebComponentAnalyzer !== next.useWebComponentAnalyzer ||
+			prev.analyzeSourceFiles !== next.analyzeSourceFiles ||
 			JSON.stringify(prev.externalManifests) !== JSON.stringify(next.externalManifests) ||
 			JSON.stringify(prev.kasstorSummary) !== JSON.stringify(next.kasstorSummary)
 		);
@@ -197,15 +194,15 @@ export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 		this.htmlStore.absorbCollection(builtInCollection, HtmlDataSourceKind.BUILT_IN);
 	}
 
-	private getWcaAdapter(): WcaSourceFileAnalyzer {
-		if (this.wcaAdapter == null) {
-			this.wcaAdapter = new WcaSourceFileAnalyzer({
+	private getSourceFileSource(): SourceFileSource {
+		if (this.sourceFileSource == null) {
+			this.sourceFileSource = new SourceFileSource({
 				ts: this.ts,
 				getProgram: () => this.program,
 				getChecker: () => this.checker
 			});
 		}
-		return this.wcaAdapter;
+		return this.sourceFileSource;
 	}
 
 	private buildExternalSources(): ExternalManifestSource[] {
@@ -339,10 +336,10 @@ export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 	}
 
 	private findComponentsInFile(sourceFile: SourceFile) {
-		const wcaPolicy = this.config.useWebComponentAnalyzer;
+		const policy = this.config.analyzeSourceFiles;
 
-		// "never": no per-file WCA analysis at all.
-		if (wcaPolicy === "never") return;
+		// "never": no per-file source-code component discovery at all.
+		if (policy === "never") return;
 
 		// All policies: skip files already covered by a loaded manifest.
 		if (this.isFileCoveredByExternalSource(sourceFile)) return;
@@ -352,13 +349,13 @@ export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 		// default libraries (lib.dom.d.ts and friends) — even when they live
 		// inside `node_modules/typescript/lib`, they describe built-in HTML
 		// elements that lit-analyzer relies on for property/event typing.
-		if (wcaPolicy === "auto") {
+		if (policy === "auto") {
 			const isDefaultLibrary = this.program.isSourceFileDefaultLibrary(sourceFile);
 			const isExternalLibrary = this.program.isSourceFileFromExternalLibrary(sourceFile);
 			if (isExternalLibrary && !isDefaultLibrary) return;
 		}
 
-		this.getWcaAdapter().analyzeAndAbsorb(sourceFile, {
+		this.getSourceFileSource().analyzeAndAbsorb(sourceFile, {
 			definitionStore: this.definitionStore,
 			htmlStore: this.htmlStore
 		});
@@ -372,9 +369,9 @@ export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 
 	private analyzeSubclassExtensions() {
 		if (this.hasAnalyzedSubclassExtensions) return;
-		if (this.config.useWebComponentAnalyzer === "never") return;
+		if (this.config.analyzeSourceFiles === "never") return;
 
-		const ok = this.getWcaAdapter().absorbDefaultLibSubclassExtension({ htmlStore: this.htmlStore });
+		const ok = this.getSourceFileSource().absorbDefaultLibSubclassExtension({ htmlStore: this.htmlStore });
 		if (ok) this.hasAnalyzedSubclassExtensions = true;
 	}
 

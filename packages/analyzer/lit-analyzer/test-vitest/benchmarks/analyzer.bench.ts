@@ -3,7 +3,7 @@ import * as ts from "typescript";
 import { DefaultLitAnalyzerContext } from "../../src/lib/analyze/default-lit-analyzer-context.js";
 import { LitAnalyzer } from "../../src/lib/analyze/lit-analyzer.js";
 import { makeConfig } from "../../src/lib/analyze/lit-analyzer-config.js";
-import { analyzeSourceFile } from "../../src/lib/kasstor-analyzer/index.js";
+import { SourceFileComponentScanner } from "../../src/lib/analyze/component-sources/source-file-component-scanner.js";
 
 /**
  * Benchmarks the hot paths the IDE plugin and the CLI exercise on every
@@ -98,17 +98,27 @@ describe("analyzer hot paths", () => {
   // walk, not `ts.createProgram` (which dominates on cold start).
   const programSingle = makeProgram([{ name: "/virtual/single.ts", text: SINGLE_LIT_COMPONENT }]);
   const programMany = makeProgram(repeatComponents(50));
-
-  bench("analyzeSourceFile (single Lit component, cached run)", () => {
-    const sf = programSingle.getSourceFile("/virtual/single.ts");
-    if (!sf) return;
-    analyzeSourceFile(sf, { program: programSingle, ts });
+  const scannerSingle = new SourceFileComponentScanner({
+    ts,
+    getProgram: () => programSingle,
+    getChecker: () => programSingle.getTypeChecker()
+  });
+  const scannerMany = new SourceFileComponentScanner({
+    ts,
+    getProgram: () => programMany,
+    getChecker: () => programMany.getTypeChecker()
   });
 
-  bench("analyzeSourceFile (50 Lit components, cold cache)", () => {
+  bench("scanner.scan (single Lit component, cached run)", () => {
+    const sf = programSingle.getSourceFile("/virtual/single.ts");
+    if (!sf) return;
+    scannerSingle.scan(sf);
+  });
+
+  bench("scanner.scan (50 Lit components, cold cache)", () => {
     for (const sf of programMany.getSourceFiles()) {
       if (sf.fileName.startsWith("/virtual/comp-")) {
-        analyzeSourceFile(sf, { program: programMany, ts });
+        scannerMany.scan(sf);
       }
     }
   });

@@ -39,8 +39,7 @@
     "LICENSE.md"
   ],
   "dependencies": {
-    "@genexus/kasstor-lit-analyzer": "workspace:*",
-    "@jackolope/web-component-analyzer": "^4.0.4"
+    "@genexus/kasstor-lit-analyzer": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.12.0",

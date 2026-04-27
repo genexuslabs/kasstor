@@ -13,5 +13,6 @@ export type {
 export { CemNodeModulesSource } from "./cem-node-modules-source.js";
 export { CemExplicitSource } from "./cem-explicit-source.js";
 export { KasstorSummarySource } from "./kasstor-summary-source.js";
-export { WcaSourceFileAnalyzer } from "./wca-source-file-analyzer.js";
+export { SourceFileSource } from "./source-file-source.js";
+export { SourceFileComponentScanner } from "./source-file-component-scanner.js";
 export { convertKasstorSummaryToCem } from "../parse/parse-kasstor-summary.js";
