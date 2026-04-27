@@ -33,8 +33,7 @@ From the repo root:
 
 ```bash
 bun analyzer:build           # tsc --build for the 3 packages
-bun analyzer:test            # Vitest (analyzer + new sources)
-bun analyzer:test:vscode     # opt-in: Mocha + @vscode/test-electron
+bun analyzer:test            # Vitest across all 3 (analyzer + plugin + vscode-extension)
 bun analyzer:lint
 ```
 

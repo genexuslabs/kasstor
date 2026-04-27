@@ -23,9 +23,19 @@ import type { SourceFile } from "typescript";
  *
  *   - `SourceFile.fileName` from TypeScript always uses forward slashes.
  *   - `add()` accepts paths with either separator. We canonicalize on
- *     ingest by replacing back-slashes with forward-slashes and stripping
- *     any trailing separator. Both forms compare cleanly against the
- *     canonical representation of `SourceFile.fileName`.
+ *     ingest by replacing back-slashes with forward-slashes, lower-casing
+ *     the whole path on Windows-style hosts (NTFS is case-insensitive),
+ *     and stripping any trailing separator. Both forms compare cleanly
+ *     against the canonical representation of `SourceFile.fileName`.
+ *
+ *   - Case sensitivity: Windows tsserver emits the drive letter in
+ *     whatever case the user passed to it (`d:/...` from `process.cwd()`
+ *     vs `D:/...` from a `SourceFile.fileName` Cursor created from the
+ *     workspace URI), so a literal `startsWith` comparison falsely says
+ *     "not covered" and re-analyses the file with the source-file
+ *     scanner — clobbering the rich data the kasstor library-summary
+ *     just absorbed. We fold case unconditionally; on POSIX the cost is
+ *     a single `toLowerCase` per path, dwarfed by the IO around it.
  */
 export class PackageRootIndex {
   /**
@@ -74,8 +84,9 @@ export class PackageRootIndex {
     // even on Windows, but synthetic SourceFile objects from tests / hosts
     // can contain back-slashes. The `indexOf` returns -1 immediately for
     // the common case (zero allocation, ~1ns).
-    const raw = sourceFile.fileName;
-    const fileName = raw.indexOf("\\") === -1 ? raw : raw.replace(BACKSLASH_RE, "/");
+    let fileName = sourceFile.fileName;
+    if (fileName.indexOf("\\") !== -1) fileName = fileName.replace(BACKSLASH_RE, "/");
+    fileName = fileName.toLowerCase();
     const fileNameLen = fileName.length;
 
     const roots = this.roots;
@@ -133,6 +144,11 @@ function canonicalize(p: string): string {
   if (out.indexOf("\\") !== -1) {
     out = out.replace(BACKSLASH_RE, "/");
   }
+  // Lower-case so the stored root matches the lower-cased file paths
+  // checked by `cover()`. Doing this once on `add()` keeps the per-file
+  // hot path allocation-free except for the single `toLowerCase` we
+  // already pay there.
+  out = out.toLowerCase();
   // Strip trailing slash, except for the root "/".
   const last = out.length - 1;
   if (last > 0 && out.charCodeAt(last) === 47 /* "/" */) {

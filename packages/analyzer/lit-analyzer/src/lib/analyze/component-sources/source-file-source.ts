@@ -84,6 +84,31 @@ export class SourceFileSource {
       checker: this.opts.getChecker(),
       addDeclarationPropertiesAsAttributes: this.program.isSourceFileFromExternalLibrary(sourceFile)
     });
+
+    // Defense in depth: drop tags that the scanner picked up only because
+    // of an `interface HTMLElementTagNameMap { "tag": HTMLChXxxElement }`
+    // entry but couldn't resolve to a class declaration. Those entries
+    // come back from the scanner with zero attrs/props/events, and
+    // absorbing them would clobber the rich data a manifest source (CEM
+    // ingest, kasstor library-summary) already wrote into the same
+    // DECLARED bucket — exactly the symptom that turned `<ch-…>` property
+    // bindings into "Unknown property" errors when a chameleon `.lit.ts`
+    // got transitively pulled into the program. The proper fallback for
+    // these cases is the manifest data; if no manifest covers the file,
+    // the binding genuinely is unknown and the user gets a tag-level
+    // diagnostic instead of a useless empty registration.
+    htmlCollection.tags = htmlCollection.tags.filter(tag => {
+      if (tag.declaration != null) return true;
+      const empty =
+        tag.attributes.length === 0 &&
+        tag.properties.length === 0 &&
+        tag.events.length === 0 &&
+        tag.slots.length === 0 &&
+        tag.cssParts.length === 0 &&
+        tag.cssProperties.length === 0;
+      return !empty;
+    });
+
     stores.htmlStore.absorbCollection(htmlCollection, reg);
   }
 

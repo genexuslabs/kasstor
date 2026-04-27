@@ -40,10 +40,9 @@
     "test:unit": "bun dev && vitest --project unit",
     "test:e2e": "bun dev && playwright install && vitest --project browser",
     "analyzer:build": "bun --filter=@genexus/kasstor-lit-analyzer --filter=@genexus/kasstor-ts-lit-plugin --filter=kasstor-lit-vscode-plugin run build",
-    "analyzer:test": "bun --filter=@genexus/kasstor-lit-analyzer run test",
+    "analyzer:test": "bun --filter=@genexus/kasstor-lit-analyzer --filter=kasstor-lit-vscode-plugin run test",
     "analyzer:test:watch": "bun --filter=@genexus/kasstor-lit-analyzer run test:watch",
     "analyzer:test:bench": "bun --filter=@genexus/kasstor-lit-analyzer run test:bench",
-    "analyzer:test:vscode": "bun --filter=kasstor-lit-vscode-plugin run test",
     "analyzer:lint": "bun --filter=@genexus/kasstor-lit-analyzer --filter=@genexus/kasstor-ts-lit-plugin --filter=kasstor-lit-vscode-plugin run lint"
   },
   "license": "Apache-2.0",

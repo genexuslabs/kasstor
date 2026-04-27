@@ -7,7 +7,7 @@ import { CemNodeModulesSource } from "./component-sources/cem-node-modules-sourc
 import type { ExternalManifestSource, ExternalManifestSourceContext, ResolvedManifest } from "./component-sources/external-manifest-source.js";
 import { KasstorSummarySource } from "./component-sources/kasstor-summary-source.js";
 import { SourceFileSource } from "./component-sources/source-file-source.js";
-import { MAX_RUNNING_TIME_PER_OPERATION } from "./constants.js";
+import { MAX_EXTERNAL_LOAD_RETRIES, MAX_RUNNING_TIME_PER_OPERATION } from "./constants.js";
 import { getBuiltInHtmlCollection } from "./data/get-built-in-html-collection.js";
 import { getUserConfigHtmlCollection } from "./data/get-user-config-html-collection.js";
 import type { LitAnalyzerConfig } from "./lit-analyzer-config.js";
@@ -24,6 +24,8 @@ import { DefaultAnalyzerDocumentStore } from "./store/document-store/default-ana
 import { DefaultAnalyzerHtmlStore } from "./store/html-store/default-analyzer-html-store.js";
 import { HtmlDataSourceKind } from "./store/html-store/html-data-source-merged.js";
 import { changedSourceFileIterator } from "./util/changed-source-file-iterator.js";
+
+const NODE_MODULES_PATH_RE = /[/\\]node_modules[/\\]/;
 
 export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 	protected componentSourceFileIterator = changedSourceFileIterator();
@@ -113,6 +115,7 @@ export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 	/** Built and loaded lazily on first analysis (or eagerly on `updateConfig`). */
 	private externalSources: ExternalManifestSource[] | undefined;
 	private externalsLoaded = false;
+	private externalLoadAttempts = 0;
 	private loadedManifests: ResolvedManifest[] = [];
 
 	private _rules: RuleCollection | undefined;
@@ -163,6 +166,7 @@ export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 		if (this.externalSourcesConfigChanged(previousConfig, config)) {
 			this.externalSources = undefined;
 			this.externalsLoaded = false;
+			this.externalLoadAttempts = 0;
 			this.loadedManifests = [];
 		}
 	}
@@ -252,6 +256,15 @@ export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 		if (this.externalsLoaded) return;
 
 		const sources = this.externalSources ?? (this.externalSources = this.buildExternalSources());
+
+		// Always-on summary log so the cold-start path is observable from
+		// `lit-plugin.log` even with default-OFF logging. The IDE plugin
+		// uses this signal to tell the difference between "externals
+		// resolved but empty" and "the loader didn't run at all".
+		this.logger.warn(
+			`[externals] ensureExternalsLoaded: cwd=${this.config.cwd}, sources=[${sources.map(s => s.name).join(",")}]`
+		);
+
 		if (sources.length === 0) {
 			this.externalsLoaded = true;
 			return;
@@ -259,6 +272,7 @@ export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 
 		const ctx = this.buildExternalSourceContext();
 
+		let totalManifestsLoaded = 0;
 		for (const src of sources) {
 			try {
 				const manifests = src.load(ctx);
@@ -267,10 +281,26 @@ export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 					this.htmlStore.absorbCollection(collection, HtmlDataSourceKind.DECLARED);
 				}
 				this.loadedManifests.push(...manifests);
-				this.logger.debug(`[${src.name}] absorbed ${manifests.length} manifest(s)`);
+				totalManifestsLoaded += manifests.length;
+				this.logger.warn(`[externals] ${src.name} absorbed ${manifests.length} manifest(s)`);
 			} catch (err) {
 				this.logger.error(`[${src.name}] failed to load`, err);
 			}
+		}
+
+		// Cold-start retry guard: in IDE contexts the very first analysis can
+		// happen before the project's source tree has been fully realized
+		// (Cursor's tsserver sometimes pings the plugin before the workspace
+		// disk view is ready). If every configured source returned zero
+		// manifests, leave the cache unprimed so the next analysis pass tries
+		// again — capped at MAX_RETRIES so a project genuinely without
+		// manifests doesn't pay the disk-walk cost on every keystroke.
+		if (totalManifestsLoaded === 0 && this.externalLoadAttempts < MAX_EXTERNAL_LOAD_RETRIES) {
+			this.externalLoadAttempts++;
+			this.logger.debug(
+				`[externals] no manifests loaded on attempt ${this.externalLoadAttempts}; will retry on next analysis`
+			);
+			return;
 		}
 
 		this.externalsLoaded = true;
@@ -349,10 +379,20 @@ export class DefaultLitAnalyzerContext implements LitAnalyzerContext {
 		// default libraries (lib.dom.d.ts and friends) — even when they live
 		// inside `node_modules/typescript/lib`, they describe built-in HTML
 		// elements that lit-analyzer relies on for property/event typing.
+		//
+		// `program.isSourceFileFromExternalLibrary` was unreliable in real
+		// IDE programs (Cursor's tsserver returned `false` for all 200+
+		// `@types/*` files in chameleon, blowing the analysis budget). We
+		// fall back to a literal `node_modules` segment check on the path
+		// so the "auto" policy actually skips them in practice.
 		if (policy === "auto") {
 			const isDefaultLibrary = this.program.isSourceFileDefaultLibrary(sourceFile);
-			const isExternalLibrary = this.program.isSourceFileFromExternalLibrary(sourceFile);
-			if (isExternalLibrary && !isDefaultLibrary) return;
+			if (!isDefaultLibrary) {
+				const isExternalLibrary =
+					this.program.isSourceFileFromExternalLibrary(sourceFile) ||
+					NODE_MODULES_PATH_RE.test(sourceFile.fileName);
+				if (isExternalLibrary) return;
+			}
 		}
 
 		this.getSourceFileSource().analyzeAndAbsorb(sourceFile, {

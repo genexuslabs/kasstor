@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { appendFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type { LitAnalyzerConfig } from "@genexus/kasstor-lit-analyzer";
 import { LitAnalyzerLoggerLevel, makeConfig, VERSION } from "@genexus/kasstor-lit-analyzer";
 import type * as ts from "typescript";
@@ -9,6 +12,26 @@ import { logger } from "./logger.js";
 import { LitPluginContext } from "./ts-lit-plugin/lit-plugin-context.js";
 import { TsLitPlugin } from "./ts-lit-plugin/ts-lit-plugin.js";
 import { setTypescriptModule } from "./ts-module.js";
+
+/**
+ * Writes a single line to `<TMPDIR>/kasstor-lit-plugin-create-trace.log`
+ * the first time `init()` is called inside a tsserver process. The user's
+ * project root might not be writable from the IDE's tsserver process —
+ * tmpdir always is — so this is a guaranteed-visible signal that says
+ * "this is the bundle that loaded, this is where its log will live".
+ *
+ * The trace file is harmless to leave around; tsservers that respawn
+ * append a new line per spawn so the timeline is preserved.
+ */
+function writeInitTrace(tsVersion: string): void {
+  try {
+    const file = join(tmpdir(), "kasstor-lit-plugin-create-trace.log");
+    const line = `[${new Date().toISOString()}] kasstor-lit-plugin v${VERSION} init (typescript=${tsVersion}, dirname=${__dirname}, pid=${process.pid})\n`;
+    appendFileSync(file, line);
+  } catch {
+    // tmpdir is unwritable on this host — nothing else we can do silently.
+  }
+}
 
 const tsHtmlPluginSymbol = Symbol.for("__tsHtmlPlugin__");
 
@@ -21,6 +44,11 @@ let context: LitPluginContext | undefined = undefined;
 export function init({ typescript }: { typescript: typeof ts }): tsServer.server.PluginModule {
 	// Cache the typescript module
 	setTypescriptModule(typescript);
+
+	// Always-on trace at tmpdir — gives users a definitive "the new bundle
+	// loaded into the live tsserver" signal that's independent of whether
+	// the project root is writable.
+	writeInitTrace(typescript.version);
 
 	/**
 	 * This function is used to print debug info once

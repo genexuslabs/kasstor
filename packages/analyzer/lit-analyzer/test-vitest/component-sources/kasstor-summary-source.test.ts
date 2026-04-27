@@ -97,4 +97,61 @@ describe("KasstorSummarySource", () => {
     const fakeFile = { fileName: join(FIXTURE, "src/components/something.ts") } as ts.SourceFile;
     expect(src.coversSourceFile(fakeFile)).toBe("<kasstor-summary>");
   });
+
+  it("walks down a monorepo-style root and discovers nested library-summary files", async () => {
+    // Layout the test creates:
+    //
+    //   <tmp>/repo/
+    //     packages/
+    //       a/src/library-summary.json
+    //       b/src/library-summary.json
+    //       c/src/                     <-- no summary, must be ignored
+    //     node_modules/<must-not-recurse>/src/library-summary.json  (skip dir)
+    //
+    // The user's actual symptom — opening Cursor at the monorepo root and
+    // not getting any kasstor completions — was caused by the loader only
+    // looking at `<programRoot>/src` and `<programRoot>`. This test pins
+    // the new walk-down behaviour.
+    const repo = mkdtempSync(join(tmpdir(), "kasstor-mono-"));
+    const make = (relPath: string, tagName: string) => {
+      const dir = join(repo, relPath);
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(
+        join(dir, "library-summary.json"),
+        JSON.stringify([
+          {
+            access: "public",
+            tagName,
+            className: tagName.replace(/-./g, m => m[1]!.toUpperCase()).replace(/^./, m => m.toUpperCase()),
+            description: "",
+            srcPath: "./x.ts",
+            developmentStatus: "stable",
+            mode: "open",
+            shadow: true
+          }
+        ])
+      );
+    };
+    make("packages/a/src", "kst-a");
+    make("packages/b/src", "kst-b");
+    mkdirSync(join(repo, "packages/c/src"), { recursive: true });
+    // Decoy summary deep inside node_modules — must be skipped because
+    // descending into `node_modules` is one of the cold-start traps.
+    make("node_modules/decoy/src", "kst-decoy");
+
+    const ctx = fakeCtx(repo);
+    const src = new KasstorSummarySource("auto");
+    const manifests = await src.load(ctx);
+
+    const tagNames = manifests
+      .flatMap(m => m.manifest.modules)
+      .flatMap(mod => mod.declarations ?? [])
+      .filter(isCustomElementDeclaration)
+      .map(d => d.tagName)
+      .sort();
+    expect(tagNames).toEqual(["kst-a", "kst-b"]);
+    expect(tagNames).not.toContain("kst-decoy");
+
+    rmSync(repo, { recursive: true, force: true });
+  });
 });

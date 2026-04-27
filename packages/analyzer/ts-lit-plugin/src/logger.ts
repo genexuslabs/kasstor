@@ -73,29 +73,35 @@ export class Logger extends DefaultLitAnalyzerLogger {
 	}
 
 	/**
-	 * Appends a log if this.level > level
-	 * @param level
-	 * @param args
+	 * Appends a log if this.level >= level. Errors AND warnings are
+	 * always written to disk regardless of the configured level —
+	 * they are silent failures otherwise (the LS decorator swallows
+	 * thrown exceptions and returns the previous service's result),
+	 * so without this hook a cold-restart crash would leave the user
+	 * with "no kasstor suggestions" and no trace of why. The log
+	 * lives at `<cwd>/lit-plugin.log`.
 	 */
 	private appendLogWithLevel(level: LitAnalyzerLoggerLevel, ...args: any[]) {
-		if (this.level >= level) {
-			const prefix = this.getLogLevelPrefix(level);
-			const message = inspect(args, {
-				colors: true,
-				depth: 6,
-				breakLength: 50,
-				maxArrayLength: 10
-			});
-			try {
-				appendFileSync(this.logPath, `${prefix}${message}\n`);
-			} catch {
-				// ignore
-			}
-			this.tsLogger?.msg(
-				`[@genexus/kasstor-ts-lit-plugin] ${message}`,
-				level === LitAnalyzerLoggerLevel.ERROR ? tsServer.server.Msg.Err : tsServer.server.Msg.Info
-			);
+		const alwaysWrite =
+			level === LitAnalyzerLoggerLevel.ERROR || level === LitAnalyzerLoggerLevel.WARN;
+		if (!alwaysWrite && this.level < level) return;
+
+		const prefix = this.getLogLevelPrefix(level);
+		const message = inspect(args, {
+			colors: false,
+			depth: 6,
+			breakLength: 80,
+			maxArrayLength: 10
+		});
+		try {
+			appendFileSync(this.logPath, `${prefix}${message}\n`);
+		} catch {
+			// ignore
 		}
+		this.tsLogger?.msg(
+			`[@genexus/kasstor-ts-lit-plugin] ${message}`,
+			level === LitAnalyzerLoggerLevel.ERROR ? tsServer.server.Msg.Err : tsServer.server.Msg.Info
+		);
 	}
 
 	private getLogLevelPrefix(level: LitAnalyzerLoggerLevel) {
