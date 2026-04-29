@@ -28,6 +28,21 @@ declare global {
         internalLanguageInitializedResolver?: (() => void) | false;
 
         /**
+         * A resolver function for the current `languageChangePromise`.
+         *
+         * When `undefined`, no language change is in flight (the previous
+         * promise has already resolved or none has started yet). When a new
+         * `setLanguage` call happens with no resolver in flight, a fresh
+         * promise + resolver are installed; rapid follow-up `setLanguage`
+         * calls reuse the same in-flight resolver so they all share a single
+         * `languageChangePromise` that resolves once the *latest* language
+         * has finished loading.
+         *
+         * Only useful for internal purposes.
+         */
+        internalLanguageChangeResolver?: () => void;
+
+        /**
          * Current translations loaded per feature (e.g. per component or per app).
          */
         readonly loadedTranslations: Map<
@@ -46,6 +61,23 @@ declare global {
          * A promise that resolves when the language has been initialized.
          */
         readonly languageInitialized: Promise<void>;
+
+        /**
+         * A promise that resolves when the in-flight language change finishes.
+         *
+         * - Initially an already-resolved promise (no change pending).
+         * - On `setLanguage`, if no change is currently in flight, a fresh
+         *   pending promise is installed here (and its resolver in
+         *   `internalLanguageChangeResolver`).
+         * - When the *latest* language's translations finish loading, the
+         *   resolver is called and cleared. Earlier-but-not-latest loads are
+         *   ignored, so burst calls don't leak resolution.
+         *
+         * Mutable across the lifecycle (each completed change is followed by
+         * a new pending promise on the next change), so it is intentionally
+         * not `readonly`.
+         */
+        languageChangePromise: Promise<void>;
 
         /**
          * Called when the language changes by user interaction, so the Host
