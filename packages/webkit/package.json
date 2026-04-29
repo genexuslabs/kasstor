@@ -59,15 +59,6 @@
       "development": "./dist/browser/development/array/index.js",
       "default": "./dist/browser/production/array/index.js"
     },
-    "./global-stylesheets.js": {
-      "node": {
-        "development": "./dist/node/development/global-stylesheets/index.js",
-        "default": "./dist/node/production/global-stylesheets/index.js"
-      },
-      "types": "./dist/browser/development/global-stylesheets/index.d.ts",
-      "development": "./dist/browser/development/global-stylesheets/index.js",
-      "default": "./dist/browser/production/global-stylesheets/index.js"
-    },
     "./internationalization/all-supported-languages.js": {
       "node": {
         "development": "./dist/node/development/internationalization/all-supported-languages.js",
@@ -193,6 +184,15 @@
       "types": "./dist/browser/development/shared-local-storage-keys.d.ts",
       "development": "./dist/browser/development/shared-local-storage-keys.js",
       "default": "./dist/browser/production/shared-local-storage-keys.js"
+    },
+    "./stylesheets.js": {
+      "node": {
+        "development": "./dist/node/development/stylesheets/index.js",
+        "default": "./dist/node/production/stylesheets/index.js"
+      },
+      "types": "./dist/browser/development/stylesheets/index.d.ts",
+      "development": "./dist/browser/development/stylesheets/index.js",
+      "default": "./dist/browser/production/stylesheets/index.js"
     },
     "./type-ahead.js": {
       "node": {

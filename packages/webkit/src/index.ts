@@ -9,7 +9,7 @@ export {
   addStyleSheet,
   removeGlobalStyleSheet,
   removeStyleSheet
-} from "./global-stylesheets/index.js";
+} from "./stylesheets/index.js";
 
 // i18n
 export {
