@@ -38,6 +38,15 @@ export const setLanguage = (
   const { fullLanguageName, subtag } = fromLanguageToFullnameAndSubtag(language);
   kasstorWebkitI18n!.currentLanguage = fullLanguageName;
 
+  // Install a pending `languageChangePromise` if none is currently in flight.
+  // Burst `setLanguage` calls reuse the same resolver so they all share a
+  // single promise that will only resolve once the *latest* language loads.
+  if (kasstorWebkitI18n!.internalLanguageChangeResolver === undefined) {
+    kasstorWebkitI18n!.languageChangePromise = new Promise<void>(resolve => {
+      kasstorWebkitI18n!.internalLanguageChangeResolver = resolve;
+    });
+  }
+
   let newLocation = undefined;
 
   // TODO: Use different outputs for the browser and server, so we don't need
@@ -62,6 +71,15 @@ export const setLanguage = (
 
       // After that, notify all subscribers for the language change
       notifyLanguageChange();
+
+      // Finally, resolve `languageChangePromise` so awaiters of
+      // `languageChangeComplete()` continue with the latest language already
+      // applied. Clearing the resolver marks the change as "no longer in
+      // flight" so the next `setLanguage` installs a fresh promise.
+      if (kasstorWebkitI18n!.internalLanguageChangeResolver) {
+        kasstorWebkitI18n!.internalLanguageChangeResolver();
+        kasstorWebkitI18n!.internalLanguageChangeResolver = undefined;
+      }
     }
   });
 

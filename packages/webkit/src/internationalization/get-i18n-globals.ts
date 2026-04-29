@@ -9,6 +9,9 @@ export const getI18nGlobals = () => {
     languageInitialized: new Promise(resolve => {
       languageInitializedResolver = resolve;
     }),
+    // Initially resolved: with no language change in flight, awaiting
+    // `languageChangeComplete()` should not block.
+    languageChangePromise: Promise.resolve(),
     loadedTranslations: new Map(),
     translationLoaders: new Map(),
 

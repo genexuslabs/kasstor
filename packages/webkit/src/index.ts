@@ -20,6 +20,7 @@ export {
   getCurrentLanguage,
   getCurrentTranslations,
   getLanguageFromUrl,
+  languageChangeComplete,
   languageHasBeenInitialized,
   registerTranslations,
   setInitialApplicationLanguage,
