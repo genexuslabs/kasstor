@@ -2,7 +2,7 @@
 import {
   addGlobalStyleSheet,
   removeGlobalStyleSheet
-} from "@genexus/kasstor-webkit/global-stylesheets.js";
+} from "@genexus/kasstor-webkit/stylesheets.js";
 import { LitElement, unsafeCSS, type PropertyValues } from "lit";
 
 import { DEV_MODE, IS_SERVER } from "../../development-flags.js";

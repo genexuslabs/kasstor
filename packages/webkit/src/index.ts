@@ -4,7 +4,12 @@ export { SyncWithRAF } from "./sync-with-frames/index.js";
 
 export { TypeAhead } from "./type-ahead/index.js";
 
-export { addGlobalStyleSheet, removeGlobalStyleSheet } from "./global-stylesheets/index.js";
+export {
+  addGlobalStyleSheet,
+  addStyleSheet,
+  removeGlobalStyleSheet,
+  removeStyleSheet
+} from "./stylesheets/index.js";
 
 // i18n
 export {
