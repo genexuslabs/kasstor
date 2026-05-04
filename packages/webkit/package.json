@@ -140,6 +140,15 @@
       "development": "./dist/browser/development/internationalization/register-translations.js",
       "default": "./dist/browser/production/internationalization/register-translations.js"
     },
+    "./internationalization/set-available-languages.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/set-available-languages.js",
+        "default": "./dist/node/production/internationalization/set-available-languages.js"
+      },
+      "types": "./dist/browser/development/internationalization/set-available-languages.d.ts",
+      "development": "./dist/browser/development/internationalization/set-available-languages.js",
+      "default": "./dist/browser/production/internationalization/set-available-languages.js"
+    },
     "./internationalization/set-initial-application-language.js": {
       "node": {
         "development": "./dist/node/development/internationalization/set-initial-application-language.js",

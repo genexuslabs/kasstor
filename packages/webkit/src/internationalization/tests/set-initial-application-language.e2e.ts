@@ -84,6 +84,83 @@ describe("[i18n e2e] setInitialApplicationLanguage", () => {
     });
   });
 
+  describe("[availableLanguages and defaultLanguage]", () => {
+    test("URL language outside availableLanguages is ignored, falls back to client/default", () => {
+      vi.spyOn(navigator, "languages", "get").mockReturnValue(["ja-JP"]);
+      setPathname("/fr/dashboard");
+
+      const result = setInitialApplicationLanguage({
+        availableLanguages: ["en", "es"],
+        defaultLanguage: "es",
+        locationChangeCallback: () => {},
+        pathname: "/fr/dashboard"
+      });
+
+      expect(result.initialLanguage.subtag).toBe("es");
+    });
+
+    test("defaultLanguage 'es' wins when URL has no language and navigator has no match", () => {
+      vi.spyOn(navigator, "languages", "get").mockReturnValue(["ja-JP"]);
+      setPathname("/dashboard");
+
+      const result = setInitialApplicationLanguage({
+        availableLanguages: ["en", "es"],
+        defaultLanguage: "es",
+        locationChangeCallback: () => {},
+        pathname: "/dashboard"
+      });
+
+      expect(result.initialLanguage.subtag).toBe("es");
+    });
+
+    test("URL language inside availableLanguages is honored", () => {
+      setPathname("/es/dashboard");
+
+      const result = setInitialApplicationLanguage({
+        availableLanguages: ["en", "es"],
+        locationChangeCallback: () => {},
+        pathname: "/es/dashboard"
+      });
+
+      expect(result.initialLanguage.subtag).toBe("es");
+    });
+
+    test("invalid defaultLanguage outside list is coerced to 'en' with warn", () => {
+      // Clear any persisted language from earlier tests so the resolution
+      // falls past localStorage onto navigator + default.
+      localStorage.clear();
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      setPathname("/dashboard");
+      vi.spyOn(navigator, "languages", "get").mockReturnValue(["ja-JP"]);
+
+      const result = setInitialApplicationLanguage({
+        availableLanguages: ["en", "es"],
+        defaultLanguage: "fr",
+        locationChangeCallback: () => {},
+        pathname: "/dashboard"
+      });
+
+      expect(result.initialLanguage.subtag).toBe("en");
+      expect(kasstorWebkitI18n!.configuredDefaultLanguage).toBe("en");
+      expect(warnSpy).toHaveBeenCalled();
+    });
+
+    test("empty availableLanguages is coerced to ['en'] with warn", () => {
+      localStorage.clear();
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      setPathname("/dashboard");
+
+      setInitialApplicationLanguage({
+        availableLanguages: [],
+        locationChangeCallback: () => {},
+        pathname: "/dashboard"
+      });
+
+      expect(kasstorWebkitI18n!.availableLanguages).toEqual(new Set(["en"]));
+      expect(warnSpy).toHaveBeenCalled();
+    });
+  });
+
   describe("[pathname without language]", () => {
     // TODO: This test is skipped because we are always using the window.location.pathname to get the language,
     // so we don't rely on the pathname parameter of setInitialApplicationLanguage for the browser.

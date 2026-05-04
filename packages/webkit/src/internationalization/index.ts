@@ -17,6 +17,7 @@ export { getLanguageFromUrl } from "./get-language-from-url.js";
 export { languageChangeComplete } from "./language-change-complete.js";
 export { languageHasBeenInitialized } from "./language-has-been-initialized.js";
 export { registerTranslations } from "./register-translations.js";
+export { setAvailableLanguages } from "./set-available-languages.js";
 export { setInitialApplicationLanguage } from "./set-initial-application-language.js";
 export { setLanguage } from "./set-language.js";
 export {

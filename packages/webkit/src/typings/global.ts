@@ -1,6 +1,7 @@
 import type {
   KasstorLanguage,
   KasstorLanguageFullnameAndSubtag,
+  KasstorLanguageSubtag,
   KasstorTranslations,
   KasstorTranslationShape,
   KasstorTranslationsLoader
@@ -11,6 +12,24 @@ type FeatureIdentifier = string;
 declare global {
   var kasstorWebkitI18n:
     | {
+        /**
+         * Subtags the host application exposes to end users. When `undefined`,
+         * no restriction applies (every supported language is considered
+         * available — legacy behavior). When set, language resolution from
+         * URL, localStorage and `navigator.languages` is filtered through it.
+         *
+         * `setLanguage` is intentionally not gated by this set: hosts can
+         * still force any registered language directly.
+         */
+        availableLanguages?: Set<KasstorLanguageSubtag>;
+
+        /**
+         * Host-configured default language subtag. Used as the final fallback
+         * when no source can resolve to an available language. When
+         * `undefined`, the static `DEFAULT_LANGUAGE` ("en") is used.
+         */
+        configuredDefaultLanguage?: KasstorLanguageSubtag;
+
         /**
          * This flag help us to avoid race conditions when resolving multiple promises
          * for new translations at the same time.
