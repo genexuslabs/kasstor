@@ -23,6 +23,7 @@ export {
   languageChangeComplete,
   languageHasBeenInitialized,
   registerTranslations,
+  setAvailableLanguages,
   setInitialApplicationLanguage,
   setLanguage,
   subscribeToLanguageChanges,
