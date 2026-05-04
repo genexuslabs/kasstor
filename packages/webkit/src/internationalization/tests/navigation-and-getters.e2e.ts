@@ -55,6 +55,31 @@ describe("[i18n e2e] navigation and getters", () => {
   });
 
   describe("[popstate / back-forward navigation]", () => {
+    test("popstate to a URL with a language outside availableLanguages falls back through the client chain", async () => {
+      vi.spyOn(navigator, "languages", "get").mockReturnValue(["ja-JP"]);
+      setPathname("/en/home");
+      setInitialApplicationLanguage({
+        availableLanguages: ["en", "es"],
+        defaultLanguage: "es",
+        locationChangeCallback: () => {}
+      });
+      registerTranslations(FEATURE_MAIN, createEnEsLoader({ greet: "Hello" }, { greet: "Hola" }), {
+        preloadTranslations: true
+      });
+      await languageHasBeenInitialized();
+      // Clear localStorage so the popstate fallback exercises the
+      // navigator/default chain instead of restoring "en" from storage.
+      localStorage.clear();
+
+      window.history.pushState({}, "", "/fr/home");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      await new Promise(r => setTimeout(r, 0));
+
+      // "fr" was rejected because it's not available. localStorage is empty,
+      // navigator only has "ja" (not available), so we fall to "es".
+      expect(getCurrentLanguage()?.subtag).toBe("es");
+    });
+
     test("when URL changes via pushState and popstate is dispatched, language syncs to URL and no location callback loop", async () => {
       setPathname("/en/home");
       const locationChangeCallback = vi.fn();
