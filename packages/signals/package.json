@@ -1,6 +1,6 @@
 {
   "name": "@genexus/kasstor-signals",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
   "description": "Reactive signals for state management; works with any JS app and provides a decorator and directives for Lit components built with @genexus/kasstor-core. Built on alien-signals.",
@@ -38,7 +38,7 @@
     "test:e2e": "playwright install && vitest --project browser"
   },
   "peerDependencies": {
-    "@genexus/kasstor-core": "^0.4.0",
+    "@genexus/kasstor-core": "^0.5.0",
     "alien-signals": "^3.1.2",
     "lit": "^3.3.2"
   },
