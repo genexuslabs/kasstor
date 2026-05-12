@@ -20,13 +20,18 @@ import type {
  * @param options.availableLanguages - Optional list of language subtags (or
  *   full names) the host application exposes to end users. When provided,
  *   resolution from URL, localStorage and `navigator.languages` is filtered
- *   through this list. `"en"` is always added if missing (with a warning in
- *   `DEV_MODE`) so there is always a safe fallback. `setLanguage` is **not**
+ *   through this list. By default, `"en"` is always added if missing (with a
+ *   warning in `DEV_MODE`) so there is always a safe fallback; pass
+ *   `strict: true` to skip that auto-addition. `setLanguage` is **not**
  *   gated by this list — hosts can still force any registered language.
  * @param options.defaultLanguage - Optional default language used as the
  *   ultimate fallback when no source resolves to an available language. If
  *   not present in `availableLanguages` (e.g. left out by mistake), it is
  *   coerced to `"en"` with a warning in `DEV_MODE`.
+ * @param options.strict - When `true`, kasstor honors the provided
+ *   `availableLanguages` list verbatim and does not auto-add `"en"`. Use
+ *   this when the host explicitly wants to forbid `"en"`. Defaults to
+ *   `false` for backwards compatibility.
  * @param options.locationChangeCallback - Called with the new pathname when the
  *   language (and thus URL) changes. Invoke your app's or framework's navigation
  *   here (e.g. React Router's `navigate`, Angular router, Vue Router, or
@@ -55,6 +60,7 @@ export const setInitialApplicationLanguage = (options: {
   languageChangeCallback?: (newLanguage: KasstorLanguageFullnameAndSubtag) => void;
   locationChangeCallback: (newLocation: string) => void;
   pathname?: string;
+  strict?: boolean;
 }): {
   initialLanguage: KasstorLanguageFullnameAndSubtag;
   locationToReplace: string | undefined;
@@ -64,7 +70,8 @@ export const setInitialApplicationLanguage = (options: {
     defaultLanguage,
     languageChangeCallback,
     locationChangeCallback,
-    pathname
+    pathname,
+    strict
   } = options;
 
   if (pathname === undefined && typeof window === "undefined") {
@@ -76,7 +83,7 @@ export const setInitialApplicationLanguage = (options: {
   // Apply host-provided i18n config (and initialize globals as a side effect)
   // before resolving the initial language so the resolution helpers see the
   // configured availableLanguages / defaultLanguage.
-  applyI18nConfig({ availableLanguages, defaultLanguage });
+  applyI18nConfig({ availableLanguages, defaultLanguage, strict });
 
   const languageFromUrl = getLanguageFromUrl(pathname);
   const initialLanguage: KasstorLanguageSubtag =

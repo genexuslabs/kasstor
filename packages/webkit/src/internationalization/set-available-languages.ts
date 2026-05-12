@@ -23,11 +23,16 @@ import type { KasstorLanguage, KasstorLanguageSubtag } from "./types";
  *
  * Important:
  * - At least one of `availableLanguages` / `defaultLanguage` must be provided.
- * - `availableLanguages = []` is coerced to `["en"]` with a warning in
- *   `DEV_MODE`. Lists missing `"en"` get it added with a warning.
+ * - By default, `availableLanguages = []` is coerced to `["en"]` with a
+ *   warning in `DEV_MODE`, and lists missing `"en"` get it auto-added. Pass
+ *   `strict: true` to disable this safety fallback and have kasstor honor
+ *   the list verbatim — useful when the host explicitly wants to forbid
+ *   `"en"` (e.g. a Spanish-only deployment).
  * - A `defaultLanguage` not in `availableLanguages` is coerced to `"en"` with
  *   a warning. Same applies to a previously-configured default that is no
- *   longer in the new list.
+ *   longer in the new list. (In `strict` mode, hosts should ensure the
+ *   default is one of the supplied entries; the coercion to `"en"` still
+ *   runs but the result may not be reachable.)
  * - Registration of translations (`registerTranslations`) is **not** affected
  *   by this list — hosts can keep registering translations for languages
  *   that are not currently exposed.
@@ -38,6 +43,7 @@ import type { KasstorLanguage, KasstorLanguageSubtag } from "./types";
 export const setAvailableLanguages = (options: {
   availableLanguages?: ReadonlyArray<KasstorLanguage | KasstorLanguageSubtag>;
   defaultLanguage?: KasstorLanguage | KasstorLanguageSubtag;
+  strict?: boolean;
 }): void => {
   if (options.availableLanguages === undefined && options.defaultLanguage === undefined) {
     throw new Error(

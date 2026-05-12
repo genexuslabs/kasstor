@@ -12,15 +12,29 @@ import type { KasstorLanguage, KasstorLanguageSubtag } from "./types";
  * - Accepts both full names (`"english"`) and subtags (`"en"`).
  * - Drops entries that are not part of `ALL_SUPPORTED_LANGUAGE_SUBTAGS` (with
  *   a warning in `DEV_MODE`).
- * - Always guarantees that `"en"` is in the resulting Set: when the input is
- *   empty (or becomes empty after filtering), or does not include `"en"`,
- *   `"en"` is added and a warning is emitted in `DEV_MODE`.
+ * - By default, guarantees that `"en"` is in the resulting Set: when the
+ *   input is empty (or becomes empty after filtering), or does not include
+ *   `"en"`, `"en"` is added and a warning is emitted in `DEV_MODE`. This is
+ *   the historical safety fallback so an app with a misconfigured list still
+ *   has a known-good language available.
+ * - When `strict` is `true`, the safety fallback is skipped and the resulting
+ *   Set reflects exactly the host-provided list (after dropping unsupported
+ *   entries). Hosts that intentionally want to forbid `"en"` (or that
+ *   pre-validate their list and want kasstor to honor it verbatim) should
+ *   pass `strict: true`. Note that an empty result in strict mode means no
+ *   language is available — `isLanguageAvailable` will return `false` for
+ *   every subtag — so the host is responsible for ensuring at least one
+ *   valid entry.
  *
  * @param input - Array of language full names or subtags.
- * @returns A `Set` of language subtags that always contains `"en"`.
+ * @param strict - When `true`, do not auto-add `"en"` as a safety fallback.
+ *   Defaults to `false` to preserve backwards-compatible behavior.
+ * @returns A `Set` of language subtags. Contains `"en"` unless `strict` is
+ *   `true` and the host did not include it.
  */
 export const normalizeAvailableLanguages = (
-  input: ReadonlyArray<KasstorLanguage | KasstorLanguageSubtag>
+  input: ReadonlyArray<KasstorLanguage | KasstorLanguageSubtag>,
+  strict: boolean = false
 ): Set<KasstorLanguageSubtag> => {
   const normalized = new Set<KasstorLanguageSubtag>();
 
@@ -47,6 +61,11 @@ export const normalizeAvailableLanguages = (
     }
 
     normalized.add(subtag);
+  }
+
+  // Strict mode: respect the host's list verbatim; skip the safety fallback.
+  if (strict) {
+    return normalized;
   }
 
   if (normalized.size === 0) {

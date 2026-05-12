@@ -14,24 +14,30 @@ import type { KasstorLanguage, KasstorLanguageSubtag } from "./types";
  *
  * Behavior:
  * - When `availableLanguages` is provided, it is normalized (full names →
- *   subtags, "en" guaranteed) and written to globals.
+ *   subtags, "en" guaranteed unless `strict` is `true`) and written to
+ *   globals.
  * - When `defaultLanguage` is provided, it is normalized to a subtag and
  *   written to globals; if it is not in the (effective) `availableLanguages`,
  *   it is coerced to "en" with a warning in `DEV_MODE`.
  * - When `availableLanguages` is provided **without** `defaultLanguage`, any
  *   previously-configured `defaultLanguage` that is no longer in the new set
  *   is also coerced to "en" with a warning in `DEV_MODE`.
+ * - When `strict` is `true`, `normalizeAvailableLanguages` skips its
+ *   "auto-add `en`" safety fallback so the resulting set matches the host's
+ *   list exactly.
  */
 export const applyI18nConfig = (config: {
   availableLanguages?: ReadonlyArray<KasstorLanguage | KasstorLanguageSubtag>;
   defaultLanguage?: KasstorLanguage | KasstorLanguageSubtag;
+  strict?: boolean;
 }) => {
   // Side effect to initialize the i18n globals if not already done.
   getI18nGlobals();
 
   if (config.availableLanguages !== undefined) {
     kasstorWebkitI18n!.availableLanguages = normalizeAvailableLanguages(
-      config.availableLanguages
+      config.availableLanguages,
+      config.strict
     );
   }
 
