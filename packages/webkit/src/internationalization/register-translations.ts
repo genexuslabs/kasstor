@@ -7,12 +7,13 @@ import type {
 } from "./types";
 
 /**
- * Registers translation loaders for a feature. Each language is loaded
- * asynchronously via the loader's promise.
+ * Registers translation loaders for a feature. Each base subtag is loaded
+ * asynchronously via the loader's promise. Region variants share the same
+ * base-subtag loader.
  *
  * @param featureId - Unique identifier for the feature (e.g. a component, a module, or the whole app).
- * @param loader - Object mapping each supported language to a function that
- *   returns a Promise of the translations for that language.
+ * @param loader - Object mapping each supported base subtag to a function
+ *   that returns a Promise of the translations for that subtag.
  * @param options - Optional configuration for this feature's translations.
  *
  * Behavior:
@@ -55,7 +56,7 @@ export const registerTranslations = <T extends KasstorTranslationShape>(
   }
 
   // Granular cache invalidation: only clear THIS feature's cache entries
-  // across all languages, so other features keep their cached translations.
+  // across all subtags, so other features keep their cached translations.
   for (const [, featureCache] of translationLoadCache) {
     featureCache.delete(featureId);
   }
@@ -68,4 +69,3 @@ export const registerTranslations = <T extends KasstorTranslationShape>(
     }
   }
 };
-

@@ -25,22 +25,8 @@ describe("[normalizeAvailableLanguages]", () => {
     expect(set.size).toBe(2);
   });
 
-  test("normalizes full names to subtags", () => {
-    const set = normalizeAvailableLanguages(["spanish", "english"]);
-    expect(set.has("es")).toBe(true);
-    expect(set.has("en")).toBe(true);
-    expect(set.size).toBe(2);
-  });
-
-  test("accepts mixed subtags and full names", () => {
-    const set = normalizeAvailableLanguages(["spanish", "en", "french"]);
-    expect(set.has("es")).toBe(true);
-    expect(set.has("en")).toBe(true);
-    expect(set.has("fr")).toBe(true);
-  });
-
   test("deduplicates entries", () => {
-    const set = normalizeAvailableLanguages(["es", "spanish", "es", "en"]);
+    const set = normalizeAvailableLanguages(["es", "es", "en"]);
     expect(set.size).toBe(2);
   });
 

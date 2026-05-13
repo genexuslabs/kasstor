@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { isValidLanguage } from "../is-valid-language.js";
-import type { KasstorLanguageSubtag } from "../types.js";
+import type { KasstorLanguageTag } from "../types.js";
 import { SUPPORTED_SUBTAGS } from "./i18n-shared-constants.js";
 
 describe("[isValidLanguage]", () => {
@@ -15,7 +15,6 @@ describe("[isValidLanguage]", () => {
     { value: null, description: "null" },
     { value: "", description: "empty string" },
     { value: "xx", description: "unsupported code" },
-    { value: "en-US", description: "region-specific code" },
     { value: "e", description: "single character" },
     { value: "eng", description: "three characters" },
     { value: "EN", description: "uppercase" }
@@ -31,7 +30,7 @@ describe("[isValidLanguage]", () => {
   test("narrows type when true", () => {
     const value: string | null = "en";
     if (isValidLanguage(value)) {
-      const _: KasstorLanguageSubtag = value;
+      const _: KasstorLanguageTag = value;
       expect(_).toBe("en");
     }
   });

@@ -1,20 +1,22 @@
+import { getBaseSubtag } from "./get-base-subtag";
 import { getI18nGlobals } from "./get-i18n-globals";
-import type { KasstorLanguage } from "./types";
+import type { KasstorLanguageSubtag } from "./types";
 
 /**
- * Loads translations for a single feature+language pair, using per-feature
+ * Loads translations for a single feature+subtag pair, using a per-feature
  * cache. Returns the cached Promise if already in-flight or resolved.
  */
 const loadFeatureTranslation = (
-  language: KasstorLanguage,
+  subtag: KasstorLanguageSubtag,
   featureId: string
 ): Promise<void> => {
-  const { loadedTranslations, translationLoaders, translationLoadCache } = getI18nGlobals();
+  const { loadedTranslations, translationLoaders, translationLoadCache } =
+    getI18nGlobals();
 
-  let featureCache = translationLoadCache.get(language);
+  let featureCache = translationLoadCache.get(subtag);
   if (featureCache === undefined) {
     featureCache = new Map();
-    translationLoadCache.set(language, featureCache);
+    translationLoadCache.set(subtag, featureCache);
   }
 
   // Cache lookup is O(1)
@@ -32,14 +34,13 @@ const loadFeatureTranslation = (
     return resolved;
   }
 
-  const promise = loader[language]().then(translations => {
+  const promise = loader[subtag]().then(translations => {
     const featureTranslations = loadedTranslations.get(featureId);
 
-    // If the translations for the feature are not loaded, we set them
     if (featureTranslations === undefined) {
-      loadedTranslations.set(featureId, new Map([[language, translations]]));
+      loadedTranslations.set(featureId, new Map([[subtag, translations]]));
     } else {
-      featureTranslations.set(language, translations);
+      featureTranslations.set(subtag, translations);
     }
   });
 
@@ -48,19 +49,21 @@ const loadFeatureTranslation = (
 };
 
 /**
- * Loads translations for the given language for features that have active
+ * Loads translations for the given subtag for features that have active
  * subscribers or are marked with `preloadTranslations: true`.
  *
- * **Cache:** Each feature+language pair is cached individually so that
- * concurrent or duplicate calls run loaders only once. Cache entries are
- * invalidated per-feature when loaders change (registerTranslations).
+ * **Cache:** Each feature+subtag pair is cached individually so concurrent
+ * or duplicate calls run loaders only once. Cache entries are invalidated
+ * per-feature when loaders change (`registerTranslations`).
  *
- * **Performance:** Feature loaders run in parallel via Promise.all.
- * Only features with active subscribers or preload flag are loaded,
- * skipping unnecessary network requests.
+ * **Performance:** Feature loaders run in parallel via `Promise.all`. Only
+ * features with active subscribers or the preload flag are loaded.
  */
-export const getTranslationsForLanguage = <T extends KasstorLanguage>(language: T) => {
-  const { translationLoaders, subscriberCounts, preloadFeatures } = getI18nGlobals();
+export const getTranslationsForLanguage = (
+  subtag: KasstorLanguageSubtag
+): Promise<void> => {
+  const { translationLoaders, subscriberCounts, preloadFeatures } =
+    getI18nGlobals();
 
   const loadPromises: Promise<void>[] = [];
 
@@ -69,7 +72,7 @@ export const getTranslationsForLanguage = <T extends KasstorLanguage>(language: 
     const shouldPreload = preloadFeatures.has(featureId);
 
     if (hasSubscribers || shouldPreload) {
-      loadPromises.push(loadFeatureTranslation(language, featureId));
+      loadPromises.push(loadFeatureTranslation(subtag, featureId));
     }
   }
 
@@ -83,7 +86,7 @@ export const getTranslationsForLanguage = <T extends KasstorLanguage>(language: 
  * `getTranslationsForLanguage` call.
  *
  * Uses the per-feature cache, so calling this multiple times for the same
- * feature+language pair does not produce duplicate requests.
+ * feature+subtag pair does not produce duplicate requests.
  *
  * @returns The load Promise, or `undefined` if no language is set yet.
  */
@@ -94,5 +97,5 @@ export const ensureFeatureTranslationsLoaded = (
   if (currentLanguage === undefined) {
     return undefined;
   }
-  return loadFeatureTranslation(currentLanguage, featureId);
+  return loadFeatureTranslation(getBaseSubtag(currentLanguage), featureId);
 };

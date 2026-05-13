@@ -13,7 +13,7 @@ import {
   setInitialApplicationLanguage,
   setLanguage
 } from "../index.js";
-import type { KasstorLanguage } from "../types.js";
+import type { KasstorLanguageSubtag } from "../types.js";
 import type { AppMainShape } from "./i18n-e2e-helpers.js";
 import { createEnEsLoader, FEATURE_MAIN, resetI18nState, setPathname } from "./i18n-e2e-helpers.js";
 
@@ -62,18 +62,6 @@ describe("[i18n e2e] setAvailableLanguages", () => {
       expect(warnSpy).toHaveBeenCalled();
     });
 
-    test("normalizes full names to subtags in availableLanguages", () => {
-      setAvailableLanguages({ availableLanguages: ["spanish", "english"] });
-      expect(kasstorWebkitI18n!.availableLanguages).toEqual(new Set(["es", "en"]));
-    });
-
-    test("normalizes defaultLanguage full name to subtag", () => {
-      setAvailableLanguages({
-        availableLanguages: ["en", "es"],
-        defaultLanguage: "spanish"
-      });
-      expect(kasstorWebkitI18n!.configuredDefaultLanguage).toBe("es");
-    });
   });
 
   describe("[no current language yet]", () => {
@@ -91,7 +79,7 @@ describe("[i18n e2e] setAvailableLanguages", () => {
         pathname: "/fr/home"
       });
 
-      expect(result.initialLanguage.subtag).toBe("es");
+      expect(result.initialLanguage).toBe("es");
     });
   });
 
@@ -116,7 +104,7 @@ describe("[i18n e2e] setAvailableLanguages", () => {
       setAvailableLanguages({ availableLanguages: ["en", "es"] });
       await flushMicrotasks();
 
-      expect(getCurrentLanguage()?.subtag).toBe("en");
+      expect(getCurrentLanguage()).toBe("en");
       expect(langChange).not.toHaveBeenCalled();
       expect(locChange).not.toHaveBeenCalled();
     });
@@ -129,14 +117,14 @@ describe("[i18n e2e] setAvailableLanguages", () => {
         preloadTranslations: true
       });
       await languageHasBeenInitialized();
-      expect(getCurrentLanguage()?.subtag).toBe("fr");
+      expect(getCurrentLanguage()).toBe("fr");
 
       // Narrow the available list — "fr" is gone, navigator.languages still
       // proposes "es" (matching).
       setAvailableLanguages({ availableLanguages: ["en", "es"] });
       await flushMicrotasks();
 
-      expect(getCurrentLanguage()?.subtag).toBe("es");
+      expect(getCurrentLanguage()).toBe("es");
     });
 
     test("falls back to defaultLanguage when neither current nor navigator match", async () => {
@@ -154,7 +142,7 @@ describe("[i18n e2e] setAvailableLanguages", () => {
       });
       await flushMicrotasks();
 
-      expect(getCurrentLanguage()?.subtag).toBe("es");
+      expect(getCurrentLanguage()).toBe("es");
     });
 
     test("falls back to 'en' when no default is configured and navigator does not match", async () => {
@@ -169,7 +157,7 @@ describe("[i18n e2e] setAvailableLanguages", () => {
       setAvailableLanguages({ availableLanguages: ["en", "es"] });
       await flushMicrotasks();
 
-      expect(getCurrentLanguage()?.subtag).toBe("en");
+      expect(getCurrentLanguage()).toBe("en");
     });
 
     test("invokes locationChangeCallback when the language switches", async () => {
@@ -202,12 +190,12 @@ describe("[i18n e2e] setAvailableLanguages", () => {
         preloadTranslations: true
       });
       await languageHasBeenInitialized();
-      expect(getCurrentLanguage()?.subtag).toBe("en");
+      expect(getCurrentLanguage()).toBe("en");
 
       // Updating only the default — does NOT change current language.
       setAvailableLanguages({ defaultLanguage: "fr" });
       await flushMicrotasks();
-      expect(getCurrentLanguage()?.subtag).toBe("en");
+      expect(getCurrentLanguage()).toBe("en");
       expect(kasstorWebkitI18n!.configuredDefaultLanguage).toBe("fr");
     });
 
@@ -250,7 +238,7 @@ describe("[i18n e2e] setAvailableLanguages", () => {
       // Forcing setLanguage to "fr" works (not gated by availableLanguages).
       setLanguage("fr");
       await flushMicrotasks();
-      expect(getCurrentLanguage()?.subtag).toBe("fr");
+      expect(getCurrentLanguage()).toBe("fr");
     });
 
     test("setLanguage with a language outside availableLanguages is honored (not gated)", async () => {
@@ -267,7 +255,7 @@ describe("[i18n e2e] setAvailableLanguages", () => {
       setLanguage("fr", true);
       await flushMicrotasks();
 
-      expect(getCurrentLanguage()?.subtag).toBe("fr");
+      expect(getCurrentLanguage()).toBe("fr");
       expect(document.documentElement.getAttribute("lang")).toBe("fr");
     });
 
@@ -277,16 +265,16 @@ describe("[i18n e2e] setAvailableLanguages", () => {
       setInitialApplicationLanguage({ locationChangeCallback: () => {} });
 
       // Use a delayed loader for "fr" so we can interleave the runtime change.
-      const delayedLoader: Record<KasstorLanguage, () => Promise<{ greet: string }>> = {
-        arabic: () => Promise.resolve({ greet: "ar" }),
-        chinese: () => Promise.resolve({ greet: "zh" }),
-        english: () => Promise.resolve({ greet: "Hello" }),
-        french: () => new Promise(r => setTimeout(() => r({ greet: "Bonjour" }), 30)),
-        german: () => Promise.resolve({ greet: "de" }),
-        italian: () => Promise.resolve({ greet: "it" }),
-        japanese: () => Promise.resolve({ greet: "ja" }),
-        portuguese: () => Promise.resolve({ greet: "pt" }),
-        spanish: () => Promise.resolve({ greet: "Hola" })
+      const delayedLoader: Record<KasstorLanguageSubtag, () => Promise<{ greet: string }>> = {
+        ar: () => Promise.resolve({ greet: "ar" }),
+        zh: () => Promise.resolve({ greet: "zh" }),
+        en: () => Promise.resolve({ greet: "Hello" }),
+        fr: () => new Promise(r => setTimeout(() => r({ greet: "Bonjour" }), 30)),
+        de: () => Promise.resolve({ greet: "de" }),
+        it: () => Promise.resolve({ greet: "it" }),
+        ja: () => Promise.resolve({ greet: "ja" }),
+        pt: () => Promise.resolve({ greet: "pt" }),
+        es: () => Promise.resolve({ greet: "Hola" })
       };
       registerTranslations(FEATURE_MAIN, delayedLoader, { preloadTranslations: true });
       await languageHasBeenInitialized();
@@ -298,7 +286,7 @@ describe("[i18n e2e] setAvailableLanguages", () => {
 
       // The end state must be "es" (resolved via navigator), and translations
       // must reflect "es", not "fr".
-      expect(getCurrentLanguage()?.subtag).toBe("es");
+      expect(getCurrentLanguage()).toBe("es");
       expect(getCurrentTranslations<{ greet: string }>(FEATURE_MAIN)!.greet).toBe("Hola");
     });
   });

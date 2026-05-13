@@ -1,9 +1,10 @@
 import { DEV_MODE } from "../development-flags.js";
 import { DEFAULT_LANGUAGE } from "./default-language.js";
-import { fromLanguageToFullnameAndSubtag } from "./from-language-to-fullname-and-subtag.js";
 import { getI18nGlobals } from "./get-i18n-globals.js";
+import { isLanguageAvailable } from "./is-language-available.js";
 import { normalizeAvailableLanguages } from "./normalize-available-languages.js";
-import type { KasstorLanguage, KasstorLanguageSubtag } from "./types";
+import { normalizeTag } from "./normalize-tag.js";
+import type { KasstorLanguageTag } from "./types";
 
 /**
  * Applies host-provided `availableLanguages` / `defaultLanguage` configuration
@@ -13,22 +14,21 @@ import type { KasstorLanguage, KasstorLanguageSubtag } from "./types";
  * `setAvailableLanguages` (runtime).
  *
  * Behavior:
- * - When `availableLanguages` is provided, it is normalized (full names →
- *   subtags, "en" guaranteed unless `strict` is `true`) and written to
+ * - When `availableLanguages` is provided, it is normalized (canonicalized
+ *   per entry; `"en"` guaranteed unless `strict` is `true`) and written to
  *   globals.
- * - When `defaultLanguage` is provided, it is normalized to a subtag and
- *   written to globals; if it is not in the (effective) `availableLanguages`,
- *   it is coerced to "en" with a warning in `DEV_MODE`.
+ * - When `defaultLanguage` is provided, it is normalized and written to
+ *   globals; if it is not in the (effective) `availableLanguages`, it is
+ *   coerced to `"en"` with a warning in `DEV_MODE`.
  * - When `availableLanguages` is provided **without** `defaultLanguage`, any
- *   previously-configured `defaultLanguage` that is no longer in the new set
- *   is also coerced to "en" with a warning in `DEV_MODE`.
- * - When `strict` is `true`, `normalizeAvailableLanguages` skips its
- *   "auto-add `en`" safety fallback so the resulting set matches the host's
- *   list exactly.
+ *   previously-configured `defaultLanguage` that is no longer valid is also
+ *   coerced to `"en"` with a warning in `DEV_MODE`.
+ * - When `strict` is `true`, the auto-add `"en"` safety fallback in
+ *   `normalizeAvailableLanguages` is skipped.
  */
 export const applyI18nConfig = (config: {
-  availableLanguages?: ReadonlyArray<KasstorLanguage | KasstorLanguageSubtag>;
-  defaultLanguage?: KasstorLanguage | KasstorLanguageSubtag;
+  availableLanguages?: ReadonlyArray<KasstorLanguageTag>;
+  defaultLanguage?: KasstorLanguageTag;
   strict?: boolean;
 }) => {
   // Side effect to initialize the i18n globals if not already done.
@@ -41,30 +41,36 @@ export const applyI18nConfig = (config: {
     );
   }
 
-  const effectiveAvailable = kasstorWebkitI18n!.availableLanguages;
-
   if (config.defaultLanguage !== undefined) {
-    const defaultSubtag = fromLanguageToFullnameAndSubtag(config.defaultLanguage).subtag;
-    if (effectiveAvailable !== undefined && !effectiveAvailable.has(defaultSubtag)) {
+    const canonical = normalizeTag(config.defaultLanguage);
+    if (canonical === undefined) {
       if (DEV_MODE) {
         console.warn(
-          `[kasstor i18n] "defaultLanguage" "${defaultSubtag}" is not in "availableLanguages"; using "${DEFAULT_LANGUAGE}" instead.`
+          `[kasstor i18n] "defaultLanguage" "${String(config.defaultLanguage)}" is not a supported tag; using "${DEFAULT_LANGUAGE}" instead.`
+        );
+      }
+      kasstorWebkitI18n!.configuredDefaultLanguage = DEFAULT_LANGUAGE;
+    } else if (
+      kasstorWebkitI18n!.availableLanguages !== undefined &&
+      !isLanguageAvailable(canonical)
+    ) {
+      if (DEV_MODE) {
+        console.warn(
+          `[kasstor i18n] "defaultLanguage" "${canonical}" is not in "availableLanguages"; using "${DEFAULT_LANGUAGE}" instead.`
         );
       }
       kasstorWebkitI18n!.configuredDefaultLanguage = DEFAULT_LANGUAGE;
     } else {
-      kasstorWebkitI18n!.configuredDefaultLanguage = defaultSubtag;
+      kasstorWebkitI18n!.configuredDefaultLanguage = canonical;
     }
   } else if (config.availableLanguages !== undefined) {
     // The host narrowed the available list without re-providing
     // `defaultLanguage`. If the previously-configured default is no longer
-    // valid, coerce it to "en" so the resolution chain stays sound.
-    const previousDefault: KasstorLanguageSubtag | undefined =
-      kasstorWebkitI18n!.configuredDefaultLanguage;
+    // valid under wildcard-by-base matching, coerce it to "en".
+    const previousDefault = kasstorWebkitI18n!.configuredDefaultLanguage;
     if (
       previousDefault !== undefined &&
-      effectiveAvailable !== undefined &&
-      !effectiveAvailable.has(previousDefault)
+      !isLanguageAvailable(previousDefault)
     ) {
       if (DEV_MODE) {
         console.warn(

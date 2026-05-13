@@ -1,4 +1,5 @@
-import type { KasstorLanguageSubtag } from "./types";
+import { getBaseSubtag } from "./get-base-subtag.js";
+import type { KasstorLanguageSubtag, KasstorLanguageTag } from "./types";
 
 const languageToDirAttrMap = {
   ar: "rtl",
@@ -12,7 +13,9 @@ const languageToDirAttrMap = {
   zh: "ltr"
 } as const satisfies Record<KasstorLanguageSubtag, "ltr" | "rtl">;
 
-export const getLanguageDirection = <T extends KasstorLanguageSubtag>(
-  language: T
-) => languageToDirAttrMap[language];
-
+/**
+ * Returns the writing direction (`"ltr"` or `"rtl"`) for a language tag.
+ * Direction is determined by the base subtag; region is ignored.
+ */
+export const getLanguageDirection = (tag: KasstorLanguageTag) =>
+  languageToDirAttrMap[getBaseSubtag(tag)];

@@ -22,8 +22,7 @@ describe("[i18n e2e] setInitialApplicationLanguage", () => {
         pathname: "/es/dashboard"
       });
 
-      expect(result.initialLanguage.subtag).toBe("es");
-      expect(result.initialLanguage.fullLanguageName).toBe("spanish");
+      expect(result.initialLanguage).toBe("es");
       expect(result.locationToReplace).toBeUndefined();
     });
 
@@ -53,9 +52,7 @@ describe("[i18n e2e] setInitialApplicationLanguage", () => {
 
       await new Promise(r => setTimeout(r, 0));
 
-      expect(languageChangeCallback).toHaveBeenCalledWith(
-        expect.objectContaining({ subtag: "es", fullLanguageName: "spanish" })
-      );
+      expect(languageChangeCallback).toHaveBeenCalledWith("es");
       expect(locationChangeCallback).toHaveBeenCalled();
     });
   });
@@ -96,7 +93,7 @@ describe("[i18n e2e] setInitialApplicationLanguage", () => {
         pathname: "/fr/dashboard"
       });
 
-      expect(result.initialLanguage.subtag).toBe("es");
+      expect(result.initialLanguage).toBe("es");
     });
 
     test("defaultLanguage 'es' wins when URL has no language and navigator has no match", () => {
@@ -110,7 +107,7 @@ describe("[i18n e2e] setInitialApplicationLanguage", () => {
         pathname: "/dashboard"
       });
 
-      expect(result.initialLanguage.subtag).toBe("es");
+      expect(result.initialLanguage).toBe("es");
     });
 
     test("URL language inside availableLanguages is honored", () => {
@@ -122,7 +119,7 @@ describe("[i18n e2e] setInitialApplicationLanguage", () => {
         pathname: "/es/dashboard"
       });
 
-      expect(result.initialLanguage.subtag).toBe("es");
+      expect(result.initialLanguage).toBe("es");
     });
 
     test("invalid defaultLanguage outside list is coerced to 'en' with warn", () => {
@@ -140,7 +137,7 @@ describe("[i18n e2e] setInitialApplicationLanguage", () => {
         pathname: "/dashboard"
       });
 
-      expect(result.initialLanguage.subtag).toBe("en");
+      expect(result.initialLanguage).toBe("en");
       expect(kasstorWebkitI18n!.configuredDefaultLanguage).toBe("en");
       expect(warnSpy).toHaveBeenCalled();
     });
@@ -171,7 +168,7 @@ describe("[i18n e2e] setInitialApplicationLanguage", () => {
         pathname: "/dashboard"
       });
 
-      expect(result.locationToReplace).toMatch(`/${result.initialLanguage.subtag}/dashboard`);
+      expect(result.locationToReplace).toMatch(`/${result.initialLanguage}/dashboard`);
     });
   });
 });

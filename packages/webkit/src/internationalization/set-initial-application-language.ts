@@ -1,29 +1,24 @@
 import { applyI18nConfig } from "./apply-i18n-config.js";
-import { fromLanguageToFullnameAndSubtag } from "./from-language-to-fullname-and-subtag.js";
 import { getClientLanguage } from "./get-client-language.js";
 import { getLanguageFromUrl } from "./get-language-from-url.js";
 import { isLanguageAvailable } from "./is-language-available.js";
-import { isValidLanguage } from "./is-valid-language.js";
+import { normalizeTag } from "./normalize-tag.js";
 import { setLanguage } from "./set-language.js";
 import { trackLanguageChangesWithForwardAndBackwardNavigation } from "./track-langauge-changes-with-forward-and-backward-navigation.js";
-import type {
-  KasstorLanguage,
-  KasstorLanguageFullnameAndSubtag,
-  KasstorLanguageSubtag
-} from "./types";
+import type { KasstorLanguageTag } from "./types";
 
 /**
  * Sets the initial application language from the URL or client preferences, and
  * wires callbacks for future language and location changes.
  *
  * @param options - Configuration.
- * @param options.availableLanguages - Optional list of language subtags (or
- *   full names) the host application exposes to end users. When provided,
- *   resolution from URL, localStorage and `navigator.languages` is filtered
- *   through this list. By default, `"en"` is always added if missing (with a
- *   warning in `DEV_MODE`) so there is always a safe fallback; pass
- *   `strict: true` to skip that auto-addition. `setLanguage` is **not**
- *   gated by this list — hosts can still force any registered language.
+ * @param options.availableLanguages - Optional list of language tags the host
+ *   application exposes to end users. When provided, resolution from URL,
+ *   localStorage and `navigator.languages` is filtered through this list. By
+ *   default, `"en"` is always added if missing (with a warning in `DEV_MODE`)
+ *   so there is always a safe fallback; pass `strict: true` to skip that
+ *   auto-addition. `setLanguage` is **not** gated by this list — hosts can
+ *   still force any registered language.
  * @param options.defaultLanguage - Optional default language used as the
  *   ultimate fallback when no source resolves to an available language. If
  *   not present in `availableLanguages` (e.g. left out by mistake), it is
@@ -37,14 +32,14 @@ import type {
  *   here (e.g. React Router's `navigate`, Angular router, Vue Router, or
  *   `history.replaceState`), so the URL reflects the new language.
  * @param options.languageChangeCallback - Optional; called with the new
- *   language when it changes.
+ *   language tag when it changes.
  * @param options.pathname - Pathname to read the language from (e.g. `/es/home`).
  *   When running in the browser and not using server-side rendering, omit this:
  *   the current window location is used. When running on the server (SSR), this
  *   is required because `window` is undefined; if omitted on the server, the
  *   function throws.
- * @returns `{ initialLanguage, locationToReplace }` — the language that was set
- *   and the pathname to replace in the URL, if any.
+ * @returns `{ initialLanguage, locationToReplace }` — the language tag that was
+ *   set and the pathname to replace in the URL, if any.
  * @throws Error if called on the server without providing `pathname`.
  *
  * Behavior:
@@ -55,14 +50,14 @@ import type {
  * - Enables tracking of language changes for forward/back navigation.
  */
 export const setInitialApplicationLanguage = (options: {
-  availableLanguages?: ReadonlyArray<KasstorLanguage | KasstorLanguageSubtag>;
-  defaultLanguage?: KasstorLanguage | KasstorLanguageSubtag;
-  languageChangeCallback?: (newLanguage: KasstorLanguageFullnameAndSubtag) => void;
+  availableLanguages?: ReadonlyArray<KasstorLanguageTag>;
+  defaultLanguage?: KasstorLanguageTag;
+  languageChangeCallback?: (newLanguage: KasstorLanguageTag) => void;
   locationChangeCallback: (newLocation: string) => void;
   pathname?: string;
   strict?: boolean;
 }): {
-  initialLanguage: KasstorLanguageFullnameAndSubtag;
+  initialLanguage: KasstorLanguageTag;
   locationToReplace: string | undefined;
 } => {
   const {
@@ -85,10 +80,12 @@ export const setInitialApplicationLanguage = (options: {
   // configured availableLanguages / defaultLanguage.
   applyI18nConfig({ availableLanguages, defaultLanguage, strict });
 
-  const languageFromUrl = getLanguageFromUrl(pathname);
-  const initialLanguage: KasstorLanguageSubtag =
-    isValidLanguage(languageFromUrl) && isLanguageAvailable(languageFromUrl)
-      ? languageFromUrl
+  const raw = getLanguageFromUrl(pathname);
+  const canonicalFromUrl = raw === null ? undefined : normalizeTag(raw);
+
+  const initialLanguage: KasstorLanguageTag =
+    canonicalFromUrl !== undefined && isLanguageAvailable(canonicalFromUrl)
+      ? canonicalFromUrl
       : getClientLanguage();
 
   kasstorWebkitI18n!.languageChangeCallback = languageChangeCallback;
@@ -99,7 +96,7 @@ export const setInitialApplicationLanguage = (options: {
   trackLanguageChangesWithForwardAndBackwardNavigation();
 
   return {
-    initialLanguage: fromLanguageToFullnameAndSubtag(initialLanguage),
+    initialLanguage,
     locationToReplace
   };
 };

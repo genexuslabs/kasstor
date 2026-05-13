@@ -87,15 +87,15 @@ describe("[i18n e2e] register and load", () => {
       setInitialApplicationLanguage({ locationChangeCallback: () => {} });
 
       const createSpyLoader = () => ({
-        arabic: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
-        chinese: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
-        english: vi.fn(() => Promise.resolve({ greet: "Hello", footer: "" })),
-        french: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
-        german: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
-        italian: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
-        japanese: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
-        portuguese: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
-        spanish: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
+        ar: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
+        zh: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
+        en: vi.fn(() => Promise.resolve({ greet: "Hello", footer: "" })),
+        fr: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
+        de: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
+        it: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
+        ja: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
+        pt: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
+        es: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
       });
 
       const lazyLoader = createSpyLoader();
@@ -106,21 +106,21 @@ describe("[i18n e2e] register and load", () => {
       setLanguage("en");
       await languageHasBeenInitialized();
 
-      expect(lazyLoader.english).toHaveBeenCalledTimes(1);
-      expect(lazyLoader.spanish).not.toHaveBeenCalled();
-      expect(lazyLoader.arabic).not.toHaveBeenCalled();
-      expect(lazyLoader.chinese).not.toHaveBeenCalled();
-      expect(lazyLoader.french).not.toHaveBeenCalled();
-      expect(lazyLoader.german).not.toHaveBeenCalled();
-      expect(lazyLoader.italian).not.toHaveBeenCalled();
-      expect(lazyLoader.japanese).not.toHaveBeenCalled();
-      expect(lazyLoader.portuguese).not.toHaveBeenCalled();
+      expect(lazyLoader.en).toHaveBeenCalledTimes(1);
+      expect(lazyLoader.es).not.toHaveBeenCalled();
+      expect(lazyLoader.ar).not.toHaveBeenCalled();
+      expect(lazyLoader.zh).not.toHaveBeenCalled();
+      expect(lazyLoader.fr).not.toHaveBeenCalled();
+      expect(lazyLoader.de).not.toHaveBeenCalled();
+      expect(lazyLoader.it).not.toHaveBeenCalled();
+      expect(lazyLoader.ja).not.toHaveBeenCalled();
+      expect(lazyLoader.pt).not.toHaveBeenCalled();
 
       setLanguage("es");
       await new Promise(r => setTimeout(r, 0));
 
-      expect(lazyLoader.spanish).toHaveBeenCalledTimes(1);
-      expect(lazyLoader.english).toHaveBeenCalledTimes(1);
+      expect(lazyLoader.es).toHaveBeenCalledTimes(1);
+      expect(lazyLoader.en).toHaveBeenCalledTimes(1);
 
       const translations = getCurrentTranslations<AppMainShape>(FEATURE_MAIN);
       expect(translations!.greet).toBe("Hola");
@@ -131,15 +131,15 @@ describe("[i18n e2e] register and load", () => {
       setInitialApplicationLanguage({ locationChangeCallback: () => {} });
 
       const mainLoader = {
-        arabic: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
-        chinese: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
-        english: vi.fn(() => Promise.resolve({ greet: "Hello", footer: "" })),
-        french: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
-        german: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
-        italian: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
-        japanese: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
-        portuguese: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
-        spanish: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
+        ar: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
+        zh: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
+        en: vi.fn(() => Promise.resolve({ greet: "Hello", footer: "" })),
+        fr: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
+        de: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
+        it: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
+        ja: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
+        pt: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
+        es: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
       };
       registerTranslations<AppMainShape>(FEATURE_MAIN, mainLoader, {
         preloadTranslations: true
@@ -150,9 +150,9 @@ describe("[i18n e2e] register and load", () => {
       setLanguage("ja");
       await new Promise(r => setTimeout(r, 0));
 
-      expect(mainLoader.english).toHaveBeenCalledTimes(1);
-      expect(mainLoader.japanese).toHaveBeenCalledTimes(1);
-      expect(mainLoader.spanish).not.toHaveBeenCalled();
+      expect(mainLoader.en).toHaveBeenCalledTimes(1);
+      expect(mainLoader.ja).toHaveBeenCalledTimes(1);
+      expect(mainLoader.es).not.toHaveBeenCalled();
     });
   });
 
@@ -162,15 +162,15 @@ describe("[i18n e2e] register and load", () => {
       setInitialApplicationLanguage({ locationChangeCallback: () => {} });
 
       const loader = {
-        arabic: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
-        chinese: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
-        english: vi.fn(() => Promise.resolve({ greet: "Hello", footer: "" })),
-        french: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
-        german: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
-        italian: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
-        japanese: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
-        portuguese: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
-        spanish: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
+        ar: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
+        zh: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
+        en: vi.fn(() => Promise.resolve({ greet: "Hello", footer: "" })),
+        fr: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
+        de: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
+        it: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
+        ja: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
+        pt: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
+        es: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
       };
       registerTranslations<AppMainShape>(FEATURE_MAIN, loader, {
         preloadTranslations: true
@@ -180,7 +180,7 @@ describe("[i18n e2e] register and load", () => {
       setLanguage("en");
       await languageHasBeenInitialized();
 
-      expect(loader.english).toHaveBeenCalledTimes(1);
+      expect(loader.en).toHaveBeenCalledTimes(1);
     });
 
     test("setLanguage for same language after first load resolved uses cache and does not run loaders again", async () => {
@@ -188,15 +188,15 @@ describe("[i18n e2e] register and load", () => {
       setInitialApplicationLanguage({ locationChangeCallback: () => {} });
 
       const loader = {
-        arabic: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
-        chinese: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
-        english: vi.fn(() => Promise.resolve({ greet: "Hello", footer: "" })),
-        french: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
-        german: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
-        italian: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
-        japanese: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
-        portuguese: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
-        spanish: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
+        ar: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
+        zh: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
+        en: vi.fn(() => Promise.resolve({ greet: "Hello", footer: "" })),
+        fr: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
+        de: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
+        it: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
+        ja: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
+        pt: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
+        es: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
       };
       registerTranslations<AppMainShape>(FEATURE_MAIN, loader, {
         preloadTranslations: true
@@ -207,7 +207,7 @@ describe("[i18n e2e] register and load", () => {
       setLanguage("en");
       await new Promise(r => setTimeout(r, 0));
 
-      expect(loader.english).toHaveBeenCalledTimes(1);
+      expect(loader.en).toHaveBeenCalledTimes(1);
     });
 
     test("registerTranslations clears cache so replacing a feature loader causes next setLanguage to run new loader", async () => {
@@ -215,15 +215,15 @@ describe("[i18n e2e] register and load", () => {
       setInitialApplicationLanguage({ locationChangeCallback: () => {} });
 
       const loader1 = {
-        arabic: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
-        chinese: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
-        english: vi.fn(() => Promise.resolve({ greet: "Hello v1", footer: "" })),
-        french: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
-        german: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
-        italian: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
-        japanese: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
-        portuguese: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
-        spanish: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
+        ar: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
+        zh: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
+        en: vi.fn(() => Promise.resolve({ greet: "Hello v1", footer: "" })),
+        fr: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
+        de: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
+        it: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
+        ja: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
+        pt: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
+        es: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
       };
       registerTranslations<AppMainShape>(FEATURE_MAIN, loader1, {
         preloadTranslations: true
@@ -232,15 +232,15 @@ describe("[i18n e2e] register and load", () => {
       await languageHasBeenInitialized();
 
       const loader2 = {
-        arabic: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
-        chinese: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
-        english: vi.fn(() => Promise.resolve({ greet: "Hello v2", footer: "" })),
-        french: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
-        german: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
-        italian: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
-        japanese: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
-        portuguese: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
-        spanish: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
+        ar: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
+        zh: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
+        en: vi.fn(() => Promise.resolve({ greet: "Hello v2", footer: "" })),
+        fr: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
+        de: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
+        it: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
+        ja: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
+        pt: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
+        es: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
       };
       registerTranslations<AppMainShape>(FEATURE_MAIN, loader2, {
         preloadTranslations: true
@@ -248,8 +248,8 @@ describe("[i18n e2e] register and load", () => {
       setLanguage("en");
       await new Promise(r => setTimeout(r, 0));
 
-      expect(loader1.english).toHaveBeenCalledTimes(1);
-      expect(loader2.english).toHaveBeenCalledTimes(1);
+      expect(loader1.en).toHaveBeenCalledTimes(1);
+      expect(loader2.en).toHaveBeenCalledTimes(1);
       expect(getCurrentTranslations<AppMainShape>(FEATURE_MAIN)!.greet).toBe("Hello v2");
     });
 
@@ -260,7 +260,7 @@ describe("[i18n e2e] register and load", () => {
       setLanguage("es");
       await languageHasBeenInitialized();
 
-      expect(getCurrentLanguage()?.subtag).toBe("es");
+      expect(getCurrentLanguage()).toBe("es");
       expect(getCurrentTranslations("any-feature")).toBeUndefined();
     });
 
@@ -269,15 +269,15 @@ describe("[i18n e2e] register and load", () => {
       setInitialApplicationLanguage({ locationChangeCallback: () => {} });
 
       const loader = {
-        arabic: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
-        chinese: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
-        english: vi.fn(() => Promise.resolve({ greet: "Hello", footer: "" })),
-        french: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
-        german: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
-        italian: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
-        japanese: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
-        portuguese: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
-        spanish: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
+        ar: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
+        zh: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
+        en: vi.fn(() => Promise.resolve({ greet: "Hello", footer: "" })),
+        fr: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
+        de: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
+        it: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
+        ja: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
+        pt: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
+        es: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
       };
       registerTranslations<AppMainShape>(FEATURE_MAIN, loader, {
         preloadTranslations: true
@@ -290,8 +290,8 @@ describe("[i18n e2e] register and load", () => {
       setLanguage("en");
       await new Promise(r => setTimeout(r, 0));
 
-      expect(loader.english).toHaveBeenCalledTimes(1);
-      expect(loader.spanish).toHaveBeenCalledTimes(1);
+      expect(loader.en).toHaveBeenCalledTimes(1);
+      expect(loader.es).toHaveBeenCalledTimes(1);
       expect(getCurrentTranslations<AppMainShape>(FEATURE_MAIN)!.greet).toBe("Hello");
     });
 
@@ -300,26 +300,26 @@ describe("[i18n e2e] register and load", () => {
       setInitialApplicationLanguage({ locationChangeCallback: () => {} });
 
       const mainLoader = {
-        arabic: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
-        chinese: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
-        english: vi.fn(() => Promise.resolve({ greet: "Hello", footer: "" })),
-        french: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
-        german: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
-        italian: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
-        japanese: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
-        portuguese: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
-        spanish: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
+        ar: vi.fn(() => Promise.resolve({ greet: "ar", footer: "" })),
+        zh: vi.fn(() => Promise.resolve({ greet: "zh", footer: "" })),
+        en: vi.fn(() => Promise.resolve({ greet: "Hello", footer: "" })),
+        fr: vi.fn(() => Promise.resolve({ greet: "fr", footer: "" })),
+        de: vi.fn(() => Promise.resolve({ greet: "de", footer: "" })),
+        it: vi.fn(() => Promise.resolve({ greet: "it", footer: "" })),
+        ja: vi.fn(() => Promise.resolve({ greet: "ja", footer: "" })),
+        pt: vi.fn(() => Promise.resolve({ greet: "pt", footer: "" })),
+        es: vi.fn(() => Promise.resolve({ greet: "Hola", footer: "" }))
       };
       const trialLoader = {
-        arabic: vi.fn(() => Promise.resolve({ price: "ar", limit: "" })),
-        chinese: vi.fn(() => Promise.resolve({ price: "zh", limit: "" })),
-        english: vi.fn(() => Promise.resolve({ price: "Free", limit: "10" })),
-        french: vi.fn(() => Promise.resolve({ price: "fr", limit: "" })),
-        german: vi.fn(() => Promise.resolve({ price: "de", limit: "" })),
-        italian: vi.fn(() => Promise.resolve({ price: "it", limit: "" })),
-        japanese: vi.fn(() => Promise.resolve({ price: "ja", limit: "" })),
-        portuguese: vi.fn(() => Promise.resolve({ price: "pt", limit: "" })),
-        spanish: vi.fn(() => Promise.resolve({ price: "Gratis", limit: "10" }))
+        ar: vi.fn(() => Promise.resolve({ price: "ar", limit: "" })),
+        zh: vi.fn(() => Promise.resolve({ price: "zh", limit: "" })),
+        en: vi.fn(() => Promise.resolve({ price: "Free", limit: "10" })),
+        fr: vi.fn(() => Promise.resolve({ price: "fr", limit: "" })),
+        de: vi.fn(() => Promise.resolve({ price: "de", limit: "" })),
+        it: vi.fn(() => Promise.resolve({ price: "it", limit: "" })),
+        ja: vi.fn(() => Promise.resolve({ price: "ja", limit: "" })),
+        pt: vi.fn(() => Promise.resolve({ price: "pt", limit: "" })),
+        es: vi.fn(() => Promise.resolve({ price: "Gratis", limit: "10" }))
       };
       registerTranslations<AppMainShape>(FEATURE_MAIN, mainLoader, {
         preloadTranslations: true
@@ -331,8 +331,8 @@ describe("[i18n e2e] register and load", () => {
       setLanguage("es");
       await languageHasBeenInitialized();
 
-      expect(mainLoader.spanish).toHaveBeenCalledTimes(1);
-      expect(trialLoader.spanish).toHaveBeenCalledTimes(1);
+      expect(mainLoader.es).toHaveBeenCalledTimes(1);
+      expect(trialLoader.es).toHaveBeenCalledTimes(1);
       expect(getCurrentTranslations<AppMainShape>(FEATURE_MAIN)!.greet).toBe("Hola");
       expect(getCurrentTranslations<TrialShape>(FEATURE_TRIAL)!.price).toBe("Gratis");
     });

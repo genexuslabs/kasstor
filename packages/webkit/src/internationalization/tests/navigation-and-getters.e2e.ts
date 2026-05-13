@@ -33,15 +33,15 @@ describe("[i18n e2e] navigation and getters", () => {
       registerTranslations(
         FEATURE_MAIN,
         {
-          arabic: () => Promise.resolve({ greet: "مرحبا" }),
-          chinese: () => Promise.resolve({ greet: "zh" }),
-          english: () => Promise.resolve({ greet: "Hello" }),
-          french: () => Promise.resolve({ greet: "fr" }),
-          german: () => Promise.resolve({ greet: "de" }),
-          italian: () => Promise.resolve({ greet: "it" }),
-          japanese: () => Promise.resolve({ greet: "ja" }),
-          portuguese: () => Promise.resolve({ greet: "pt" }),
-          spanish: () => Promise.resolve({ greet: "es" })
+          ar: () => Promise.resolve({ greet: "مرحبا" }),
+          zh: () => Promise.resolve({ greet: "zh" }),
+          en: () => Promise.resolve({ greet: "Hello" }),
+          fr: () => Promise.resolve({ greet: "fr" }),
+          de: () => Promise.resolve({ greet: "de" }),
+          it: () => Promise.resolve({ greet: "it" }),
+          ja: () => Promise.resolve({ greet: "ja" }),
+          pt: () => Promise.resolve({ greet: "pt" }),
+          es: () => Promise.resolve({ greet: "es" })
         },
         { preloadTranslations: true }
       );
@@ -77,7 +77,7 @@ describe("[i18n e2e] navigation and getters", () => {
 
       // "fr" was rejected because it's not available. localStorage is empty,
       // navigator only has "ja" (not available), so we fall to "es".
-      expect(getCurrentLanguage()?.subtag).toBe("es");
+      expect(getCurrentLanguage()).toBe("es");
     });
 
     test("when URL changes via pushState and popstate is dispatched, language syncs to URL and no location callback loop", async () => {
@@ -93,14 +93,14 @@ describe("[i18n e2e] navigation and getters", () => {
       setLanguage("en");
       await languageHasBeenInitialized();
 
-      expect(getCurrentLanguage()?.subtag).toBe("en");
+      expect(getCurrentLanguage()).toBe("en");
 
       window.history.pushState({}, "", "/es/home");
       window.dispatchEvent(new PopStateEvent("popstate"));
 
       await new Promise(r => setTimeout(r, 0));
 
-      expect(getCurrentLanguage()?.subtag).toBe("es");
+      expect(getCurrentLanguage()).toBe("es");
       expect(getCurrentTranslations<AppMainShape>(FEATURE_MAIN)!.greet).toBe("Hola");
     });
   });
@@ -116,8 +116,7 @@ describe("[i18n e2e] navigation and getters", () => {
 
       const current = getCurrentLanguage();
       expect(current).toBeDefined();
-      expect(current!.subtag).toBe("es");
-      expect(current!.fullLanguageName).toBe("spanish");
+      expect(current).toBe("es");
     });
 
     test("getCurrentTranslations returns undefined for unregistered feature", async () => {

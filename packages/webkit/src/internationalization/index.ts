@@ -8,14 +8,17 @@
 
 export { ALL_SUPPORTED_LANGUAGE_SUBTAGS } from "./all-supported-languages.js";
 
-export { fromLanguageFullnameToSubtag } from "./from-language-fullname-to-subtag.js";
-export { fromLanguageToFullnameAndSubtag } from "./from-language-to-fullname-and-subtag.js";
+export { getBaseSubtag } from "./get-base-subtag.js";
 export { getClientLanguage } from "./get-client-language.js";
 export { getCurrentLanguage } from "./get-current-language.js";
 export { getCurrentTranslations } from "./get-current-translations.js";
+export { getLanguageDirection } from "./get-language-direction.js";
 export { getLanguageFromUrl } from "./get-language-from-url.js";
+export { isLanguageAvailable } from "./is-language-available.js";
+export { isValidLanguage } from "./is-valid-language.js";
 export { languageChangeComplete } from "./language-change-complete.js";
 export { languageHasBeenInitialized } from "./language-has-been-initialized.js";
+export { normalizeTag } from "./normalize-tag.js";
 export { registerTranslations } from "./register-translations.js";
 export { setAvailableLanguages } from "./set-available-languages.js";
 export { setInitialApplicationLanguage } from "./set-initial-application-language.js";
@@ -25,4 +28,3 @@ export {
   unsubscribeToLanguageChanges
 } from "./subscriber.js";
 export type * from "./types.js";
-

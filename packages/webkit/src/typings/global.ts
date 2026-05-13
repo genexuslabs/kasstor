@@ -1,8 +1,6 @@
 import type {
-  KasstorLanguage,
-  KasstorLanguageFullnameAndSubtag,
   KasstorLanguageSubtag,
-  KasstorTranslations,
+  KasstorLanguageTag,
   KasstorTranslationShape,
   KasstorTranslationsLoader
 } from "../internationalization/types";
@@ -13,28 +11,32 @@ declare global {
   var kasstorWebkitI18n:
     | {
         /**
-         * Subtags the host application exposes to end users. When `undefined`,
+         * Tags the host application exposes to end users. When `undefined`,
          * no restriction applies (every supported language is considered
          * available — legacy behavior). When set, language resolution from
          * URL, localStorage and `navigator.languages` is filtered through it.
          *
+         * Entries are stored verbatim (with or without region). Availability
+         * matching is wildcard-by-base: a member `"es"` accepts any `"es-*"`
+         * query, and a member `"es-AR"` accepts a `"es"` query.
+         *
          * `setLanguage` is intentionally not gated by this set: hosts can
          * still force any registered language directly.
          */
-        availableLanguages?: Set<KasstorLanguageSubtag>;
+        availableLanguages?: Set<KasstorLanguageTag>;
 
         /**
-         * Host-configured default language subtag. Used as the final fallback
+         * Host-configured default language tag. Used as the final fallback
          * when no source can resolve to an available language. When
          * `undefined`, the static `DEFAULT_LANGUAGE` ("en") is used.
          */
-        configuredDefaultLanguage?: KasstorLanguageSubtag;
+        configuredDefaultLanguage?: KasstorLanguageTag;
 
         /**
-         * This flag help us to avoid race conditions when resolving multiple promises
-         * for new translations at the same time.
+         * The currently-active language tag (with region if explicitly set
+         * by the host or the user; otherwise a bare subtag).
          */
-        currentLanguage: KasstorLanguage | undefined;
+        currentLanguage: KasstorLanguageTag | undefined;
 
         /**
          * A resolver function for the `languageInitialized` promise.
@@ -63,10 +65,11 @@ declare global {
 
         /**
          * Current translations loaded per feature (e.g. per component or per app).
+         * Keyed by base subtag — region variants share the same entry.
          */
         readonly loadedTranslations: Map<
           FeatureIdentifier,
-          KasstorTranslations<KasstorTranslationShape>
+          Map<KasstorLanguageSubtag, KasstorTranslationShape>
         >;
 
         /**
@@ -74,7 +77,7 @@ declare global {
          * navigating forward/back in the browser, so the Host application
          * can update its UI accordingly.
          */
-        languageChangeCallback?: (newLanguage: KasstorLanguageFullnameAndSubtag) => void;
+        languageChangeCallback?: (newLanguage: KasstorLanguageTag) => void;
 
         /**
          * A promise that resolves when the language has been initialized.
@@ -113,14 +116,14 @@ declare global {
         >;
 
         /**
-         * Cache of load Promises per language and feature. Deduplicates
-         * getTranslationsForLanguage calls so loaders run once per
-         * language+feature pair. Individual feature entries are cleared when
-         * translationLoaders change (registerTranslations) so new/replaced
+         * Cache of load Promises per base subtag and feature. Deduplicates
+         * `getTranslationsForLanguage` calls so loaders run once per
+         * subtag+feature pair. Individual feature entries are cleared when
+         * `translationLoaders` change (registerTranslations) so new/replaced
          * features are loaded on the next request.
          */
         readonly translationLoadCache: Map<
-          KasstorLanguage,
+          KasstorLanguageSubtag,
           Map<FeatureIdentifier, Promise<void>>
         >;
 

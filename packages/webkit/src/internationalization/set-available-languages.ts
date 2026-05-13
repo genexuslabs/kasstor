@@ -1,11 +1,10 @@
 import { applyI18nConfig } from "./apply-i18n-config.js";
-import { fromLanguageFullnameToSubtag } from "./from-language-fullname-to-subtag.js";
 import { getI18nGlobals } from "./get-i18n-globals.js";
 import { getLanguageFromUserPreferences } from "./get-language-from-user-preferences.js";
 import { isLanguageAvailable } from "./is-language-available.js";
 import { resolveDefaultLanguage } from "./resolve-default-language.js";
 import { setLanguage } from "./set-language.js";
-import type { KasstorLanguage, KasstorLanguageSubtag } from "./types";
+import type { KasstorLanguageTag } from "./types";
 
 /**
  * Updates the host's `availableLanguages` and/or `defaultLanguage` at runtime.
@@ -30,9 +29,7 @@ import type { KasstorLanguage, KasstorLanguageSubtag } from "./types";
  *   `"en"` (e.g. a Spanish-only deployment).
  * - A `defaultLanguage` not in `availableLanguages` is coerced to `"en"` with
  *   a warning. Same applies to a previously-configured default that is no
- *   longer in the new list. (In `strict` mode, hosts should ensure the
- *   default is one of the supplied entries; the coercion to `"en"` still
- *   runs but the result may not be reachable.)
+ *   longer in the new list.
  * - Registration of translations (`registerTranslations`) is **not** affected
  *   by this list — hosts can keep registering translations for languages
  *   that are not currently exposed.
@@ -41,11 +38,14 @@ import type { KasstorLanguage, KasstorLanguageSubtag } from "./types";
  * @throws Error when neither `availableLanguages` nor `defaultLanguage` is provided.
  */
 export const setAvailableLanguages = (options: {
-  availableLanguages?: ReadonlyArray<KasstorLanguage | KasstorLanguageSubtag>;
-  defaultLanguage?: KasstorLanguage | KasstorLanguageSubtag;
+  availableLanguages?: ReadonlyArray<KasstorLanguageTag>;
+  defaultLanguage?: KasstorLanguageTag;
   strict?: boolean;
 }): void => {
-  if (options.availableLanguages === undefined && options.defaultLanguage === undefined) {
+  if (
+    options.availableLanguages === undefined &&
+    options.defaultLanguage === undefined
+  ) {
     throw new Error(
       '"setAvailableLanguages" requires at least one of "availableLanguages" or "defaultLanguage".'
     );
@@ -61,13 +61,13 @@ export const setAvailableLanguages = (options: {
     return;
   }
 
-  if (isLanguageAvailable(fromLanguageFullnameToSubtag(currentLanguage))) {
+  if (isLanguageAvailable(currentLanguage)) {
     return;
   }
 
-  const newSubtag = getLanguageFromUserPreferences() ?? resolveDefaultLanguage();
+  const newTag = getLanguageFromUserPreferences() ?? resolveDefaultLanguage();
 
   // Trigger the standard language change flow (URL update, callbacks,
   // subscribers, localStorage).
-  setLanguage(newSubtag, true);
+  setLanguage(newTag, true);
 };

@@ -4,7 +4,7 @@
  */
 
 import { unsubscribeToLanguageChanges } from "../index.js";
-import type { KasstorLanguage } from "../types.js";
+import type { KasstorLanguageSubtag } from "../types.js";
 
 export const FEATURE_MAIN = "app-main";
 export const FEATURE_TRIAL = "trial";
@@ -31,14 +31,14 @@ export function setPathname(pathname: string) {
 export const createEnEsLoader = <T extends Record<string, unknown>>(
   en: T,
   es: T
-): Record<KasstorLanguage, () => Promise<T>> => ({
-  arabic: () => Promise.resolve(en),
-  chinese: () => Promise.resolve(en),
-  english: () => Promise.resolve(en),
-  french: () => Promise.resolve(en),
-  german: () => Promise.resolve(en),
-  italian: () => Promise.resolve(en),
-  japanese: () => Promise.resolve(en),
-  portuguese: () => Promise.resolve(en),
-  spanish: () => Promise.resolve(es)
+): Record<KasstorLanguageSubtag, () => Promise<T>> => ({
+  ar: () => Promise.resolve(en),
+  de: () => Promise.resolve(en),
+  en: () => Promise.resolve(en),
+  es: () => Promise.resolve(es),
+  fr: () => Promise.resolve(en),
+  it: () => Promise.resolve(en),
+  ja: () => Promise.resolve(en),
+  pt: () => Promise.resolve(en),
+  zh: () => Promise.resolve(en)
 });

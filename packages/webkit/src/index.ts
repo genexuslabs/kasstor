@@ -14,8 +14,6 @@ export {
 // i18n
 export {
   ALL_SUPPORTED_LANGUAGE_SUBTAGS,
-  fromLanguageFullnameToSubtag,
-  fromLanguageToFullnameAndSubtag,
   getClientLanguage,
   getCurrentLanguage,
   getCurrentTranslations,
@@ -28,12 +26,10 @@ export {
   setLanguage,
   subscribeToLanguageChanges,
   unsubscribeToLanguageChanges,
-  type KasstorLanguage,
-  type KasstorLanguageFullnameAndSubtag,
   type KasstorLanguageSubtag,
   type KasstorLanguageSubtagWithRegion,
+  type KasstorLanguageTag,
   type KasstorTranslationShape,
-  type KasstorTranslations,
   type KasstorTranslationsLoader
 } from "./internationalization/index.js";
 

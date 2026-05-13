@@ -36,15 +36,15 @@ const createSpyLoader = <T extends Record<string, unknown>>(en: T, es: T, delayM
       : () => Promise.resolve(value);
 
   return {
-    arabic: vi.fn(makeResolver(en)),
-    chinese: vi.fn(makeResolver(en)),
-    english: vi.fn(makeResolver(en)),
-    french: vi.fn(makeResolver(en)),
-    german: vi.fn(makeResolver(en)),
-    italian: vi.fn(makeResolver(en)),
-    japanese: vi.fn(makeResolver(en)),
-    portuguese: vi.fn(makeResolver(en)),
-    spanish: vi.fn(makeResolver(es))
+    ar: vi.fn(makeResolver(en)),
+    de: vi.fn(makeResolver(en)),
+    en: vi.fn(makeResolver(en)),
+    es: vi.fn(makeResolver(es)),
+    fr: vi.fn(makeResolver(en)),
+    it: vi.fn(makeResolver(en)),
+    ja: vi.fn(makeResolver(en)),
+    pt: vi.fn(makeResolver(en)),
+    zh: vi.fn(makeResolver(en))
   };
 };
 
@@ -76,8 +76,8 @@ describe("[i18n e2e] lazy per-feature loading", () => {
       setLanguage("en");
       await languageHasBeenInitialized();
 
-      expect(mainLoader.english).toHaveBeenCalledTimes(1);
-      expect(trialLoader.english).not.toHaveBeenCalled();
+      expect(mainLoader.en).toHaveBeenCalledTimes(1);
+      expect(trialLoader.en).not.toHaveBeenCalled();
     });
 
     test("preloadTranslations bypasses subscriber requirement", async () => {
@@ -97,7 +97,7 @@ describe("[i18n e2e] lazy per-feature loading", () => {
       setLanguage("en");
       await languageHasBeenInitialized();
 
-      expect(loader.english).toHaveBeenCalledTimes(1);
+      expect(loader.en).toHaveBeenCalledTimes(1);
       const translations = getCurrentTranslations<AppMainShape>(FEATURE_MAIN);
       expect(translations).toBeDefined();
       expect(translations!.greet).toBe("Hello");
@@ -117,7 +117,7 @@ describe("[i18n e2e] lazy per-feature loading", () => {
       await languageHasBeenInitialized();
 
       // No subscriber yet — loader should NOT have been called
-      expect(loader.english).not.toHaveBeenCalled();
+      expect(loader.en).not.toHaveBeenCalled();
 
       const received: AppMainShape[] = [];
       trackSubscriber(
@@ -127,7 +127,7 @@ describe("[i18n e2e] lazy per-feature loading", () => {
       // Allow on-demand load to complete
       await new Promise(r => setTimeout(r, 0));
 
-      expect(loader.english).toHaveBeenCalledTimes(1);
+      expect(loader.en).toHaveBeenCalledTimes(1);
       expect(received.length).toBe(1);
       expect(received[0].greet).toBe("Hello");
     });
@@ -150,7 +150,7 @@ describe("[i18n e2e] lazy per-feature loading", () => {
       await languageHasBeenInitialized();
 
       // English was loaded because there was a subscriber
-      expect(loader.english).toHaveBeenCalledTimes(1);
+      expect(loader.en).toHaveBeenCalledTimes(1);
 
       unsubscribeToLanguageChanges(id);
 
@@ -158,7 +158,7 @@ describe("[i18n e2e] lazy per-feature loading", () => {
       setLanguage("es");
       await new Promise(r => setTimeout(r, 0));
 
-      expect(loader.spanish).not.toHaveBeenCalled();
+      expect(loader.es).not.toHaveBeenCalled();
     });
 
     test("resubscribe after full unsubscription triggers load for current language", async () => {
@@ -181,7 +181,7 @@ describe("[i18n e2e] lazy per-feature loading", () => {
       // Switch to spanish without subscriber — not loaded
       setLanguage("es");
       await new Promise(r => setTimeout(r, 0));
-      expect(loader.spanish).not.toHaveBeenCalled();
+      expect(loader.es).not.toHaveBeenCalled();
 
       // Resubscribe — should trigger on-demand load for spanish
       const received: AppMainShape[] = [];
@@ -190,7 +190,7 @@ describe("[i18n e2e] lazy per-feature loading", () => {
       );
       await new Promise(r => setTimeout(r, 0));
 
-      expect(loader.spanish).toHaveBeenCalledTimes(1);
+      expect(loader.es).toHaveBeenCalledTimes(1);
       expect(received.length).toBe(1);
       expect(received[0].greet).toBe("Hola");
     });
@@ -220,8 +220,8 @@ describe("[i18n e2e] lazy per-feature loading", () => {
       setLanguage("en");
       await languageHasBeenInitialized();
 
-      expect(mainLoader1.english).toHaveBeenCalledTimes(1);
-      expect(trialLoader.english).toHaveBeenCalledTimes(1);
+      expect(mainLoader1.en).toHaveBeenCalledTimes(1);
+      expect(trialLoader.en).toHaveBeenCalledTimes(1);
 
       // Re-register MAIN with new loader
       const mainLoader2 = createSpyLoader<AppMainShape>(
@@ -234,8 +234,8 @@ describe("[i18n e2e] lazy per-feature loading", () => {
       await new Promise(r => setTimeout(r, 0));
 
       // New MAIN loader was called, TRIAL loader was NOT re-called (cached)
-      expect(mainLoader2.english).toHaveBeenCalledTimes(1);
-      expect(trialLoader.english).toHaveBeenCalledTimes(1);
+      expect(mainLoader2.en).toHaveBeenCalledTimes(1);
+      expect(trialLoader.en).toHaveBeenCalledTimes(1);
       expect(getCurrentTranslations<AppMainShape>(FEATURE_MAIN)!.greet).toBe("Hello v2");
     });
   });
@@ -274,8 +274,8 @@ describe("[i18n e2e] lazy per-feature loading", () => {
       // Wait for all loads to complete
       await new Promise(r => setTimeout(r, 50));
 
-      expect(mainLoader.english).toHaveBeenCalledTimes(1);
-      expect(trialLoader.english).toHaveBeenCalledTimes(1);
+      expect(mainLoader.en).toHaveBeenCalledTimes(1);
+      expect(trialLoader.en).toHaveBeenCalledTimes(1);
       expect(trialReceived.length).toBeGreaterThanOrEqual(1);
       expect(trialReceived[trialReceived.length - 1].price).toBe("Free");
     });
@@ -387,13 +387,13 @@ describe("[i18n e2e] lazy per-feature loading", () => {
       registerTranslations<AppMainShape>(FEATURE_MAIN, loader);
 
       // Loader should NOT have been called (no subscribers, no preload)
-      expect(loader.english).not.toHaveBeenCalled();
+      expect(loader.en).not.toHaveBeenCalled();
 
       // Subscribe triggers on-demand load
       trackSubscriber(subscribeToLanguageChanges(FEATURE_MAIN, () => {}));
       await new Promise(r => setTimeout(r, 0));
 
-      expect(loader.english).toHaveBeenCalledTimes(1);
+      expect(loader.en).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -421,9 +421,9 @@ describe("[i18n e2e] lazy per-feature loading", () => {
       // Only feat-3 should have been loaded
       for (const { id, loader } of loaders) {
         if (id === "feat-3") {
-          expect(loader.english).toHaveBeenCalledTimes(1);
+          expect(loader.en).toHaveBeenCalledTimes(1);
         } else {
-          expect(loader.english).not.toHaveBeenCalled();
+          expect(loader.en).not.toHaveBeenCalled();
         }
       }
     });
@@ -458,7 +458,7 @@ describe("[i18n e2e] lazy per-feature loading", () => {
       await new Promise(r => setTimeout(r, 50));
 
       // Loader called only once (cached promise reused)
-      expect(loader.english).toHaveBeenCalledTimes(1);
+      expect(loader.en).toHaveBeenCalledTimes(1);
 
       // Both subscribers received translations
       expect(received1.length).toBe(1);

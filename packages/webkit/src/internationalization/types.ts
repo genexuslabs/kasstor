@@ -1,46 +1,32 @@
-export type KasstorLanguage =
-  | "english"
-  | "spanish"
-  | "japanese"
-  | "french"
-  | "german"
-  | "portuguese"
-  | "italian"
-  | "chinese"
-  | "arabic";
-
 /**
- * BCP 47 language tags for supported languages.
+ * BCP 47 language subtags supported by kasstor's i18n manager.
  * See: https://developer.mozilla.org/en-US/docs/Glossary/BCP_47_language_tag#bcp_47_syntax
  */
 export type KasstorLanguageSubtag = "en" | "ja" | "es" | "fr" | "de" | "pt" | "it" | "zh" | "ar";
 
 /**
- * BCP 47 language tags for supported languages.
- * See: https://developer.mozilla.org/en-US/docs/Glossary/BCP_47_language_tag#region_subtag_optional
+ * BCP 47 language tag with a region subtag (e.g. `"en-US"`, `"es-AR"`).
+ * The region is opaque: any non-empty string is accepted at the type level,
+ * canonicalized to uppercase at runtime by `normalizeTag`.
  */
-export type KasstorLanguageSubtagWithRegion =
-  | "en-US"
-  | "ja"
-  | "es-ES"
-  | "fr-FR"
-  | "de-DE"
-  | "pt-BR"
-  | "it-IT"
-  | "zh-CN"
-  | "ar-SA";
+export type KasstorLanguageSubtagWithRegion = `${KasstorLanguageSubtag}-${string}`;
 
-export type KasstorLanguageFullnameAndSubtag = {
-  fullLanguageName: KasstorLanguage;
-  subtag: KasstorLanguageSubtag;
-};
+/**
+ * Canonical language identifier: either a bare subtag (`"en"`) or a tag
+ * with an optional region (`"en-US"`). This is the single representation
+ * used across the kasstor i18n API.
+ */
+export type KasstorLanguageTag = KasstorLanguageSubtag | KasstorLanguageSubtagWithRegion;
 
 export type KasstorTranslationShape = Record<string | number, unknown>;
 
-export type KasstorTranslations<T extends KasstorTranslationShape> = Map<KasstorLanguage, T>;
-
+/**
+ * Loader for a feature's translations. Keyed by base subtag — region
+ * variants share the same translation file (regions only affect
+ * `<html lang>`, `localStorage`, URL segments and HTTP headers).
+ */
 export type KasstorTranslationsLoader<T extends KasstorTranslationShape> = Record<
-  KasstorLanguage,
+  KasstorLanguageSubtag,
   () => Promise<T>
 >;
 
@@ -52,4 +38,3 @@ export type KasstorRegisterTranslationsOptions = {
    */
   preloadTranslations?: boolean;
 };
-

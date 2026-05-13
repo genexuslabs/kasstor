@@ -1,38 +1,37 @@
-import { ALL_SUPPORTED_LANGUAGE_SUBTAGS } from "./all-supported-languages.js";
 import { isLanguageAvailable } from "./is-language-available.js";
-import type { KasstorLanguageSubtag } from "./types";
+import { normalizeTag } from "./normalize-tag.js";
+import type { KasstorLanguageTag } from "./types";
 
 /**
- * Returns the first supported and currently-available language from the
- * user’s browser preferences (`navigator.languages`), stripping the region
- * subtag (e.g. `"en-US"` → `"en"`).
+ * Returns the first supported tag from `navigator.languages` that is
+ * available under the host's configured set. Preserves the user's region
+ * when possible.
+ *
+ * Resolution per entry, in order:
+ * 1. Canonicalize the entry via `normalizeTag` (unsupported base → skip).
+ * 2. If the canonical tag (with region, when present) is available, return it.
+ * 3. If the bare base subtag is available, return the base subtag.
  *
  * Safe to call on the server: returns `null` when `navigator` is undefined.
  *
- * @returns The matching subtag, or `null` if none of the user’s preferred
+ * @returns The matching tag, or `null` if none of the user's preferred
  *   languages are supported and available.
  */
-export const getLanguageFromUserPreferences = (): KasstorLanguageSubtag | null => {
+export const getLanguageFromUserPreferences = (): KasstorLanguageTag | null => {
   if (typeof navigator === "undefined") {
     return null;
   }
 
   const preferredLanguages = navigator.languages;
 
-  // For index loop is the fastest "for"
   for (let index = 0; index < preferredLanguages.length; index++) {
-    const preferredLanguage = preferredLanguages[index];
+    const canonical = normalizeTag(preferredLanguages[index]);
+    if (canonical === undefined) {
+      continue;
+    }
 
-    // Remove the region
-    const preferredLanguageWithoutRegion = preferredLanguage
-      .split("-")[0]
-      .toLowerCase() as KasstorLanguageSubtag;
-
-    if (
-      ALL_SUPPORTED_LANGUAGE_SUBTAGS.has(preferredLanguageWithoutRegion) &&
-      isLanguageAvailable(preferredLanguageWithoutRegion)
-    ) {
-      return preferredLanguageWithoutRegion;
+    if (isLanguageAvailable(canonical)) {
+      return canonical;
     }
   }
 

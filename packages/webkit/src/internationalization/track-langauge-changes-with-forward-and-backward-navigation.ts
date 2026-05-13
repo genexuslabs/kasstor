@@ -2,7 +2,7 @@ import { getClientLanguage } from "./get-client-language";
 import { getCurrentLanguage } from "./get-current-language";
 import { getLanguageFromUrl } from "./get-language-from-url";
 import { isLanguageAvailable } from "./is-language-available";
-import { isValidLanguage } from "./is-valid-language";
+import { normalizeTag } from "./normalize-tag";
 import { setLanguage } from "./set-language";
 
 let trackingNavigation = false;
@@ -17,18 +17,19 @@ export const trackLanguageChangesWithForwardAndBackwardNavigation = () => {
 
   // Listen to the "popstate" event to detect forward/backward navigation
   window.addEventListener("popstate", () => {
-    const languageFromUrl = getLanguageFromUrl(window.location.pathname);
-    // A subtag from the URL is only honored when it's both supported by the
-    // library AND part of the host's available list — otherwise we fall
-    // back to the client/default chain.
+    const raw = getLanguageFromUrl(window.location.pathname);
+    const canonical = raw === null ? undefined : normalizeTag(raw);
+
+    // A tag from the URL is only honored when its base is supported AND it
+    // matches the host's available list — otherwise fall back to the
+    // client/default chain.
     const newLanguageAfterNavigation =
-      isValidLanguage(languageFromUrl) && isLanguageAvailable(languageFromUrl)
-        ? languageFromUrl
+      canonical !== undefined && isLanguageAvailable(canonical)
+        ? canonical
         : getClientLanguage();
 
-    if (newLanguageAfterNavigation !== getCurrentLanguage()?.subtag) {
+    if (newLanguageAfterNavigation !== getCurrentLanguage()) {
       setLanguage(newLanguageAfterNavigation, false);
     }
   });
 };
-

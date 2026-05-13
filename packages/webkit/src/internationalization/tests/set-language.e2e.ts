@@ -12,7 +12,7 @@ import {
   setInitialApplicationLanguage,
   setLanguage
 } from "../index.js";
-import type { KasstorLanguage } from "../types.js";
+import type { KasstorLanguageSubtag } from "../types.js";
 import type { AppMainShape } from "./i18n-e2e-helpers.js";
 import { createEnEsLoader, FEATURE_MAIN, resetI18nState, setPathname } from "./i18n-e2e-helpers.js";
 
@@ -33,7 +33,7 @@ describe("[i18n e2e] setLanguage", () => {
       await languageHasBeenInitialized();
       expect(getCurrentTranslations<AppMainShape>(FEATURE_MAIN)!.greet).toBe("Hola");
 
-      setLanguage("english");
+      setLanguage("en");
       await new Promise(r => setTimeout(r, 0));
       expect(getCurrentTranslations<AppMainShape>(FEATURE_MAIN)!.greet).toBe("Hello");
     });
@@ -87,26 +87,26 @@ describe("[i18n e2e] setLanguage", () => {
       setInitialApplicationLanguage({ locationChangeCallback: () => {} });
 
       const delays: Record<string, number> = {
-        english: 30,
-        spanish: 10
+        en: 30,
+        es: 10
       };
-      const raceLoader: Record<KasstorLanguage, () => Promise<AppMainShape>> = {
-        arabic: () => Promise.resolve({ greet: "ar", footer: "" }),
-        chinese: () => Promise.resolve({ greet: "zh", footer: "" }),
-        english: () =>
-          new Promise(r => setTimeout(() => r({ greet: "Hello", footer: "" }), delays.english)),
-        french: () => Promise.resolve({ greet: "fr", footer: "" }),
-        german: () => Promise.resolve({ greet: "de", footer: "" }),
-        italian: () => Promise.resolve({ greet: "it", footer: "" }),
-        japanese: () => Promise.resolve({ greet: "ja", footer: "" }),
-        portuguese: () => Promise.resolve({ greet: "pt", footer: "" }),
-        spanish: () =>
-          new Promise(r => setTimeout(() => r({ greet: "Hola", footer: "" }), delays.spanish))
+      const raceLoader: Record<KasstorLanguageSubtag, () => Promise<AppMainShape>> = {
+        ar: () => Promise.resolve({ greet: "ar", footer: "" }),
+        zh: () => Promise.resolve({ greet: "zh", footer: "" }),
+        en: () =>
+          new Promise(r => setTimeout(() => r({ greet: "Hello", footer: "" }), delays.en)),
+        fr: () => Promise.resolve({ greet: "fr", footer: "" }),
+        de: () => Promise.resolve({ greet: "de", footer: "" }),
+        it: () => Promise.resolve({ greet: "it", footer: "" }),
+        ja: () => Promise.resolve({ greet: "ja", footer: "" }),
+        pt: () => Promise.resolve({ greet: "pt", footer: "" }),
+        es: () =>
+          new Promise(r => setTimeout(() => r({ greet: "Hola", footer: "" }), delays.es))
       };
       registerTranslations(FEATURE_MAIN, raceLoader, { preloadTranslations: true });
 
-      setLanguage("english");
-      setLanguage("spanish");
+      setLanguage("en");
+      setLanguage("es");
       await new Promise(r => setTimeout(r, 50));
 
       const translations = getCurrentTranslations<AppMainShape>(FEATURE_MAIN);

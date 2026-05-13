@@ -1,11 +1,10 @@
 import { SHARED_LOCAL_STORAGE_KEYS } from "../shared-local-storage-keys.js";
-import type { KasstorLanguageSubtag } from "./types";
+import type { KasstorLanguageTag } from "./types";
 
 export const getLanguageFromLocalStorage = () =>
   localStorage.getItem(
     SHARED_LOCAL_STORAGE_KEYS.LANGUAGE
-  ) as KasstorLanguageSubtag | null;
+  ) as KasstorLanguageTag | null;
 
-export const setLanguageInLocalStorage = (subtag: KasstorLanguageSubtag) =>
-  localStorage.setItem(SHARED_LOCAL_STORAGE_KEYS.LANGUAGE, subtag);
-
+export const setLanguageInLocalStorage = (tag: KasstorLanguageTag) =>
+  localStorage.setItem(SHARED_LOCAL_STORAGE_KEYS.LANGUAGE, tag);

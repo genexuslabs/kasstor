@@ -1,69 +1,48 @@
 import { DEV_MODE } from "../development-flags.js";
-import { ALL_SUPPORTED_LANGUAGE_SUBTAGS } from "./all-supported-languages.js";
 import { DEFAULT_LANGUAGE } from "./default-language.js";
-import { fromLanguageFullnameToSubtag } from "./from-language-fullname-to-subtag.js";
-import type { KasstorLanguage, KasstorLanguageSubtag } from "./types";
+import { normalizeTag } from "./normalize-tag.js";
+import type { KasstorLanguageTag } from "./types";
 
 /**
  * Normalizes a list of available languages provided by the host application
- * into an internal `Set<KasstorLanguageSubtag>`.
+ * into an internal `Set<KasstorLanguageTag>` of canonical tags.
  *
  * Behavior:
- * - Accepts both full names (`"english"`) and subtags (`"en"`).
- * - Drops entries that are not part of `ALL_SUPPORTED_LANGUAGE_SUBTAGS` (with
- *   a warning in `DEV_MODE`).
+ * - Each entry is canonicalized via `normalizeTag` (base lowercased, region
+ *   uppercased, base validated against `ALL_SUPPORTED_LANGUAGE_SUBTAGS`).
+ * - Entries whose base is not supported are dropped with a `DEV_MODE` warning.
  * - By default, guarantees that `"en"` is in the resulting Set: when the
- *   input is empty (or becomes empty after filtering), or does not include
- *   `"en"`, `"en"` is added and a warning is emitted in `DEV_MODE`. This is
- *   the historical safety fallback so an app with a misconfigured list still
- *   has a known-good language available.
+ *   input is empty (or all entries are invalid), or none has base `"en"`,
+ *   `"en"` is added and a `DEV_MODE` warning is emitted. This is the
+ *   historical safety fallback.
  * - When `strict` is `true`, the safety fallback is skipped and the resulting
- *   Set reflects exactly the host-provided list (after dropping unsupported
- *   entries). Hosts that intentionally want to forbid `"en"` (or that
- *   pre-validate their list and want kasstor to honor it verbatim) should
- *   pass `strict: true`. Note that an empty result in strict mode means no
- *   language is available — `isLanguageAvailable` will return `false` for
- *   every subtag — so the host is responsible for ensuring at least one
- *   valid entry.
+ *   Set reflects exactly the host-provided list. Hosts that intentionally
+ *   want to forbid `"en"` should pass `strict: true`.
  *
- * @param input - Array of language full names or subtags.
+ * @param input - Array of language tags.
  * @param strict - When `true`, do not auto-add `"en"` as a safety fallback.
- *   Defaults to `false` to preserve backwards-compatible behavior.
- * @returns A `Set` of language subtags. Contains `"en"` unless `strict` is
- *   `true` and the host did not include it.
+ *   Defaults to `false`.
+ * @returns A `Set` of canonical language tags.
  */
 export const normalizeAvailableLanguages = (
-  input: ReadonlyArray<KasstorLanguage | KasstorLanguageSubtag>,
+  input: ReadonlyArray<KasstorLanguageTag>,
   strict: boolean = false
-): Set<KasstorLanguageSubtag> => {
-  const normalized = new Set<KasstorLanguageSubtag>();
+): Set<KasstorLanguageTag> => {
+  const normalized = new Set<KasstorLanguageTag>();
 
   for (const entry of input) {
-    // Reject unsupported strings defensively (could happen if the host bypasses
-    // the type system, e.g. data coming from a config file).
-    let subtag: KasstorLanguageSubtag | undefined;
-    if (ALL_SUPPORTED_LANGUAGE_SUBTAGS.has(entry as KasstorLanguageSubtag)) {
-      subtag = entry as KasstorLanguageSubtag;
-    } else {
-      // `fromLanguageFullnameToSubtag` returns `undefined` for non-fullname
-      // inputs because it's a plain dictionary lookup typed against
-      // `KasstorLanguage`.
-      subtag = fromLanguageFullnameToSubtag(entry as KasstorLanguage);
-    }
-
-    if (subtag === undefined) {
+    const canonical = normalizeTag(entry);
+    if (canonical === undefined) {
       if (DEV_MODE) {
         console.warn(
-          `[kasstor i18n] "${String(entry)}" is not a supported language and was skipped from "availableLanguages".`
+          `[kasstor i18n] "${String(entry)}" is not a supported language tag and was skipped from "availableLanguages".`
         );
       }
       continue;
     }
-
-    normalized.add(subtag);
+    normalized.add(canonical);
   }
 
-  // Strict mode: respect the host's list verbatim; skip the safety fallback.
   if (strict) {
     return normalized;
   }
@@ -78,7 +57,16 @@ export const normalizeAvailableLanguages = (
     return normalized;
   }
 
-  if (!normalized.has(DEFAULT_LANGUAGE)) {
+  // Ensure at least one entry has base "en"
+  let hasEnglishBase = false;
+  for (const entry of normalized) {
+    if (entry === "en" || entry.startsWith("en-")) {
+      hasEnglishBase = true;
+      break;
+    }
+  }
+
+  if (!hasEnglishBase) {
     if (DEV_MODE) {
       console.warn(
         '[kasstor i18n] "availableLanguages" did not include "en"; adding it as the safety fallback.'

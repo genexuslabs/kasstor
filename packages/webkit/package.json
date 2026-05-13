@@ -1,6 +1,6 @@
 {
   "name": "@genexus/kasstor-webkit",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
   "description": "Utilities for web applications: array helpers, internationalization (i18n), type-ahead search, frame synchronization, and shared local storage keys.",
@@ -68,23 +68,23 @@
       "development": "./dist/browser/development/internationalization/all-supported-languages.js",
       "default": "./dist/browser/production/internationalization/all-supported-languages.js"
     },
-    "./internationalization/from-language-fullname-to-subtag.js": {
+    "./internationalization/get-base-subtag.js": {
       "node": {
-        "development": "./dist/node/development/internationalization/from-language-fullname-to-subtag.js",
-        "default": "./dist/node/production/internationalization/from-language-fullname-to-subtag.js"
+        "development": "./dist/node/development/internationalization/get-base-subtag.js",
+        "default": "./dist/node/production/internationalization/get-base-subtag.js"
       },
-      "types": "./dist/browser/development/internationalization/from-language-fullname-to-subtag.d.ts",
-      "development": "./dist/browser/development/internationalization/from-language-fullname-to-subtag.js",
-      "default": "./dist/browser/production/internationalization/from-language-fullname-to-subtag.js"
+      "types": "./dist/browser/development/internationalization/get-base-subtag.d.ts",
+      "development": "./dist/browser/development/internationalization/get-base-subtag.js",
+      "default": "./dist/browser/production/internationalization/get-base-subtag.js"
     },
-    "./internationalization/from-language-to-fullname-and-subtag.js": {
+    "./internationalization/normalize-tag.js": {
       "node": {
-        "development": "./dist/node/development/internationalization/from-language-to-fullname-and-subtag.js",
-        "default": "./dist/node/production/internationalization/from-language-to-fullname-and-subtag.js"
+        "development": "./dist/node/development/internationalization/normalize-tag.js",
+        "default": "./dist/node/production/internationalization/normalize-tag.js"
       },
-      "types": "./dist/browser/development/internationalization/from-language-to-fullname-and-subtag.d.ts",
-      "development": "./dist/browser/development/internationalization/from-language-to-fullname-and-subtag.js",
-      "default": "./dist/browser/production/internationalization/from-language-to-fullname-and-subtag.js"
+      "types": "./dist/browser/development/internationalization/normalize-tag.d.ts",
+      "development": "./dist/browser/development/internationalization/normalize-tag.js",
+      "default": "./dist/browser/production/internationalization/normalize-tag.js"
     },
     "./internationalization/get-client-language.js": {
       "node": {

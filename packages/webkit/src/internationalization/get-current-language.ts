@@ -1,14 +1,11 @@
-import { fromLanguageToFullnameAndSubtag } from "./from-language-to-fullname-and-subtag";
 import { getI18nGlobals } from "./get-i18n-globals";
-import type { KasstorLanguageFullnameAndSubtag } from "./types";
+import type { KasstorLanguageTag } from "./types";
 
 /**
- * Returns the currently active language as full name and BCP 47 subtag.
+ * Returns the currently active language tag.
  *
- * @returns `{ fullLanguageName, subtag }` if a language is set, otherwise `undefined`.
+ * @returns The active `KasstorLanguageTag` (with region if any), or `undefined`
+ *   if no language has been set yet.
  */
-export const getCurrentLanguage = (): KasstorLanguageFullnameAndSubtag | undefined => {
-  const { currentLanguage } = getI18nGlobals();
-
-  return currentLanguage ? fromLanguageToFullnameAndSubtag(currentLanguage) : undefined;
-};
+export const getCurrentLanguage = (): KasstorLanguageTag | undefined =>
+  getI18nGlobals().currentLanguage;

@@ -20,7 +20,7 @@ import {
   setLanguage,
   subscribeToLanguageChanges
 } from "../index.js";
-import type { KasstorLanguage } from "../types.js";
+import type { KasstorLanguageSubtag } from "../types.js";
 import type { AppMainShape } from "./i18n-e2e-helpers.js";
 import {
   createEnEsLoader,
@@ -38,21 +38,21 @@ import {
 const waitForStaleLoaders = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 const buildDelayedLoader = (
-  delays: Partial<Record<KasstorLanguage, number>>,
-  payload: Partial<Record<KasstorLanguage, AppMainShape>> = {}
-): Record<KasstorLanguage, () => Promise<AppMainShape>> => {
-  const langs: KasstorLanguage[] = [
-    "arabic",
-    "chinese",
-    "english",
-    "french",
-    "german",
-    "italian",
-    "japanese",
-    "portuguese",
-    "spanish"
+  delays: Partial<Record<KasstorLanguageSubtag, number>>,
+  payload: Partial<Record<KasstorLanguageSubtag, AppMainShape>> = {}
+): Record<KasstorLanguageSubtag, () => Promise<AppMainShape>> => {
+  const langs: KasstorLanguageSubtag[] = [
+    "ar",
+    "de",
+    "en",
+    "es",
+    "fr",
+    "it",
+    "ja",
+    "pt",
+    "zh"
   ];
-  const loader = {} as Record<KasstorLanguage, () => Promise<AppMainShape>>;
+  const loader = {} as Record<KasstorLanguageSubtag, () => Promise<AppMainShape>>;
   for (const lang of langs) {
     const delay = delays[lang] ?? 0;
     const value = payload[lang] ?? { greet: lang, footer: "" };
@@ -79,7 +79,7 @@ describe("[i18n e2e] languageChangeComplete", () => {
     setLanguage("es");
     await languageChangeComplete();
 
-    expect(getCurrentLanguage()!.fullLanguageName).toBe("spanish");
+    expect(getCurrentLanguage()).toBe("es");
     expect(getCurrentTranslations<AppMainShape>(FEATURE_MAIN)!.greet).toBe("Hola");
   });
 
@@ -88,16 +88,16 @@ describe("[i18n e2e] languageChangeComplete", () => {
     setInitialApplicationLanguage({ locationChangeCallback: () => {} });
     // english slow, spanish fast — but spanish is set last, so it should win.
     const loader = buildDelayedLoader(
-      { english: 40, spanish: 5 },
-      { english: { greet: "Hello", footer: "" }, spanish: { greet: "Hola", footer: "" } }
+      { en: 40, es: 5 },
+      { en: { greet: "Hello", footer: "" }, es: { greet: "Hola", footer: "" } }
     );
     registerTranslations(FEATURE_MAIN, loader, { preloadTranslations: true });
 
-    setLanguage("english");
-    setLanguage("spanish");
+    setLanguage("en");
+    setLanguage("es");
     await languageChangeComplete();
 
-    expect(getCurrentLanguage()!.fullLanguageName).toBe("spanish");
+    expect(getCurrentLanguage()).toBe("es");
     expect(getCurrentTranslations<AppMainShape>(FEATURE_MAIN)!.greet).toBe("Hola");
 
     // Wait for english loader (slower, non-latest) to settle before teardown.
@@ -108,18 +108,18 @@ describe("[i18n e2e] languageChangeComplete", () => {
     setPathname("/en/home");
     setInitialApplicationLanguage({ locationChangeCallback: () => {} });
     const loader = buildDelayedLoader(
-      { english: 5, spanish: 40 },
-      { english: { greet: "Hello", footer: "" }, spanish: { greet: "Hola", footer: "" } }
+      { en: 5, es: 40 },
+      { en: { greet: "Hello", footer: "" }, es: { greet: "Hola", footer: "" } }
     );
     registerTranslations(FEATURE_MAIN, loader, { preloadTranslations: true });
 
-    setLanguage("english");
-    setLanguage("spanish");
+    setLanguage("en");
+    setLanguage("es");
     const start = performance.now();
     await languageChangeComplete();
     const elapsed = performance.now() - start;
 
-    expect(getCurrentLanguage()!.fullLanguageName).toBe("spanish");
+    expect(getCurrentLanguage()).toBe("es");
     expect(getCurrentTranslations<AppMainShape>(FEATURE_MAIN)!.greet).toBe("Hola");
     // We waited for spanish (~40ms), not english (~5ms).
     expect(elapsed).toBeGreaterThanOrEqual(30);
@@ -129,21 +129,21 @@ describe("[i18n e2e] languageChangeComplete", () => {
     setPathname("/en/home");
     setInitialApplicationLanguage({ locationChangeCallback: () => {} });
     const loader = buildDelayedLoader(
-      { english: 30, spanish: 20, french: 10 },
+      { en: 30, es: 20, fr: 10 },
       {
-        english: { greet: "Hello", footer: "" },
-        spanish: { greet: "Hola", footer: "" },
-        french: { greet: "Bonjour", footer: "" }
+        en: { greet: "Hello", footer: "" },
+        es: { greet: "Hola", footer: "" },
+        fr: { greet: "Bonjour", footer: "" }
       }
     );
     registerTranslations(FEATURE_MAIN, loader, { preloadTranslations: true });
 
-    setLanguage("english");
-    setLanguage("spanish");
-    setLanguage("french");
+    setLanguage("en");
+    setLanguage("es");
+    setLanguage("fr");
     await languageChangeComplete();
 
-    expect(getCurrentLanguage()!.fullLanguageName).toBe("french");
+    expect(getCurrentLanguage()).toBe("fr");
     expect(getCurrentTranslations<AppMainShape>(FEATURE_MAIN)!.greet).toBe("Bonjour");
 
     // english (30ms) and spanish (20ms) loaders are still pending — flush.
@@ -175,7 +175,7 @@ describe("[i18n e2e] languageChangeComplete", () => {
     const firstPromise = languageChangeComplete();
     await firstPromise;
 
-    setLanguage("english");
+    setLanguage("en");
     const secondPromise = languageChangeComplete();
 
     expect(secondPromise).not.toBe(firstPromise);
@@ -192,7 +192,7 @@ describe("[i18n e2e] languageChangeComplete", () => {
 
     setLanguage("es");
     await languageChangeComplete();
-    setLanguage("english");
+    setLanguage("en");
     await languageChangeComplete();
     expect(getCurrentTranslations<AppMainShape>(FEATURE_MAIN)!.greet).toBe("Hello");
 
@@ -211,21 +211,21 @@ describe("[i18n e2e] languageChangeComplete", () => {
     setPathname("/en/home");
     setInitialApplicationLanguage({ locationChangeCallback: () => {} });
     const loader = buildDelayedLoader(
-      { english: 40, spanish: 0 },
-      { english: { greet: "Hello", footer: "" }, spanish: { greet: "Hola", footer: "" } }
+      { en: 40, es: 0 },
+      { en: { greet: "Hello", footer: "" }, es: { greet: "Hola", footer: "" } }
     );
     registerTranslations(FEATURE_MAIN, loader, { preloadTranslations: true });
 
     // Prime the cache for spanish.
-    setLanguage("spanish");
+    setLanguage("es");
     await languageChangeComplete();
 
     // Now go to english (slow) then back to spanish (cached) in burst.
-    setLanguage("english");
-    setLanguage("spanish");
+    setLanguage("en");
+    setLanguage("es");
     await languageChangeComplete();
 
-    expect(getCurrentLanguage()!.fullLanguageName).toBe("spanish");
+    expect(getCurrentLanguage()).toBe("es");
     expect(getCurrentTranslations<AppMainShape>(FEATURE_MAIN)!.greet).toBe("Hola");
 
     // english loader (40ms) is still in flight — flush.
@@ -270,10 +270,10 @@ describe("[i18n e2e] languageChangeComplete", () => {
     );
     trackSubscriber(id);
 
-    setLanguage("english");
+    setLanguage("en");
     await languageChangeComplete();
 
-    setLanguage("spanish");
+    setLanguage("es");
     await languageChangeComplete();
 
     expect(received).toContain("Hola");
@@ -289,21 +289,21 @@ describe("[i18n e2e] languageChangeComplete", () => {
     setPathname("/de/home");
     setInitialApplicationLanguage({ locationChangeCallback: () => {} });
     const loader = buildDelayedLoader(
-      { english: 25, spanish: 25, french: 25 },
+      { en: 25, es: 25, fr: 25 },
       {
-        english: { greet: "Hello", footer: "" },
-        spanish: { greet: "Hola", footer: "" },
-        french: { greet: "Bonjour", footer: "" }
+        en: { greet: "Hello", footer: "" },
+        es: { greet: "Hola", footer: "" },
+        fr: { greet: "Bonjour", footer: "" }
       }
     );
     registerTranslations(FEATURE_MAIN, loader, { preloadTranslations: true });
 
-    setLanguage("spanish");
-    setLanguage("french");
-    setLanguage("english");
+    setLanguage("es");
+    setLanguage("fr");
+    setLanguage("en");
     await languageChangeComplete();
 
-    expect(getCurrentLanguage()!.fullLanguageName).toBe("english");
+    expect(getCurrentLanguage()).toBe("en");
     expect(getCurrentTranslations<AppMainShape>(FEATURE_MAIN)!.greet).toBe("Hello");
 
     // The two earlier loaders may still be in flight if their setTimeout
