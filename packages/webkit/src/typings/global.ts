@@ -5,6 +5,14 @@ import type {
   KasstorTranslationsLoader
 } from "../internationalization/types";
 
+/**
+ * Key under which a feature's translations are stored — the resolved
+ * loader key (a regional tag when the loader carried an explicit
+ * override, otherwise the base subtag). Always one of the two; never an
+ * arbitrary tag.
+ */
+type TranslationLoadKey = KasstorLanguageTag;
+
 type FeatureIdentifier = string;
 
 declare global {
@@ -78,12 +86,20 @@ declare global {
         internalLanguageChangeResolver?: () => void;
 
         /**
-         * Current translations loaded per feature (e.g. per component or per app).
-         * Keyed by base subtag — region variants share the same entry.
+         * Translations loaded per feature, keyed by the resolved loader
+         * key for the language that produced the load:
+         *  - a regional tag (e.g. `"es-ES"`) when the feature's loader
+         *    carried an explicit override for that region, or
+         *  - the base subtag (e.g. `"es"`) when the load fell back to
+         *    the base entry.
+         *
+         * Reads via `getCurrentTranslations` try the full current tag
+         * first and fall back to the base, mirroring the load-time
+         * resolution rule.
          */
         readonly loadedTranslations: Map<
           FeatureIdentifier,
-          Map<KasstorLanguageSubtag, KasstorTranslationShape>
+          Map<TranslationLoadKey, KasstorTranslationShape>
         >;
 
         /**
@@ -130,14 +146,22 @@ declare global {
         >;
 
         /**
-         * Cache of load Promises per base subtag and feature. Deduplicates
-         * `getTranslationsForLanguage` calls so loaders run once per
-         * subtag+feature pair. Individual feature entries are cleared when
-         * `translationLoaders` change (registerTranslations) so new/replaced
-         * features are loaded on the next request.
+         * Cache of load Promises keyed by the resolved loader key
+         * (`TranslationLoadKey` — full regional tag or base subtag,
+         * depending on what the feature's loader provided) and feature.
+         *
+         * Deduplicates `getTranslationsForLanguage` calls so loaders run
+         * once per load-key+feature pair: e.g. `setLanguage("es-ES")` then
+         * `setLanguage("es-AR")` share the same `"es"` cache entry when
+         * neither regional override exists, but use distinct entries when
+         * `"es-ES"` does and `"es-AR"` does not.
+         *
+         * Individual feature entries are cleared when `translationLoaders`
+         * change (registerTranslations) so new/replaced features are
+         * loaded on the next request.
          */
         readonly translationLoadCache: Map<
-          KasstorLanguageSubtag,
+          TranslationLoadKey,
           Map<FeatureIdentifier, Promise<void>>
         >;
 

@@ -1,5 +1,4 @@
 import { DEV_MODE } from "../development-flags.js";
-import { getBaseSubtag } from "./get-base-subtag";
 import { setLanguageInLocalStorage } from "./get-and-set-language-in-local-storage";
 import { getI18nGlobals } from "./get-i18n-globals";
 import { getLanguageDirection } from "./get-language-direction";
@@ -71,7 +70,10 @@ export const setLanguage = (
     newLocation = updateLocation(tag, executeLocationChange);
   }
 
-  getTranslationsForLanguage(getBaseSubtag(tag)).then(() => {
+  // Pass the full tag (region included) so per-feature loaders can pick
+  // their regional override when present, falling back to the base subtag
+  // otherwise. See `resolveLoaderKey` in `get-translations-for-language`.
+  getTranslationsForLanguage(tag).then(() => {
     // If the user changed the language multiple times, only the latest one
     // should notify subscribers.
     if (kasstorWebkitI18n!.currentLanguage === tag) {

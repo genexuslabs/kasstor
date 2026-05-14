@@ -44,13 +44,24 @@ export type KasstorLanguageTag =
 export type KasstorTranslationShape = Record<string | number, unknown>;
 
 /**
- * Loader for a feature's translations. Keyed by base subtag — region
- * variants share the same translation file (regions only affect
- * `<html lang>`, `localStorage`, URL segments and HTTP headers).
+ * Loader for a feature's translations.
+ *
+ * Keys are full `KasstorLanguageTag`s — bare base subtags (`"es"`) act as
+ * the default for every region variant of that base, and explicit
+ * region-tagged entries (`"es-ES"`) override the base for that specific
+ * variant. At lookup time, kasstor resolves a tag to its loader entry by
+ * trying the full tag first and falling back to the base subtag.
+ *
+ * Typical shape: provide one entry per supported base subtag and add
+ * regional entries only when the regional copy differs from the base.
+ *
+ * @example
+ *   { en: () => import("./en"),
+ *     es: () => import("./es"),
+ *     "es-ES": () => import("./es-ES") }  // Iberian override
  */
-export type KasstorTranslationsLoader<T extends KasstorTranslationShape> = Record<
-  KasstorLanguageSubtag,
-  () => Promise<T>
+export type KasstorTranslationsLoader<T extends KasstorTranslationShape> = Partial<
+  Record<KasstorLanguageTag, () => Promise<T>>
 >;
 
 export type KasstorRegisterTranslationsOptions = {
