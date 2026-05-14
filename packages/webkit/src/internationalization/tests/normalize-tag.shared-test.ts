@@ -36,10 +36,25 @@ describe("[normalizeTag]", () => {
     expect(normalizeTag("ZH-cn")).toBe("zh-CN");
   });
 
-  test("returns undefined when the base subtag is not supported", () => {
+  test("accepts arbitrary 2- and 3-letter base subtags (BCP47 grammar)", () => {
+    // The library is open-universe: any structurally valid BCP47 base
+    // subtag (2 or 3 ASCII letters) is accepted. Host applications
+    // restrict the universe at runtime via `setInitialApplicationLanguage`.
+    expect(normalizeTag("nl")).toBe("nl");
+    expect(normalizeTag("nl-NL")).toBe("nl-NL");
+    expect(normalizeTag("he")).toBe("he");
+    expect(normalizeTag("fil")).toBe("fil");
+    expect(normalizeTag("haw-US")).toBe("haw-US");
+  });
+
+  test("returns undefined when the base subtag is structurally invalid", () => {
+    // Too long (≥ 4 chars), single char, digits, mixed → all invalid.
     expect(normalizeTag("klingon")).toBeUndefined();
-    expect(normalizeTag("xx")).toBeUndefined();
-    expect(normalizeTag("xx-YY")).toBeUndefined();
+    expect(normalizeTag("engl")).toBeUndefined();
+    expect(normalizeTag("e")).toBeUndefined();
+    expect(normalizeTag("1en")).toBeUndefined();
+    expect(normalizeTag("e1")).toBeUndefined();
+    expect(normalizeTag("123")).toBeUndefined();
   });
 
   test("returns undefined for empty or non-string input", () => {

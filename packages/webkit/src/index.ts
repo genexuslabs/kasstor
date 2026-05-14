@@ -13,13 +13,20 @@ export {
 
 // i18n
 export {
-  ALL_SUPPORTED_LANGUAGE_SUBTAGS,
+  RTL_LANGUAGES,
+  getAvailableLanguages,
+  getBaseSubtag,
   getClientLanguage,
   getCurrentLanguage,
   getCurrentTranslations,
+  getLanguageDirection,
   getLanguageFromUrl,
+  isLanguageAvailable,
+  isValidLanguage,
   languageChangeComplete,
   languageHasBeenInitialized,
+  normalizeTag,
+  registerLanguageDirection,
   registerTranslations,
   setAvailableLanguages,
   setInitialApplicationLanguage,
@@ -30,9 +37,9 @@ export {
   type KasstorLanguageSubtagWithRegion,
   type KasstorLanguageTag,
   type KasstorTranslationShape,
-  type KasstorTranslationsLoader
+  type KasstorTranslationsLoader,
+  type KnownKasstorLanguageSubtag
 } from "./internationalization/index.js";
 
 export type { FilterObjectKeys } from "./typings/filter-keys.js";
 export type { ObjectEntries } from "./typings/object-entries.js";
-

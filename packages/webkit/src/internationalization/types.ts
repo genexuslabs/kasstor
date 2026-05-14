@@ -1,22 +1,45 @@
 /**
- * BCP 47 language subtags supported by kasstor's i18n manager.
- * See: https://developer.mozilla.org/en-US/docs/Glossary/BCP_47_language_tag#bcp_47_syntax
+ * Curated set of BCP47 base subtags that the library ships with for
+ * autocomplete and as documentation defaults. The runtime accepts any
+ * structurally valid base subtag — the host application declares its
+ * supported universe via `setInitialApplicationLanguage`.
  */
-export type KasstorLanguageSubtag = "en" | "ja" | "es" | "fr" | "de" | "pt" | "it" | "zh" | "ar";
+export type KnownKasstorLanguageSubtag =
+  | "ar"
+  | "de"
+  | "en"
+  | "es"
+  | "fr"
+  | "it"
+  | "ja"
+  | "pt"
+  | "zh";
 
 /**
- * BCP 47 language tag with a region subtag (e.g. `"en-US"`, `"es-AR"`).
- * The region is opaque: any non-empty string is accepted at the type level,
- * canonicalized to uppercase at runtime by `normalizeTag`.
+ * BCP47 base subtag. Open by design — applications declare their supported
+ * universe at bootstrap time (via `setInitialApplicationLanguage`) rather
+ * than the library hardcoding it. The `(string & {})` keeps autocomplete
+ * for `KnownKasstorLanguageSubtag` literals while allowing any other
+ * string (e.g. `"nl"`, `"he"`, `"pl"`).
+ */
+export type KasstorLanguageSubtag =
+  | KnownKasstorLanguageSubtag
+  | (string & {});
+
+/**
+ * BCP47 tag with a region subtag (e.g. `"en-US"`, `"es-AR"`). The region
+ * is opaque at the type level; runtime canonicalization (`normalizeTag`)
+ * lowercases the base and uppercases the region.
  */
 export type KasstorLanguageSubtagWithRegion = `${KasstorLanguageSubtag}-${string}`;
 
 /**
- * Canonical language identifier: either a bare subtag (`"en"`) or a tag
- * with an optional region (`"en-US"`). This is the single representation
- * used across the kasstor i18n API.
+ * Canonical language identifier used across the kasstor i18n API: either
+ * a bare base subtag or a base subtag with an optional region.
  */
-export type KasstorLanguageTag = KasstorLanguageSubtag | KasstorLanguageSubtagWithRegion;
+export type KasstorLanguageTag =
+  | KasstorLanguageSubtag
+  | KasstorLanguageSubtagWithRegion;
 
 export type KasstorTranslationShape = Record<string | number, unknown>;
 

@@ -18,31 +18,53 @@ describe("[normalizeAvailableLanguages]", () => {
   });
 
   test("normalizes subtags as-is", () => {
-    const set = normalizeAvailableLanguages(["es", "en"]);
-    expect(set).toBeInstanceOf(Set);
-    expect(set.has("es")).toBe(true);
-    expect(set.has("en")).toBe(true);
-    expect(set.size).toBe(2);
+    const { languages, baseSubtags } = normalizeAvailableLanguages(["es", "en"]);
+    expect(languages).toBeInstanceOf(Set);
+    expect(languages.has("es")).toBe(true);
+    expect(languages.has("en")).toBe(true);
+    expect(languages.size).toBe(2);
+    // Base-subtag index mirrors the canonical entries when none are regional.
+    expect(baseSubtags.has("es")).toBe(true);
+    expect(baseSubtags.has("en")).toBe(true);
+    expect(baseSubtags.size).toBe(2);
   });
 
   test("deduplicates entries", () => {
-    const set = normalizeAvailableLanguages(["es", "es", "en"]);
-    expect(set.size).toBe(2);
+    const { languages } = normalizeAvailableLanguages(["es", "es", "en"]);
+    expect(languages.size).toBe(2);
+  });
+
+  test("derives base subtags from regional entries (wildcard-by-base index)", () => {
+    const { languages, baseSubtags } = normalizeAvailableLanguages([
+      "en",
+      "es-AR",
+      "es-ES"
+    ]);
+    expect(languages.has("en")).toBe(true);
+    expect(languages.has("es-AR")).toBe(true);
+    expect(languages.has("es-ES")).toBe(true);
+    expect(languages.size).toBe(3);
+    // Both regional entries share the same base, so the index has one "es".
+    expect(baseSubtags.has("en")).toBe(true);
+    expect(baseSubtags.has("es")).toBe(true);
+    expect(baseSubtags.size).toBe(2);
   });
 
   test("empty input falls back to ['en'] with warn", () => {
-    const set = normalizeAvailableLanguages([]);
-    expect(set.size).toBe(1);
-    expect(set.has("en")).toBe(true);
+    const { languages, baseSubtags } = normalizeAvailableLanguages([]);
+    expect(languages.size).toBe(1);
+    expect(languages.has("en")).toBe(true);
+    expect(baseSubtags.has("en")).toBe(true);
     expect(warnSpy).toHaveBeenCalledTimes(1);
   });
 
   test("missing 'en' is auto-added with warn", () => {
-    const set = normalizeAvailableLanguages(["es", "fr"]);
-    expect(set.has("es")).toBe(true);
-    expect(set.has("fr")).toBe(true);
-    expect(set.has("en")).toBe(true);
-    expect(set.size).toBe(3);
+    const { languages, baseSubtags } = normalizeAvailableLanguages(["es", "fr"]);
+    expect(languages.has("es")).toBe(true);
+    expect(languages.has("fr")).toBe(true);
+    expect(languages.has("en")).toBe(true);
+    expect(languages.size).toBe(3);
+    expect(baseSubtags.has("en")).toBe(true);
     expect(warnSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -51,21 +73,43 @@ describe("[normalizeAvailableLanguages]", () => {
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
-  test("invalid entries are dropped with warn (and 'en' added if needed)", () => {
-    // @ts-expect-error — exercising runtime-only validation
-    const set = normalizeAvailableLanguages(["es", "xx", "klingon"]);
-    expect(set.has("es")).toBe(true);
-    expect(set.has("en")).toBe(true);
-    expect(set.has("xx" as never)).toBe(false);
-    // 2 invalid entries + 1 "en added" warn = 3 warns
+  test("regional 'en-US' counts as English base and skips the auto-add warn", () => {
+    const { languages, baseSubtags } = normalizeAvailableLanguages([
+      "en-US",
+      "es"
+    ]);
+    expect(languages.has("en-US")).toBe(true);
+    expect(languages.has("es")).toBe(true);
+    expect(languages.has("en")).toBe(false); // not auto-added: base "en" is already present via "en-US"
+    expect(baseSubtags.has("en")).toBe(true);
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  test("structurally-invalid entries are dropped with warn (and 'en' added if needed)", () => {
+    // Under the open-universe model, "xx" is structurally valid (2 letters)
+    // so it is kept; only entries that fail BCP47 base grammar are dropped.
+    // "klingon" (7 chars) and "engl" (4 chars) both fail and produce warns.
+    const { languages } = normalizeAvailableLanguages(["es", "klingon", "engl"]);
+    expect(languages.has("es")).toBe(true);
+    expect(languages.has("en")).toBe(true);
+    expect(languages.has("klingon" as never)).toBe(false);
+    expect(languages.has("engl" as never)).toBe(false);
+    // 2 invalid drop warns + 1 "en added" warn = 3 warns
     expect(warnSpy).toHaveBeenCalledTimes(3);
   });
 
-  test("only invalid entries falls back to ['en'] with warn(s)", () => {
-    // @ts-expect-error — exercising runtime-only validation
-    const set = normalizeAvailableLanguages(["xx", "klingon"]);
-    expect(set.size).toBe(1);
-    expect(set.has("en")).toBe(true);
+  test("accepts open-universe valid subtags (e.g. 'nl', 'he')", () => {
+    const { languages } = normalizeAvailableLanguages(["es", "nl", "he"]);
+    expect(languages.has("es")).toBe(true);
+    expect(languages.has("nl")).toBe(true);
+    expect(languages.has("he")).toBe(true);
+    expect(languages.has("en")).toBe(true); // safety fallback
+  });
+
+  test("only structurally-invalid entries falls back to ['en'] with warn(s)", () => {
+    const { languages } = normalizeAvailableLanguages(["klingon", "engl"]);
+    expect(languages.size).toBe(1);
+    expect(languages.has("en")).toBe(true);
   });
 
   // ─── strict mode ─────────────────────────────────────────────────────────
@@ -74,45 +118,51 @@ describe("[normalizeAvailableLanguages]", () => {
   // input legitimately produces an empty Set.
 
   test("strict: does not auto-add 'en' when the input excludes it", () => {
-    const set = normalizeAvailableLanguages(["es", "fr"], true);
-    expect(set.has("es")).toBe(true);
-    expect(set.has("fr")).toBe(true);
-    expect(set.has("en")).toBe(false);
-    expect(set.size).toBe(2);
+    const { languages, baseSubtags } = normalizeAvailableLanguages(
+      ["es", "fr"],
+      true
+    );
+    expect(languages.has("es")).toBe(true);
+    expect(languages.has("fr")).toBe(true);
+    expect(languages.has("en")).toBe(false);
+    expect(languages.size).toBe(2);
+    expect(baseSubtags.has("en")).toBe(false);
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
   test("strict: respects an empty input verbatim (no fallback)", () => {
-    const set = normalizeAvailableLanguages([], true);
-    expect(set.size).toBe(0);
+    const { languages, baseSubtags } = normalizeAvailableLanguages([], true);
+    expect(languages.size).toBe(0);
+    expect(baseSubtags.size).toBe(0);
     // No safety-fallback warn is emitted because strict opted out of it.
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
   test("strict: keeps 'en' when the host explicitly included it", () => {
-    const set = normalizeAvailableLanguages(["en", "es"], true);
-    expect(set.has("en")).toBe(true);
-    expect(set.has("es")).toBe(true);
-    expect(set.size).toBe(2);
+    const { languages } = normalizeAvailableLanguages(["en", "es"], true);
+    expect(languages.has("en")).toBe(true);
+    expect(languages.has("es")).toBe(true);
+    expect(languages.size).toBe(2);
   });
 
-  test("strict: still drops unsupported entries with a warn", () => {
-    const set = normalizeAvailableLanguages(
-      // @ts-expect-error — exercising runtime-only validation
-      ["es", "xx", "fr"],
+  test("strict: still drops structurally-invalid entries with a warn", () => {
+    const { languages } = normalizeAvailableLanguages(
+      // "klingon" fails BCP47 base grammar (7 chars). "xx" passes
+      // (2 chars) under the open-universe model so it is kept.
+      ["es", "klingon", "fr"],
       true
     );
-    expect(set.has("es")).toBe(true);
-    expect(set.has("fr")).toBe(true);
-    expect(set.has("xx" as never)).toBe(false);
-    expect(set.has("en")).toBe(false); // strict: not auto-added even after dropping invalid
-    expect(warnSpy).toHaveBeenCalledTimes(1); // only the "xx" drop warn
+    expect(languages.has("es")).toBe(true);
+    expect(languages.has("fr")).toBe(true);
+    expect(languages.has("klingon" as never)).toBe(false);
+    expect(languages.has("en")).toBe(false); // strict: not auto-added even after dropping invalid
+    expect(warnSpy).toHaveBeenCalledTimes(1); // only the "klingon" drop warn
   });
 
   test("strict: defaults to non-strict (false) when omitted", () => {
     // Same as historical behavior — auto-adds "en".
-    const set = normalizeAvailableLanguages(["es"]);
-    expect(set.has("en")).toBe(true);
-    expect(set.has("es")).toBe(true);
+    const { languages } = normalizeAvailableLanguages(["es"]);
+    expect(languages.has("en")).toBe(true);
+    expect(languages.has("es")).toBe(true);
   });
 });

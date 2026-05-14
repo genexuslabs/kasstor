@@ -1,28 +1,49 @@
-import { ALL_SUPPORTED_LANGUAGE_SUBTAGS } from "./all-supported-languages.js";
-import type { KasstorLanguageSubtag, KasstorLanguageTag } from "./types";
+import type {
+  KasstorLanguageSubtag,
+  KasstorLanguageSubtagWithRegion,
+  KasstorLanguageTag
+} from "./types";
+
+// BCP47 §2.2.1: language subtag is 2 or 3 ASCII alphabetic characters.
+// Anchored regex; faster than a manual char-by-char loop and small enough
+// to be JIT-cached.
+const BASE_SUBTAG_REGEX = /^[a-z]{2,3}$/;
 
 /**
- * Normalizes an arbitrary language string to a canonical `KasstorLanguageTag`:
- * - Lowercases the base subtag.
- * - Uppercases the region (when present).
- * - Returns `undefined` if the base is not a supported `KasstorLanguageSubtag`.
+ * Canonicalizes an arbitrary language string to a `KasstorLanguageTag`:
+ * lowercases the base subtag, uppercases the region (when present), and
+ * returns `undefined` if the base subtag does not match the BCP47 base
+ * grammar (2–3 ASCII letters).
+ *
+ * Notes:
+ * - The base subtag is validated structurally only — the function does
+ *   NOT consult any host-configured "supported languages" list. Use
+ *   `isLanguageAvailable` for that.
+ * - Region content past the first dash is opaque: any non-empty string
+ *   is preserved (uppercased). A trailing dash with empty region
+ *   degrades to the bare base subtag.
  *
  * Examples:
- * - `"en"` → `"en"`
- * - `"EN"` → `"en"`
- * - `"en-us"` → `"en-US"`
- * - `"en-US"` → `"en-US"`
- * - `"klingon"` → `undefined`
+ * - `"en"`     → `"en"`
+ * - `"EN"`     → `"en"`
+ * - `"en-us"`  → `"en-US"`
+ * - `"en-"`    → `"en"`
+ * - `"nl-NL"`  → `"nl-NL"`
+ * - `"klingon"`→ `undefined`
  */
-export const normalizeTag = (input: string): KasstorLanguageTag | undefined => {
+export const normalizeTag = (
+  input: string
+): KasstorLanguageTag | undefined => {
   if (typeof input !== "string" || input.length === 0) {
     return undefined;
   }
 
   const dashIndex = input.indexOf("-");
-  const base = (dashIndex === -1 ? input : input.slice(0, dashIndex)).toLowerCase();
+  const base = (
+    dashIndex === -1 ? input : input.slice(0, dashIndex)
+  ).toLowerCase();
 
-  if (!ALL_SUPPORTED_LANGUAGE_SUBTAGS.has(base as KasstorLanguageSubtag)) {
+  if (!BASE_SUBTAG_REGEX.test(base)) {
     return undefined;
   }
 
@@ -31,9 +52,7 @@ export const normalizeTag = (input: string): KasstorLanguageTag | undefined => {
   }
 
   const region = input.slice(dashIndex + 1).toUpperCase();
-  if (region.length === 0) {
-    return base as KasstorLanguageSubtag;
-  }
-
-  return `${base as KasstorLanguageSubtag}-${region}`;
+  return region.length === 0
+    ? (base as KasstorLanguageSubtag)
+    : (`${base}-${region}` as KasstorLanguageSubtagWithRegion);
 };

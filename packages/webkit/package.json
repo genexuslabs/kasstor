@@ -59,14 +59,23 @@
       "development": "./dist/browser/development/array/index.js",
       "default": "./dist/browser/production/array/index.js"
     },
-    "./internationalization/all-supported-languages.js": {
+    "./internationalization/rtl-languages.js": {
       "node": {
-        "development": "./dist/node/development/internationalization/all-supported-languages.js",
-        "default": "./dist/node/production/internationalization/all-supported-languages.js"
+        "development": "./dist/node/development/internationalization/rtl-languages.js",
+        "default": "./dist/node/production/internationalization/rtl-languages.js"
       },
-      "types": "./dist/browser/development/internationalization/all-supported-languages.d.ts",
-      "development": "./dist/browser/development/internationalization/all-supported-languages.js",
-      "default": "./dist/browser/production/internationalization/all-supported-languages.js"
+      "types": "./dist/browser/development/internationalization/rtl-languages.d.ts",
+      "development": "./dist/browser/development/internationalization/rtl-languages.js",
+      "default": "./dist/browser/production/internationalization/rtl-languages.js"
+    },
+    "./internationalization/get-available-languages.js": {
+      "node": {
+        "development": "./dist/node/development/internationalization/get-available-languages.js",
+        "default": "./dist/node/production/internationalization/get-available-languages.js"
+      },
+      "types": "./dist/browser/development/internationalization/get-available-languages.d.ts",
+      "development": "./dist/browser/development/internationalization/get-available-languages.js",
+      "default": "./dist/browser/production/internationalization/get-available-languages.js"
     },
     "./internationalization/get-base-subtag.js": {
       "node": {

@@ -11,6 +11,9 @@ describe("[getLanguageFromUrl]", () => {
     { pathname: "/ja", expected: "ja" },
     { pathname: "/es/", expected: "es" },
     { pathname: "/zh/dashboard", expected: "zh" },
+    // 3-letter base subtags are valid per BCP47 §2.2.1.
+    { pathname: "/fil", expected: "fil" },
+    { pathname: "/haw/aloha", expected: "haw" },
     // Region-tagged variants (BCP47 with region subtag)
     { pathname: "/en-US", expected: "en-US" },
     { pathname: "/es-AR/foo", expected: "es-AR" },
@@ -44,7 +47,6 @@ describe("[getLanguageFromUrl]", () => {
     { pathname: "/home", description: "path without language segment" },
     { pathname: "/123/ab", description: "numeric first segment" },
     { pathname: "/e", description: "single letter" },
-    { pathname: "/eng", description: "three letters" },
     { pathname: "/EN", description: "uppercase two letters" },
     // Malformed region tags (single-char region, too-long region)
     { pathname: "/en-U", description: "region too short" },

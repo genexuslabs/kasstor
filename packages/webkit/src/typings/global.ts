@@ -26,6 +26,20 @@ declare global {
         availableLanguages?: Set<KasstorLanguageTag>;
 
         /**
+         * Base-subtag index derived from `availableLanguages`, populated by
+         * `applyI18nConfig` whenever the available set changes. Used by
+         * `isLanguageAvailable` to resolve wildcard-by-base lookups in O(1):
+         * a query `"es-AR"` matches when the index contains `"es"`, and a
+         * query `"es"` matches when the index contains the base of any
+         * region-tagged entry.
+         *
+         * Always present when `availableLanguages` is present (the two
+         * fields are kept in lockstep). When `availableLanguages` is
+         * `undefined`, this is `undefined` too.
+         */
+        availableBaseSubtags?: Set<KasstorLanguageSubtag>;
+
+        /**
          * Host-configured default language tag. Used as the final fallback
          * when no source can resolve to an available language. When
          * `undefined`, the static `DEFAULT_LANGUAGE` ("en") is used.

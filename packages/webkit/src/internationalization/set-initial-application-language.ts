@@ -1,8 +1,8 @@
 import { applyI18nConfig } from "./apply-i18n-config.js";
 import { getClientLanguage } from "./get-client-language.js";
 import { getLanguageFromUrl } from "./get-language-from-url.js";
-import { isLanguageAvailable } from "./is-language-available.js";
 import { normalizeTag } from "./normalize-tag.js";
+import { resolveAvailableLanguage } from "./resolve-available-language.js";
 import { setLanguage } from "./set-language.js";
 import { trackLanguageChangesWithForwardAndBackwardNavigation } from "./track-langauge-changes-with-forward-and-backward-navigation.js";
 import type { KasstorLanguageTag } from "./types";
@@ -83,10 +83,17 @@ export const setInitialApplicationLanguage = (options: {
   const raw = getLanguageFromUrl(pathname);
   const canonicalFromUrl = raw === null ? undefined : normalizeTag(raw);
 
+  // Run the URL tag through the same host-config rule as `localStorage` and
+  // `navigator.languages`: exact match preserved, otherwise narrowed to the
+  // declared base subtag. A URL outside the host's universe falls through
+  // to the rest of the client-language chain.
+  const resolvedFromUrl =
+    canonicalFromUrl === undefined
+      ? undefined
+      : resolveAvailableLanguage(canonicalFromUrl);
+
   const initialLanguage: KasstorLanguageTag =
-    canonicalFromUrl !== undefined && isLanguageAvailable(canonicalFromUrl)
-      ? canonicalFromUrl
-      : getClientLanguage();
+    resolvedFromUrl ?? getClientLanguage();
 
   kasstorWebkitI18n!.languageChangeCallback = languageChangeCallback;
   kasstorWebkitI18n!.locationChangeCallback = locationChangeCallback;

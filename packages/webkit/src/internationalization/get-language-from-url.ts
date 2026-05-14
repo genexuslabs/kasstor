@@ -1,11 +1,11 @@
-// Accepts a 2-letter base subtag and an optional region subtag of 2-8
-// alphanumeric characters (BCP47-style).
+// BCP47 §2.2.1: base subtag is 2 or 3 alphabetic chars. The region
+// portion accepts 2–8 alphanumerics (BCP47 region or script).
 const LANGUAGE_URL_PATTERN =
-  /^\/(?<lang>[a-z]{2}(?:-[A-Za-z0-9]{2,8})?)(?:\/.*)?$/;
+  /^\/(?<lang>[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})?)(?:\/.*)?$/;
 
 /**
  * Extracts the language tag from a pathname (e.g. `/es/home` → `"es"`,
- * `/es-AR/home` → `"es-AR"`).
+ * `/es-AR/home` → `"es-AR"`, `/fil/home` → `"fil"`).
  *
  * @param pathname - Path to parse; defaults to `window.location.pathname` in the browser.
  * @returns The first path segment when it matches the language pattern, or `null`.

@@ -1,7 +1,7 @@
 import { getLanguageFromLocalStorage } from "./get-and-set-language-in-local-storage.js";
 import { getLanguageFromUserPreferences } from "./get-language-from-user-preferences.js";
-import { isLanguageAvailable } from "./is-language-available.js";
 import { normalizeTag } from "./normalize-tag.js";
+import { resolveAvailableLanguage } from "./resolve-available-language.js";
 import { resolveDefaultLanguage } from "./resolve-default-language.js";
 import type { KasstorLanguageTag } from "./types";
 
@@ -11,9 +11,14 @@ import type { KasstorLanguageTag } from "./types";
  *
  * Behavior:
  * - In the browser: reads local storage first (only when the persisted value
- *   is valid and available), then `navigator.languages`, then falls back to
- *   the configured default language (or `"en"` when no default is configured).
+ *   resolves under the host's declared `availableLanguages`), then
+ *   `navigator.languages`, then falls back to the configured default
+ *   language (or `"en"` when no default is configured).
  * - On the server: returns the configured default language (or `"en"`).
+ *
+ * The persisted tag is run through `resolveAvailableLanguage` so the
+ * returned value always matches the host's declared form — e.g. a stored
+ * `"es-AR"` under host `["en", "es"]` resolves to `"es"`.
  *
  * @returns A supported BCP 47 language tag; never `null`.
  */
@@ -25,8 +30,11 @@ export const getClientLanguage = (): KasstorLanguageTag => {
   const fromStorage = getLanguageFromLocalStorage();
   if (fromStorage !== null) {
     const canonical = normalizeTag(fromStorage);
-    if (canonical !== undefined && isLanguageAvailable(canonical)) {
-      return canonical;
+    if (canonical !== undefined) {
+      const resolved = resolveAvailableLanguage(canonical);
+      if (resolved !== undefined) {
+        return resolved;
+      }
     }
   }
 
