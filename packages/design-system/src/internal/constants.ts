@@ -1,0 +1,1 @@
+export const THEME_LOAD_TIMEOUT = 10000;
