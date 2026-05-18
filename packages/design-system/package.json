@@ -1,6 +1,6 @@
 {
   "name": "@genexus/kasstor-design-system",
-  "version": "0.5.0",
+  "version": "0.1.0",
   "license": "Apache-2.0",
   "homepage": "https://github.com/genexuslabs/kasstor",
   "description": "Design-system foundation for Kasstor: global registry of design systems and a theme-loader that fetches, caches, and shares CSSStyleSheet bundles across components.",

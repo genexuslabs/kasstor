@@ -8,7 +8,7 @@
   "exclude": [
     "node_modules",
     "vite.config.ts",
-    "tests",
+    "src/**/tests/**",
     "src/testings/**.ts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",

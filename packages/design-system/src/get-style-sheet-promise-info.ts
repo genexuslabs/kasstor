@@ -1,12 +1,12 @@
 import { THEME_LOAD_TIMEOUT } from "./internal/constants";
-import { THEME_NAME_TO_PROMISE_MAPPING } from "./internal/store";
+import { getStyleSheetPromiseCache } from "./internal/store";
 import type { ThemePromiseResolver } from "./typings/internal-types";
 
 const clearPromiseInfoAfterCompletion = (themeName: string) =>
-  THEME_NAME_TO_PROMISE_MAPPING.delete(themeName);
+  getStyleSheetPromiseCache().delete(themeName);
 
 export const getThemePromiseInfoFromCache = (name: string): ThemePromiseResolver | undefined =>
-  THEME_NAME_TO_PROMISE_MAPPING.get(name);
+  getStyleSheetPromiseCache().get(name);
 
 export const getStyleSheetPromiseInfo = (
   name: string,
@@ -42,7 +42,7 @@ export const getStyleSheetPromiseInfo = (
       };
     }
   );
-  THEME_NAME_TO_PROMISE_MAPPING.set(name, promiseInfo as ThemePromiseResolver);
+  getStyleSheetPromiseCache().set(name, promiseInfo as ThemePromiseResolver);
 
   return promiseInfo as ThemePromiseResolver;
 };

@@ -12,13 +12,21 @@ const fetchStylesheetFromUrl = (url: string) =>
  *
  * This copy is necessary because the DOM style sheet is not a constructed
  * style sheet, so we can not adopt it into the DOM.
+ *
+ * Iteration uses an indexed `for` loop with a cached `length` over
+ * `cssRules` (instead of `for…of`) to avoid the iterator-protocol overhead
+ * on `CSSRuleList`. See the benchmark in
+ * `packages/core/src/decorators/Component/tests/constructed-stylesheet-from-dom.bench.e2e.ts`
+ * for the full comparison.
  */
 const createConstructedStyleSheetFromDomStyleSheet = (domStyleSheet: CSSStyleSheet) => {
   const result = new CSSStyleSheet();
+  const rules = domStyleSheet.cssRules;
+  const len = rules.length;
   let css = "";
 
-  for (const r of domStyleSheet.cssRules) {
-    css += r.cssText;
+  for (let i = 0; i < len; i++) {
+    css += rules[i].cssText;
   }
 
   result.replaceSync(css);

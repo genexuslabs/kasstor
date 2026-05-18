@@ -9,6 +9,7 @@ const loggerInfo = logger.info;
 
 const packagePathToPackageName = {
   "packages/core/": "@genexus/kasstor-core",
+  "packages/design-system/": "@genexus/kasstor-design-system",
   "packages/insights/": "@genexus/kasstor-insights",
   "packages/signals/": "@genexus/kasstor-signals",
   "packages/webkit/": "@genexus/kasstor-webkit"
@@ -21,6 +22,7 @@ export const defineDistributionConfiguration = (options: {
   peerDependencies: string[];
   packagePath:
     | "packages/core/"
+    | "packages/design-system/"
     | "packages/insights/"
     | "packages/signals/"
     | "packages/webkit/";

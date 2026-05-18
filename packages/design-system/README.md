@@ -17,16 +17,31 @@ core when you need runtime-loaded design-system themes.
 | API                                   | Description                                                                                                                                                                                                        |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `registerDesignSystem(name, options)` | Registers a design system in the global registry. `options.bundleLoaders` is a map from bundle name → URL. Already-registered systems and bundle loaders are not overwritten (a warning is logged in development). |
-| `clearDesignSystemState()`            | Clears every piece of global state held by the design system: registered systems, bundle loaders, cached stylesheets, and in-flight theme promises. Intended for tests and HMR reset scenarios.                    |
 
 ### Theme loader
 
-| API                                                                                         | Description                                                                                                                                                                                     |
-| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `fetchStyleSheet(name, timeout?)`                                                           | Resolves the bundle URL from the registry, fetches the CSS, builds a `CSSStyleSheet`, caches it, and resolves the waiters. Default `timeout` is `10000` ms.                                     |
-| `getLoadedStylesheet(name)`                                                                 | Returns the cached `CSSStyleSheet` for a theme name, or `undefined` if the theme has not been loaded yet.                                                                                       |
-| `setThemeMappingWithStyleSheet(name, sheet)`                                                | Caches a `CSSStyleSheet` under `name` and resolves any pending waiters. Useful when the stylesheet is produced outside the standard fetch flow.                                                 |
-| `getThemePromiseInfo(name, timeout?)` (subpath: `./theme-loader/get-theme-promise-info.js`) | Low-level helper that returns (or creates) the promise associated with a theme name. Mostly used by `kst-theme` internals and by tests that need to pre-warm the promise with a custom timeout. |
+| API                                          | Description                                                                                                                                                                                     |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fetchStyleSheet(name, timeout?)`            | Resolves the bundle URL from the registry, fetches the CSS, builds a `CSSStyleSheet`, caches it, and resolves the waiters. Default `timeout` is `10000` ms.                                     |
+| `getLoadedStyleSheet(name)`                  | Returns the cached `CSSStyleSheet` for a theme name, or `undefined` if the theme has not been loaded yet.                                                                                       |
+| `setStyleSheetMapping(name, sheet)`          | Caches a `CSSStyleSheet` under `name` and resolves any pending waiters. Useful when the stylesheet is produced outside the standard fetch flow.                                                 |
+| `getStyleSheetPromiseInfo(name, timeout?)`   | Low-level helper that returns (or creates) the promise associated with a theme name. Mostly used by `kst-theme` internals and by tests that need to pre-warm the promise with a custom timeout. |
+
+### Resetting state (tests, HMR)
+
+There is intentionally no public reset API. The package's global state is
+held under `globalThis` so that test suites and HMR boundaries can clear it
+without going through a destructive public function:
+
+```ts
+globalThis.geneXusDesignSystemsRegistry?.clear();
+globalThis.geneXusDesignSystemsLoaders?.clear();
+globalThis.geneXusDesignSystemsStyleSheets?.clear();
+globalThis.geneXusDesignSystemsStyleSheetPromises?.clear();
+```
+
+Importing anything from `@genexus/kasstor-design-system` brings the type
+declarations for these globals into scope.
 
 ## Installation
 

@@ -1,3 +1,4 @@
+import type { ThemePromiseResolver } from "./internal-types";
 import type { DesignSystemBundleUrl, DesignSystemRegistry } from "./types";
 
 declare global {
@@ -30,7 +31,25 @@ declare global {
    * ```
    */
   var geneXusDesignSystemsLoaders: Map<string, DesignSystemBundleUrl> | undefined;
+
+  /**
+   * Global cache of `CSSStyleSheet` instances keyed by theme name. Populated
+   * by `setStyleSheetMapping` once a bundle resolves successfully, and read
+   * by `getLoadedStyleSheet`.
+   *
+   * Exposed on `globalThis` so test suites and HMR boundaries can clear it
+   * (`?.clear()`) without going through a dedicated reset API.
+   */
+  var geneXusDesignSystemsStyleSheets: Map<string, CSSStyleSheet> | undefined;
+
+  /**
+   * Global cache of in-flight `getStyleSheetPromiseInfo` entries keyed by
+   * theme name. Used to dedupe concurrent fetches for the same theme.
+   *
+   * Exposed on `globalThis` so test suites and HMR boundaries can clear it
+   * (`?.clear()`) without going through a dedicated reset API.
+   */
+  var geneXusDesignSystemsStyleSheetPromises: Map<string, ThemePromiseResolver> | undefined;
 }
 
 export {};
-

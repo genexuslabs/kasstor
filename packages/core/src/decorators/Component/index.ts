@@ -86,7 +86,7 @@ export const Component = <
       }
 
       console.warn(
-        `The tag name "${tag}" is already defined by the class "${existing.name}". The current tag won't be redefined by the class "${target.name}" and the "Component" decorator implementation will be ignored.
+        `[@genexus/kasstor-core | Decorator Component] The tag name "${tag}" is already defined by the class "${existing.name}". The current tag won't be redefined by the class "${target.name}" and the "Component" decorator implementation will be ignored.
 In some cases, this error can happen due to HMR (Hot Module Replacement) issues.`
       );
 
@@ -123,7 +123,7 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
 
       if (hasGlobalStylesWhenNotUsingShadow) {
         console.warn(
-          `You can safely use normal styles instead of globalStyles in the @Component decorator for the "${tag}" element, because the element doesn't have Shadow DOM.`
+          `[@genexus/kasstor-core | Decorator Component] You can safely use normal styles instead of globalStyles in the @Component decorator for the "${tag}" element, because the element doesn't have Shadow DOM.`
         );
       }
     }

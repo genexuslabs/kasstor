@@ -1,5 +1,5 @@
 import { getStyleSheetPromiseInfo } from "./get-style-sheet-promise-info";
-import { THEME_NAME_TO_STYLE_SHEET_MAPPING } from "./internal/store";
+import { getStyleSheetCache } from "./internal/store";
 
 /**
  * Set the style sheet mapping for the given name with the loaded CSS style sheet.
@@ -15,7 +15,7 @@ import { THEME_NAME_TO_STYLE_SHEET_MAPPING } from "./internal/store";
 export const setStyleSheetMapping = (name: string, loadedCssStyleSheet: CSSStyleSheet) => {
   const promiseInfo = getStyleSheetPromiseInfo(name);
 
-  THEME_NAME_TO_STYLE_SHEET_MAPPING.set(name, loadedCssStyleSheet);
+  getStyleSheetCache().set(name, loadedCssStyleSheet);
 
   promiseInfo.promiseResolver({ name, styleSheet: loadedCssStyleSheet });
 };
