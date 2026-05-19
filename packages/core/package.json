@@ -38,8 +38,15 @@
     "test:e2e": "playwright install && vitest --project browser"
   },
   "peerDependencies": {
+    "@genexus/kasstor-design-system": "^0.1.0",
     "@genexus/kasstor-webkit": "^0.5.0",
     "lit": "^3.3.2"
+  },
+  "devDependencies": {
+    "@genexus/vite-plugin-kasstor": "^0.6.0",
+    "@lit-labs/rollup-plugin-minify-html-literals": "^0.1.1",
+    "@rollup/plugin-typescript": "~12.3.0",
+    "sass": "~1.86.3"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
@@ -53,6 +60,15 @@
       "types": "./dist/browser/development/index.d.ts",
       "development": "./dist/browser/development/index.js",
       "default": "./dist/browser/production/index.js"
+    },
+    "./components/theme.js": {
+      "node": {
+        "development": "./dist/node/development/components/theme/theme.lit.js",
+        "default": "./dist/node/production/components/theme/theme.lit.js"
+      },
+      "types": "./dist/browser/development/components/theme/theme.lit.d.ts",
+      "development": "./dist/browser/development/components/theme/theme.lit.js",
+      "default": "./dist/browser/production/components/theme/theme.lit.js"
     },
     "./decorators/component.js": {
       "node": {
@@ -89,7 +105,8 @@
       "types": "./dist/browser/development/bootstrapping/register-custom-element-loaders/index.d.ts",
       "development": "./dist/browser/development/bootstrapping/register-custom-element-loaders/index.js",
       "default": "./dist/browser/production/bootstrapping/register-custom-element-loaders/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   }
 }
 
