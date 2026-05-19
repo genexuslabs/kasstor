@@ -73,6 +73,15 @@
       "development": "./dist/browser/development/get-style-sheet-promise-info.js",
       "default": "./dist/browser/production/get-style-sheet-promise-info.js"
     },
+    "./get-style-sheet-url.js": {
+      "node": {
+        "development": "./dist/node/development/get-style-sheet-url.js",
+        "default": "./dist/node/production/get-style-sheet-url.js"
+      },
+      "types": "./dist/browser/development/get-style-sheet-url.d.ts",
+      "development": "./dist/browser/development/get-style-sheet-url.js",
+      "default": "./dist/browser/production/get-style-sheet-url.js"
+    },
     "./set-style-sheet-mapping.js": {
       "node": {
         "development": "./dist/node/development/set-style-sheet-mapping.js",

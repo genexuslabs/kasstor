@@ -1,12 +1,12 @@
 import { getStyleSheetPromiseInfo } from "./get-style-sheet-promise-info";
+import { getStyleSheetUrl } from "./get-style-sheet-url";
 import { THEME_LOAD_TIMEOUT } from "./internal/constants";
-import { getDesignSystemLoaders } from "./internal/get-design-system-registry";
-import { getStylesheetFromUrl } from "./internal/get-stylesheet-when-from-url";
+import { getStylesheetFromUrl } from "./internal/get-stylesheet-from-url";
 import { setStyleSheetMapping } from "./set-style-sheet-mapping";
 
 export const fetchStyleSheet = (name: string, timeout = THEME_LOAD_TIMEOUT) => {
   const promiseInfo = getStyleSheetPromiseInfo(name, timeout);
-  const bundleUrl = getDesignSystemLoaders().get(name);
+  const bundleUrl = getStyleSheetUrl(name);
 
   if (bundleUrl === undefined || promiseInfo.isDownloading) {
     return;
