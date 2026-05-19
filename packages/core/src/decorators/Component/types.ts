@@ -40,6 +40,13 @@ export type ComponentOptions<LibraryPrefix extends `${string}-`, Metadata> = {
    */
   shadow?: ComponentShadowRootOptions | false;
 
+  /**
+   * Shared asynchronous styles that are loaded from the design system registry
+   * and adopted into the component's shadow root or the root node of the
+   * component if it doesn't have a shadow root.
+   */
+  sharedDesignSystemStyles?: string[];
+
   styles?: string;
 };
 

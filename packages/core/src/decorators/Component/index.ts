@@ -6,6 +6,7 @@ import {
 import { LitElement, unsafeCSS, type PropertyValues } from "lit";
 
 import { DEV_MODE, IS_SERVER } from "../../development-flags.js";
+import { applySharedDesignSystemStyles } from "./apply-shared-design-system-styles.js";
 import { componentWasServerSideRendered } from "./component-was-server-side-rendered.js";
 import { register, replaceConstructorWithProxy } from "./hmr-for-component.js";
 import type { ComponentOptions } from "./types";
@@ -38,6 +39,10 @@ const KASSTOR_METADATA_SYMBOL = Symbol("kasstor-component-metadata");
  * `Object.getOwnPropertySymbols(proto).find(s => s.description === "kasstor-global-stylesheet")`.
  */
 const KASSTOR_GLOBAL_STYLESHEET_SYMBOL = Symbol("kasstor-global-stylesheet");
+
+const KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_SYMBOL = Symbol(
+  "kasstor-shared-design-system-stylesheet"
+);
 
 /**
  * Class decorator factory that defines the decorated class as a custom element.
@@ -178,6 +183,7 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
     }
 
     prototype[KASSTOR_METADATA_SYMBOL] = options.metadata;
+    prototype[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_SYMBOL] = options.sharedDesignSystemStyles;
 
     // We won't implement the define method of the custom elements protocol,
     // since at the time of creating the Component decorator, there are not
@@ -231,6 +237,7 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
 
   protected [KASSTOR_GLOBAL_STYLESHEET_SYMBOL]: CSSStyleSheet | undefined;
   protected [KASSTOR_METADATA_SYMBOL]: Metadata | undefined;
+  protected [KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_SYMBOL]: string[] | undefined;
 
   constructor() {
     super();
@@ -268,6 +275,10 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
       willUpdateOriginalImplementation.call(this, changedProperties);
     };
 
+    // If there are shared design system styles, we inline them as a link when the component is SSRed
+    const sharedDesignSystemStylesheet = this[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_SYMBOL];
+    applySharedDesignSystemStyles(this, sharedDesignSystemStylesheet, this.#serverSideRendered);
+
     // TODO: Add an additional flag for checking when the vite server is on
     // HMR support for dev mode only
     if (DEV_MODE && !IS_SERVER && globalThis.kasstorCoreHmrEnabled) {
@@ -276,7 +287,7 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
   }
 
   /**
-   * `true` is the component was rendered in the server
+   * `true` if the component was server side rendered.
    */
   protected get wasServerSideRendered(): boolean {
     return this.#serverSideRendered;
