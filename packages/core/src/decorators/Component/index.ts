@@ -29,6 +29,17 @@ const DEFAULT_SHADOW_ROOT_DELEGATE_FOCUS = false satisfies ShadowRootInit["deleg
 const KASSTOR_METADATA_SYMBOL = Symbol("kasstor-component-metadata");
 
 /**
+ * Symbol used to store the global stylesheet attached to the Kasstor component defined in the `@Component`
+ * decorator.
+ *
+ * Not exported so it's not part of the public API.
+ *
+ * **Note**: It's still discoverable via
+ * `Object.getOwnPropertySymbols(proto).find(s => s.description === "kasstor-global-stylesheet")`.
+ */
+const KASSTOR_GLOBAL_STYLESHEET_SYMBOL = Symbol("kasstor-global-stylesheet");
+
+/**
  * Class decorator factory that defines the decorated class as a custom element.
  *
  * @category Decorator
@@ -163,7 +174,7 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
     if (!IS_SERVER && stylesToAttach) {
       const stylesheet = new CSSStyleSheet();
       stylesheet.replaceSync(stylesToAttach);
-      (prototype as any).globalStyles = stylesheet;
+      prototype[KASSTOR_GLOBAL_STYLESHEET_SYMBOL] = stylesheet;
     }
 
     prototype[KASSTOR_METADATA_SYMBOL] = options.metadata;
@@ -218,8 +229,8 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
 export abstract class KasstorElement<Metadata = unknown> extends LitElement {
   #serverSideRendered: boolean;
 
-  protected globalStyles: CSSStyleSheet | undefined;
-  [KASSTOR_METADATA_SYMBOL]: Metadata | undefined;
+  protected [KASSTOR_GLOBAL_STYLESHEET_SYMBOL]: CSSStyleSheet | undefined;
+  protected [KASSTOR_METADATA_SYMBOL]: Metadata | undefined;
 
   constructor() {
     super();
@@ -285,8 +296,8 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
   override connectedCallback(): void {
     super.connectedCallback();
 
-    if (this.globalStyles) {
-      addGlobalStyleSheet(this, this.globalStyles);
+    if (this[KASSTOR_GLOBAL_STYLESHEET_SYMBOL]) {
+      addGlobalStyleSheet(this, this[KASSTOR_GLOBAL_STYLESHEET_SYMBOL]);
     }
 
     // Register instance globally for dev-time tooling (HMR, style replacement)
@@ -375,8 +386,8 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
   override disconnectedCallback(): void {
     super.disconnectedCallback();
 
-    if (this.globalStyles) {
-      removeGlobalStyleSheet(this, this.globalStyles);
+    if (this[KASSTOR_GLOBAL_STYLESHEET_SYMBOL]) {
+      removeGlobalStyleSheet(this, this[KASSTOR_GLOBAL_STYLESHEET_SYMBOL]);
     }
 
     // Unregister instance globally for dev-time tooling (HMR, style replacement)
