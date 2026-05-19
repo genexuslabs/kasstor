@@ -37,7 +37,14 @@ const KASSTOR_METADATA_SYMBOL = Symbol("kasstor-component-metadata");
  * @remarks
  * - The decorated class must extend {@link KasstorElement} (not `LitElement` directly).
  * - If `tag` is already defined by another constructor, the decorator does not
- *   redefine it and a console warning is emitted (except when HMR has replaced the component).
+ *   redefine it and a console warning is emitted, except in two cases:
+ *   - Under client-side HMR (the new class replaces the previous one via the
+ *     HMR machinery wired up by `@genexus/vite-plugin-kasstor`).
+ *   - During dev-time SSR (`DEV_MODE && IS_SERVER`), where the `@lit-labs/ssr`
+ *     `CustomElementRegistry` is a process-wide singleton: the previous
+ *     registration is evicted and the freshly-edited class is registered
+ *     so subsequent SSR renders use the new template. See
+ *     `docs/decorators.md → Dev-time SSR re-registration`.
  *
  * @example
  * ```ts
@@ -85,12 +92,29 @@ export const Component = <
         return existing as any;
       }
 
-      console.warn(
-        `[@genexus/kasstor-core | Decorator Component] The tag name "${tag}" is already defined by the class "${existing.name}". The current tag won't be redefined by the class "${target.name}" and the "Component" decorator implementation will be ignored.
-In some cases, this error can happen due to HMR (Hot Module Replacement) issues.`
-      );
+      // Dev SSR fall-through: when Vite/Astro re-execute a component module
+      // after a file edit, `@lit-labs/ssr`'s singleton `customElements`
+      // registry still holds the OLD class. Evict the previous entry from
+      // the dom-shim's internal map so the `customElements.define` call
+      // below registers the freshly-edited class — otherwise the next SSR
+      // render would emit stale HTML and the client would throw a
+      // "Hydration value mismatch" from `@lit-labs/ssr-client`.
+      const shimDefinitions =
+        DEV_MODE && IS_SERVER
+          ? (customElements as unknown as { __definitions?: Map<string, unknown> }).__definitions
+          : undefined;
 
-      return existing as any;
+      if (shimDefinitions instanceof Map) {
+        shimDefinitions.delete(tag);
+        // Fall through to `customElements.define(tag, target)` below.
+      } else {
+        console.warn(
+          `[@genexus/kasstor-core | Decorator Component] The tag name "${tag}" is already defined by the class "${existing.name}". The current tag won't be redefined by the class "${target.name}" and the "Component" decorator implementation will be ignored.
+In some cases, this error can happen due to HMR (Hot Module Replacement) issues.`
+        );
+
+        return existing as any;
+      }
     }
 
     // Modify the class without creating a new one
