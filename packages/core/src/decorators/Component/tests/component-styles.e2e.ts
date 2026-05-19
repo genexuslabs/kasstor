@@ -18,13 +18,33 @@ function countSheet(sheets: readonly CSSStyleSheet[], target: CSSStyleSheet): nu
   return n;
 }
 
-/** Reads the CSSStyleSheet currently stored on the component prototype. */
-function prototypeGlobalStyles(ctor: typeof KasstorElement): CSSStyleSheet | undefined {
-  return (ctor.prototype as unknown as { globalStyles?: CSSStyleSheet }).globalStyles;
+/**
+ * Constructor type that any KasstorElement subclass is assignable to. We
+ * can't use `typeof KasstorElement` directly here because it's generic in
+ * `Metadata` and concrete subclasses are not — TS rejects the call sites
+ * with TS2345.
+ */
+type KasstorElementClass = abstract new () => KasstorElement;
+
+/**
+ * Reads the CSSStyleSheet stored on the component prototype by the `@Component`
+ * decorator. The slot is a private `Symbol` (so it's not part of the public
+ * API); the symbol's JSDoc documents that tests/tooling can find it via
+ * `Object.getOwnPropertySymbols(proto).find(s => s.description === "kasstor-global-stylesheet")`.
+ */
+function prototypeGlobalStyles(ctor: KasstorElementClass): CSSStyleSheet | undefined {
+  const proto = (ctor as unknown as { prototype: object }).prototype;
+  const symbol = Object.getOwnPropertySymbols(proto).find(
+    s => s.description === "kasstor-global-stylesheet"
+  );
+  if (!symbol) {
+    return undefined;
+  }
+  return (proto as Record<symbol, CSSStyleSheet | undefined>)[symbol];
 }
 
 /** Reads the static `styles` placed on a LitElement subclass by the decorator. */
-function staticStyles(ctor: typeof KasstorElement): unknown {
+function staticStyles(ctor: KasstorElementClass): unknown {
   return (ctor as unknown as { styles?: unknown }).styles;
 }
 
@@ -428,9 +448,16 @@ describe("[Decorator]", () => {
           expect(elements.length).toBe(3);
 
           const protoSheet = prototypeGlobalStyles(StylesRefcount)!;
+          // The slot lives on the prototype under a private Symbol; each instance
+          // sees it via prototype-chain lookup, so every instance returns the
+          // same reference.
+          const slot = Object.getOwnPropertySymbols(
+            Object.getPrototypeOf(elements[0]) as object
+          ).find(s => s.description === "kasstor-global-stylesheet")!;
           for (const el of elements) {
-            // The instance reads the inherited slot — same reference for everyone
-            const instanceSheet = (el as unknown as { globalStyles?: CSSStyleSheet }).globalStyles;
+            const instanceSheet = (el as unknown as Record<symbol, CSSStyleSheet | undefined>)[
+              slot
+            ];
             expect(instanceSheet).toBe(protoSheet);
           }
         });
