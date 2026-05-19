@@ -25,14 +25,11 @@
 // several components at once, editing the same component multiple times in
 // a row, and editing a non-component file that a component imports.
 
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { resolve } from "node:path";
+import { kasstor } from "@genexus/vite-plugin-kasstor";
 import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { createServer, type ViteDevServer } from "vite";
-
-// Import from the built output so the runtime `readFile` calls in
-// `src/index.ts` (which expect `*.js` siblings emitted by tsc) resolve.
-import { kasstor } from "../dist/index.js";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Paths & fixture content factories

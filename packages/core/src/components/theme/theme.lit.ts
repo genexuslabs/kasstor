@@ -269,7 +269,7 @@ declare global {
    *   contains a `success` array with the names of the themes that loaded
    *   successfully and a `failed` array with the names of the themes that
    *   failed (timed out or registry miss).
-   *
+   *   
    *   Bubbles: `true`. Composed: `false` — the event does not cross shadow DOM
    *   boundaries.
    */
