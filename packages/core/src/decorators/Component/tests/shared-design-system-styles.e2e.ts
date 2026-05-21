@@ -480,23 +480,54 @@ describe("[Decorator]", () => {
           expect(document.adoptedStyleSheets).not.toContain(sheet);
         });
 
-        test("a download that resolves WHILE the host is disconnected: the sheet still ends up on the host's shadow root (the gate keeps the first render pending)", async () => {
+        test("a download that resolves WHILE the host is disconnected — disconnect happens BEFORE scheduleUpdate has even started: the sheet ends up on the host's shadow root after reconnect (Lit defers the whole update until reconnect)", async () => {
           const host = setupHost(uniqueTag(), {
             sharedDesignSystemStyles: ["csr-shadow-resolve-while-disconnected"]
           });
           const parent = host.parentElement!;
 
-          // Disconnect BEFORE the bundle resolves. The first render is gated
-          // on the promise, so it is still pending.
+          // Synchronous disconnect — no microtask runs in between, so Lit
+          // defers the update entirely. This exercises the "Lit pauses the
+          // whole update while disconnected" path.
           host.remove();
 
           const sheet = makeStyleSheet("p { color: rgb(200, 50, 50); }");
           setStyleSheetMapping("csr-shadow-resolve-while-disconnected", sheet);
 
-          // Reconnect — the first scheduleUpdate, still parked on the
-          // promise, resumes and adopts the sheet on the shadow root.
           parent.appendChild(host);
           await host.updateComplete;
+          expect(shadowAdoptedSheets(host)).toContain(sheet);
+          expect(shadowAdoptedSheets(host).filter(s => s === sheet)).toHaveLength(1);
+        });
+
+        test("disconnect happens WHILE scheduleUpdate is parked on the joined promise; the promise then resolves while disconnected — on reconnect, the sheet still lands on the shadow root exactly once", async () => {
+          // Different from the previous test: here we let the first
+          // `scheduleUpdate` actually start and `await` the joined promise
+          // BEFORE the host is disconnected. Then the bundle resolves
+          // while the host is detached. For shadow DOM this must work
+          // because adoption on `shadowRoot.adoptedStyleSheets` does not
+          // depend on the host being in the document — the shadow root
+          // lives on the element itself.
+          const host = setupHost(uniqueTag(), {
+            sharedDesignSystemStyles: ["csr-shadow-park-then-disconnect"]
+          });
+          const parent = host.parentElement!;
+
+          // Let scheduleUpdate run to its `await` of the joined promise.
+          await flushMicroAndMacroTasks();
+
+          host.remove();
+
+          const sheet = makeStyleSheet("p { color: rgb(11, 22, 33); }");
+          setStyleSheetMapping("csr-shadow-park-then-disconnect", sheet);
+
+          // Give the .then chain a turn to run the adoption against the
+          // (still-alive) shadow root.
+          await flushMicroAndMacroTasks();
+
+          parent.appendChild(host);
+          await host.updateComplete;
+
           expect(shadowAdoptedSheets(host)).toContain(sheet);
           expect(shadowAdoptedSheets(host).filter(s => s === sheet)).toHaveLength(1);
         });
@@ -994,6 +1025,156 @@ describe("[Decorator]", () => {
           // Removing the second one finally releases it.
           hostB.remove();
           expect(document.adoptedStyleSheets).not.toContain(sheet);
+        });
+
+        test("a download that resolves WHILE `scheduleUpdate` is parked on the joined promise — and the host is disconnected at that moment — the sheet must end up on the host's root once the host reconnects", async () => {
+          // Light DOM relies on the webkit `addGlobalStyleSheet` helper,
+          // which is a no-op while the element is detached
+          // (`getRootNode()` doesn't return a `Document` / `ShadowRoot`).
+          // The first render is gated by `scheduleUpdate`'s await; if the
+          // joined promise settles while the host is disconnected, the
+          // helper bails. The runtime MUST re-attempt adoption when the
+          // host reconnects — otherwise the styles would be silently lost.
+          const host = setupHost(uniqueTag(), {
+            shadow: false,
+            sharedDesignSystemStyles: ["csr-light-resolve-while-disconnected"]
+          });
+          const parent = host.parentElement!;
+
+          // Let scheduleUpdate start and park on the joined promise. Without
+          // this, Lit just defers the entire update until reconnect and the
+          // "promise resolves while disconnected" edge case is never reached.
+          await flushMicroAndMacroTasks();
+
+          host.remove();
+
+          const sheet = makeStyleSheet(".light-disconnect {}");
+          setStyleSheetMapping("csr-light-resolve-while-disconnected", sheet);
+
+          // While disconnected, no document-level adoption can happen.
+          await flushMicroAndMacroTasks();
+          expect(document.adoptedStyleSheets).not.toContain(sheet);
+
+          // Reconnect — the runtime must re-attempt adoption now that the
+          // host has a real root, and the first render must complete with
+          // the sheet on `document.adoptedStyleSheets`.
+          parent.appendChild(host);
+          await host.updateComplete;
+
+          expect(document.adoptedStyleSheets).toContain(sheet);
+          // Exactly one entry — no duplicate from the disconnected attempt.
+          expect(document.adoptedStyleSheets.filter(s => s === sheet)).toHaveLength(1);
+        });
+
+        test("many disconnect/reconnect cycles stay ref-count balanced (no leak, no missing adoption)", async () => {
+          const sheet = makeStyleSheet(".light-cycle {}");
+          setStyleSheetMapping("csr-light-cycle-bundle", sheet);
+
+          const host = setupHost(uniqueTag(), {
+            shadow: false,
+            sharedDesignSystemStyles: ["csr-light-cycle-bundle"]
+          });
+          const parent = host.parentElement!;
+          await host.updateComplete;
+          expect(document.adoptedStyleSheets).toContain(sheet);
+
+          for (let i = 0; i < 5; i++) {
+            host.remove();
+            expect(document.adoptedStyleSheets).not.toContain(sheet);
+            parent.appendChild(host);
+            await host.updateComplete;
+            expect(document.adoptedStyleSheets).toContain(sheet);
+            // Exactly one adoption — webkit's WeakSet guards against
+            // counting two references for the same `(element, sheet)`
+            // pair, so the ref count stays balanced.
+            expect(
+              document.adoptedStyleSheets.filter(s => s === sheet)
+            ).toHaveLength(1);
+          }
+        });
+      });
+
+      // ===================================================================
+      // First connectedCallback contract — adoption is deferred to
+      // scheduleUpdate. The first connect MUST NOT eagerly adopt the
+      // shared sheets, because Lit's `connectedCallback` cannot return a
+      // Promise that gates the first render; that responsibility belongs
+      // to `scheduleUpdate`.
+      // ===================================================================
+      describe("[first connectedCallback contract] no eager adoption on the first connect", () => {
+        test("shadow DOM cache-hit: at the end of the first connectedCallback, the shadow root (if Lit has created it yet) does NOT contain the shared sheet — adoption happens later, inside scheduleUpdate", async () => {
+          const sheet = makeStyleSheet(".shadow-first-connect {}");
+          setStyleSheetMapping("csr-shadow-first-connect-no-adopt", sheet);
+
+          let snapshotAtConnect: readonly CSSStyleSheet[] | undefined;
+
+          const tag = uniqueTag();
+          class C extends KasstorElement {
+            override connectedCallback() {
+              super.connectedCallback();
+              // Capture the shadow root state AFTER super's
+              // connectedCallback has run end-to-end. The contract is:
+              // the FIRST connect must not have adopted yet.
+              snapshotAtConnect = this.shadowRoot
+                ? [...this.shadowRoot.adoptedStyleSheets]
+                : undefined;
+            }
+            override render() {
+              return html`<p data-original>client</p>`;
+            }
+          }
+          Component({
+            tag: tag as `${string}-${string}`,
+            sharedDesignSystemStyles: ["csr-shadow-first-connect-no-adopt"]
+          })(C as never);
+
+          const host = document.createElement(tag) as KasstorElement;
+          document.body.appendChild(host);
+          createdHosts.push(host);
+
+          // If Lit created the shadow root by connect time, the shared
+          // sheet must NOT yet be in adoptedStyleSheets. (In current Lit
+          // the renderRoot is lazy and the shadowRoot is created on first
+          // update, so `snapshotAtConnect` is typically `undefined`.)
+          if (snapshotAtConnect !== undefined) {
+            expect(snapshotAtConnect).not.toContain(sheet);
+          }
+
+          await host.updateComplete;
+          expect(shadowAdoptedSheets(host)).toContain(sheet);
+        });
+
+        test("light DOM cache-hit: `document.adoptedStyleSheets` does NOT contain the shared sheet at the end of the first connectedCallback — adoption happens later, inside scheduleUpdate", async () => {
+          const sheet = makeStyleSheet(".light-first-connect {}");
+          setStyleSheetMapping("csr-light-first-connect-no-adopt", sheet);
+
+          let docSheetsAtConnect: readonly CSSStyleSheet[] = [];
+
+          const tag = uniqueTag();
+          class C extends KasstorElement {
+            override connectedCallback() {
+              super.connectedCallback();
+              docSheetsAtConnect = [...document.adoptedStyleSheets];
+            }
+            override render() {
+              return html`<p data-original>client</p>`;
+            }
+          }
+          Component({
+            tag: tag as `${string}-${string}`,
+            shadow: false,
+            sharedDesignSystemStyles: ["csr-light-first-connect-no-adopt"]
+          })(C as never);
+
+          const host = document.createElement(tag) as KasstorElement;
+          document.body.appendChild(host);
+          createdHosts.push(host);
+
+          // The first connect must NOT eagerly call `addGlobalStyleSheet`.
+          expect(docSheetsAtConnect).not.toContain(sheet);
+
+          await host.updateComplete;
+          expect(document.adoptedStyleSheets).toContain(sheet);
         });
       });
 

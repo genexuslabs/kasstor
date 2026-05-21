@@ -6,7 +6,6 @@ import {
 import { LitElement, unsafeCSS, type PropertyValues } from "lit";
 
 import { DEV_MODE, IS_SERVER } from "../../development-flags.js";
-import { adoptSharedStyleSheets } from "./adopt-shared-style-sheets.js";
 import { applySharedDesignSystemStylesForSSR } from "./apply-shared-design-system-styles-for-ssr.js";
 import { componentWasServerSideRendered } from "./component-was-server-side-rendered.js";
 import { getStylesheetsAndPromisesForSharedStyles } from "./get-styles-sheets-and-promises-for-shared-styles.js";
@@ -271,6 +270,7 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
  */
 export abstract class KasstorElement<Metadata = unknown> extends LitElement {
   #serverSideRendered: boolean;
+  #sharedStylesWereAdopted: boolean = false;
 
   protected [KASSTOR_GLOBAL_STYLESHEET_SYMBOL]: CSSStyleSheet | undefined;
   protected [KASSTOR_METADATA_SYMBOL]: Metadata | undefined;
@@ -341,6 +341,56 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
   }
 
   /**
+   * Waits for the shared style sheets to be loaded and adopts them into the
+   * component's shadow root or the root node of the component if it doesn't
+   * have a shadow root.
+   */
+  #waitAndAdoptSharedStyleSheets = (): Promise<void> | undefined => {
+    if (this.#sharedStylesWereAdopted || this.#serverSideRendered) {
+      return;
+    }
+    const promiseToLoadStyleSheets = this[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_PROMISES_SYMBOL];
+
+    if (promiseToLoadStyleSheets === undefined) {
+      this.#adoptSharedStyleSheets();
+      return;
+    }
+    return promiseToLoadStyleSheets.then(this.#adoptSharedStyleSheets);
+  };
+
+  #adoptSharedStyleSheets = () => {
+    const stylesheets = this[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEETS_SYMBOL];
+
+    if (stylesheets === undefined) {
+      return undefined;
+    }
+
+    if (this.renderRoot instanceof ShadowRoot) {
+      this.renderRoot.adoptedStyleSheets.push(...stylesheets);
+      this.#sharedStylesWereAdopted = true;
+      return;
+    }
+
+    // If the component is not connected to the DOM, we can't adopt the global,
+    // stylesheets, as the root node is not available. We do this early return
+    // to avoid marking the stylesheets as adopted prematurely.
+    if (!this.isConnected) {
+      return;
+    }
+    stylesheets.forEach(stylesheet => addGlobalStyleSheet(this, stylesheet));
+    this.#sharedStylesWereAdopted = true;
+  };
+
+  #removeSharedStyleSheets = () => {
+    if (this.#sharedStylesWereAdopted && !(this.renderRoot instanceof ShadowRoot)) {
+      this[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEETS_SYMBOL]?.forEach(stylesheet =>
+        removeGlobalStyleSheet(this, stylesheet)
+      );
+      this.#sharedStylesWereAdopted = false;
+    }
+  };
+
+  /**
    * `true` if the component was server side rendered.
    */
   protected get wasServerSideRendered(): boolean {
@@ -363,6 +413,10 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
 
     if (this[KASSTOR_GLOBAL_STYLESHEET_SYMBOL]) {
       addGlobalStyleSheet(this, this[KASSTOR_GLOBAL_STYLESHEET_SYMBOL]);
+    }
+
+    if (this.hasUpdated) {
+      this.#waitAndAdoptSharedStyleSheets();
     }
 
     // Register instance globally for dev-time tooling (HMR, style replacement)
@@ -412,13 +466,13 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
 
     // At this point, since the connectedCallback method has been called, we can
     // assume that the component has been rendered and is attached to the DOM.
-    adoptSharedStyleSheets(
-      this.renderRoot,
-      this.hasUpdated,
-      this.#serverSideRendered,
-      this[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_PROMISES_SYMBOL],
-      this[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEETS_SYMBOL]
-    );
+    if (!this.hasUpdated) {
+      const mustWaitForPromiseResolution = this.#waitAndAdoptSharedStyleSheets();
+
+      if (mustWaitForPromiseResolution !== undefined) {
+        await mustWaitForPromiseResolution;
+      }
+    }
 
     // Render the element, as super.update ends up calling render()
     super.scheduleUpdate();
@@ -464,6 +518,8 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
     if (this[KASSTOR_GLOBAL_STYLESHEET_SYMBOL]) {
       removeGlobalStyleSheet(this, this[KASSTOR_GLOBAL_STYLESHEET_SYMBOL]);
     }
+
+    this.#removeSharedStyleSheets();
 
     // Unregister instance globally for dev-time tooling (HMR, style replacement)
     // Only in dev mode
