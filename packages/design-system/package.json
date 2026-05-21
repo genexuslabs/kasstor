@@ -31,7 +31,9 @@
     "build:prod:node": "vite build --mode node-production",
     "build.types": "tsc --project tsconfig-types.json",
     "watch": "bun run clear.dist && concurrently 'bun build:dev:browser --watch' 'bun build:dev:node --watch' 'bun build:prod:browser --watch' 'bun build:prod:node --watch' 'bun dev.types --watch'",
-    "clear.dist": "bun run ./scripts/remove-dist.ts"
+    "clear.dist": "bun run ./scripts/remove-dist.ts",
+    "test": "vitest",
+    "test.ci": "vitest run"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
@@ -103,4 +105,3 @@
     "./package.json": "./package.json"
   }
 }
-

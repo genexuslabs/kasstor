@@ -68,6 +68,17 @@ jobs:
         run: bun dev
         working-directory: "packages/webkit"
 
+      # We need to pre-build design-system, because the kasstor-core package
+      # imports from `@genexus/kasstor-design-system/*` and that package
+      # resolves through its built `dist/`. Without this step, the core build
+      # (and any package that transitively imports core) fails to resolve the
+      # design-system entry points.
+      # TODO: We should only build it when the package is kasstor-core or
+      # kasstor-signals.
+      - name: Pre-build design-system
+        run: bun dev
+        working-directory: "packages/design-system"
+
       # We need to pre-build core, because the kasstor-signals package needs it.
       # TODO: We should only build it when the package is kasstor-signals
       - name: Pre-build core

@@ -11,6 +11,7 @@ jobs:
     outputs:
       build-changed: ${{ steps.check-build.outputs.version-changed }}
       core-changed: ${{ steps.check-core.outputs.version-changed }}
+      design-system-changed: ${{ steps.check-design-system.outputs.version-changed }}
       insights-changed: ${{ steps.check-insights.outputs.version-changed }}
       signals-changed: ${{ steps.check-signals.outputs.version-changed }}
       vite-plugin-changed: ${{ steps.check-vite-plugin.outputs.version-changed }}
@@ -36,6 +37,13 @@ jobs:
           PACKAGE_NAME=@genexus/kasstor-core
           LATEST_CORE_VERSION=$(curl -s https://registry.npmjs.org/$PACKAGE_NAME | jq -r '.["dist-tags"].latest')
           echo "latest_core_version=$LATEST_CORE_VERSION" >> $GITHUB_ENV
+
+      - name: Get the latest Kasstor Design System version
+        id: get-latest-design-system-version
+        run: |
+          PACKAGE_NAME=@genexus/kasstor-design-system
+          LATEST_DESIGN_SYSTEM_VERSION=$(curl -s https://registry.npmjs.org/$PACKAGE_NAME | jq -r '.["dist-tags"].latest')
+          echo "latest_design_system_version=$LATEST_DESIGN_SYSTEM_VERSION" >> $GITHUB_ENV
 
       - name: Get the latest Kasstor Insights version
         id: get-latest-insights-version
@@ -69,6 +77,7 @@ jobs:
         run: |
           echo "The latest Kasstor Build version is ${{ env.latest_build_version }}"
           echo "The latest Kasstor Core version is ${{ env.latest_core_version }}"
+          echo "The latest Kasstor Design System version is ${{ env.latest_design_system_version }}"
           echo "The latest Kasstor Insights version is ${{ env.latest_insights_version }}"
           echo "The latest Kasstor Signals version is ${{ env.latest_signals_version }}"
           echo "The latest Vite Plugin Kasstor version is ${{ env.latest_vite_plugin_version }}"
@@ -91,6 +100,18 @@ jobs:
         run: |
           CURRENT_VERSION=$(jq -r .version packages/core/package.json)
           PREVIOUS_VERSION=${{ env.latest_core_version }}
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "Version changed!"
+            echo "version-changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "version-changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if `design-system` version changed
+        id: check-design-system
+        run: |
+          CURRENT_VERSION=$(jq -r .version packages/design-system/package.json)
+          PREVIOUS_VERSION=${{ env.latest_design_system_version }}
           if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
             echo "Version changed!"
             echo "version-changed=true" >> $GITHUB_OUTPUT
@@ -164,6 +185,16 @@ jobs:
       cache: false
       publish: true
       package: "packages/core"
+    secrets: inherit
+
+  publish-design-system:
+    needs: check-version
+    if: needs.check-version.outputs.design-system-changed == 'true'
+    uses: ./.github/workflows/common-ci-checks.yml
+    with:
+      cache: false
+      publish: true
+      package: "packages/design-system"
     secrets: inherit
 
   publish-insights:

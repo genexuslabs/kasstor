@@ -23,6 +23,13 @@ jobs:
       publish: false
       package: "packages/core"
 
+  design-system:
+    uses: ./.github/workflows/common-ci-checks.yml
+    with:
+      cache: true
+      publish: false
+      package: "packages/design-system"
+
   insights:
     uses: ./.github/workflows/common-ci-checks.yml
     with:
