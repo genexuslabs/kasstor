@@ -30,7 +30,7 @@ export const applySharedDesignSystemStylesForSSR = (
     const styleSheetUrl = getStyleSheetUrl(sharedDesignSystemStylesheet[i]);
     if (styleSheetUrl === undefined) {
       throw new Error(
-        `[@genexus/kasstor-core | KasstorElement] The shared design system style "${sharedDesignSystemStylesheet[i]}" is not registered when registering the "${component.tagName.toLowerCase()}" component. The component will not be able to use it.\nYou must call first the "registerDesignSystem" function of the "@genexus/kasstor-design-system" package to register the style.`
+        `[@genexus/kasstor-core | KasstorElement] The shared design system style "${sharedDesignSystemStylesheet[i]}" is not registered when registering the "${component.tagName.toLowerCase()}" component. The component will not be able to use it.\nYou must call first the "registerDesignSystem" function of the "@genexus/kasstor-design-system" package to register the style. If you are calling the function, ensure it is called before the component is registered (for example, see the order of the TypeScript imports).`
       );
     } else {
       styleSheetUrls.push(styleSheetUrl);
