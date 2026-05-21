@@ -82,6 +82,15 @@
       "development": "./dist/browser/development/get-style-sheet-url.js",
       "default": "./dist/browser/production/get-style-sheet-url.js"
     },
+    "./register-design-system.js": {
+      "node": {
+        "development": "./dist/node/development/register-design-system.js",
+        "default": "./dist/node/production/register-design-system.js"
+      },
+      "types": "./dist/browser/development/register-design-system.d.ts",
+      "development": "./dist/browser/development/register-design-system.js",
+      "default": "./dist/browser/production/register-design-system.js"
+    },
     "./set-style-sheet-mapping.js": {
       "node": {
         "development": "./dist/node/development/set-style-sheet-mapping.js",
