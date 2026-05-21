@@ -15,10 +15,9 @@ type ComponentWorkaround = KasstorElement & { render: () => unknown };
  * @param sharedDesignSystemStylesheet - The shared design system stylesheet to apply to the component.
  * @param wasServerSideRendered - Whether the component was server side rendered.
  */
-export const applySharedDesignSystemStyles = (
+export const applySharedDesignSystemStylesForSSR = (
   component: KasstorElement,
-  sharedDesignSystemStylesheet: string[] | undefined,
-  wasServerSideRendered: boolean
+  sharedDesignSystemStylesheet: string[] | undefined
 ) => {
   if (sharedDesignSystemStylesheet === undefined) {
     return;
@@ -48,21 +47,13 @@ export const applySharedDesignSystemStyles = (
    * Template cache for the shared design system styles, so we can skip diffing
    * the template when updating the component, which improves the performance.
    */
-  const sharedStylesTemplateCache = wasServerSideRendered
-    ? guard([], () =>
-        styleSheetUrls.map(url => html`<link rel="stylesheet" crossorigin href=${url} />`)
-      )
-    : guard([], () => html`<ch-theme .model=${styleSheetUrls}></ch-theme>`);
+  const sharedStylesTemplateCache = guard([], () =>
+    styleSheetUrls.map(url => html`<link rel="stylesheet" crossorigin href=${url} />`)
+  );
 
   // Monkey-patch the render method to add the shared design system styles in the template
   (component as ComponentWorkaround).render = function () {
     return html`${sharedStylesTemplateCache}${renderOriginalImplementation.call(this)}`;
   };
-
-  const waitForTheChThemeToBeDownloaded = !wasServerSideRendered;
-
-  if (waitForTheChThemeToBeDownloaded) {
-    import("../../components/theme/theme.lit.js");
-  }
 };
 
