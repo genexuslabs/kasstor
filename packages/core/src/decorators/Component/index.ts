@@ -418,6 +418,9 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
       addGlobalStyleSheet(this, this[KASSTOR_GLOBAL_STYLESHEET_SYMBOL]);
     }
 
+    // If the component has been moved and it doesn't have a shadow root, we
+    // need to re-attach the shared style sheets in the new root node, as the
+    // disconnectedCallback method was previously called and the stylesheets were removed.
     if (this.hasUpdated) {
       this.#waitAndAdoptSharedStyleSheets();
     }
