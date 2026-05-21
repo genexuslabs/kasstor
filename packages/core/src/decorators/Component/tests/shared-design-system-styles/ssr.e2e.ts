@@ -176,6 +176,11 @@ describe("[Decorator]", () => {
           // The tag name is mentioned (lowercased) so the developer can
           // grep their codebase to find the offending component.
           expect(captured!.message).toMatch(new RegExp(tag));
+          // The message also points the reader at the most common cause:
+          // calling `registerDesignSystem` AFTER the component has already
+          // been registered (i.e. wrong import order). Pin the actionable
+          // hint down — losing it would silently degrade the DX.
+          expect(captured!.message).toMatch(/before the component is registered/i);
         });
 
         test("partial registration: an unregistered bundle still surfaces an error even when other bundles in the list ARE registered", async () => {
