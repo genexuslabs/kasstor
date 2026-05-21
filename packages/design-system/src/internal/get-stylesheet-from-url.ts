@@ -1,3 +1,5 @@
+import { IS_SERVER } from "../development-flags";
+
 const fetchStylesheetFromUrl = (url: string) =>
   fetch(url)
     .then(response => response.text())
@@ -35,7 +37,9 @@ const createConstructedStyleSheetFromDomStyleSheet = (domStyleSheet: CSSStyleShe
 };
 
 export const getStylesheetFromUrl = (url: string) => {
-  const linkRef = document.head.querySelector(`link[href='${url}']`) as HTMLLinkElement;
+  const linkRef = IS_SERVER // For safety reasons, we don't try to fetch the stylesheet from the URL in the server side
+    ? undefined
+    : (document.head.querySelector(`link[href='${url}']`) as HTMLLinkElement);
 
   // If the link is not found in the head, fetch the stylesheet from the URL
   if (!linkRef) {

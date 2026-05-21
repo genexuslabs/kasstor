@@ -164,7 +164,10 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
         target.styles = unsafeCSS(styles);
       }
 
-      if (sharedDesignSystemStyles) {
+      // Don't try to fetch the shared design system stylesheets in the server side,
+      // because the stylesheets are not available and we render them as a html
+      // link tag in the component template.
+      if (!IS_SERVER && sharedDesignSystemStyles) {
         const { successfulThemes, promises } =
           getStylesheetsAndPromisesForSharedStyles(sharedDesignSystemStyles);
 
