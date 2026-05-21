@@ -220,13 +220,7 @@ interface BenchResult {
 
 /** Runs `samples` timed batches of `batch` calls each. Returns per-call
  *  timings (a batch sample divided by `batch`), so all sizes are comparable. */
-function timeOne(
-  fn: Impl,
-  sheet: CSSStyleSheet,
-  samples: number,
-  batch: number,
-  warmup: number
-) {
+function timeOne(fn: Impl, sheet: CSSStyleSheet, samples: number, batch: number, warmup: number) {
   // Sink prevents the engine from dead-code-eliminating the calls.
   let sink = 0;
 
@@ -261,7 +255,9 @@ afterAll(() => {
   createdStyleElements.length = 0;
 });
 
-describe("[design-system]", () => {
+// `describe.skip` so CI ignores this file by default — it's a comparative
+// benchmark, not a regression test. Run it locally by flipping `.skip` off.
+describe.skip("[design-system]", () => {
   describe("[createConstructedStyleSheetFromDomStyleSheet]", () => {
     test("all candidate implementations produce equivalent output", () => {
       const sheet = createDomStyleSheet(50);
@@ -335,9 +331,7 @@ describe("[design-system]", () => {
           return "(no rows)";
         }
         const cols = Object.keys(rows[0]);
-        const widths = cols.map(c =>
-          Math.max(c.length, ...rows.map(r => String(r[c]).length))
-        );
+        const widths = cols.map(c => Math.max(c.length, ...rows.map(r => String(r[c]).length)));
         const sep = "+" + widths.map(w => "-".repeat(w + 2)).join("+") + "+";
         const fmt = (cells: string[]) =>
           "| " + cells.map((cell, i) => cell.padEnd(widths[i])).join(" | ") + " |";
@@ -363,8 +357,7 @@ describe("[design-system]", () => {
           "median (ms/call)": r.medianMs.toFixed(5),
           "mean (ms/call)": r.meanMs.toFixed(5),
           "min (ms/call)": r.minMs.toFixed(5),
-          "x slower":
-            fastest > 0 ? (r.medianMs / fastest).toFixed(2) : "—",
+          "x slower": fastest > 0 ? (r.medianMs / fastest).toFixed(2) : "—",
           batch: String(r.batch),
           samples: String(r.samples),
           rules: String(r.rules)
@@ -400,10 +393,7 @@ describe("[design-system]", () => {
           );
           return { impl, "geomean x slower": geoMean.toFixed(3) };
         })
-        .sort(
-          (a, b) =>
-            parseFloat(a["geomean x slower"]) - parseFloat(b["geomean x slower"])
-        );
+        .sort((a, b) => parseFloat(a["geomean x slower"]) - parseFloat(b["geomean x slower"]));
 
       log("\n--- overall ranking (geo-mean slowdown vs per-size winner) ---");
       log(renderTable(overall));

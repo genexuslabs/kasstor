@@ -147,6 +147,39 @@ export function flushMicroAndMacroTasks(): Promise<void> {
   return new Promise<void>(resolve => setTimeout(resolve, 0));
 }
 
+/**
+ * Runs `fn` while listening for a global `error` event, returning the captured
+ * `Error` if one fires (or `undefined` if no error was reported).
+ *
+ * Browsers swallow constructor exceptions during a synchronous custom-element
+ * upgrade (the spec mandates that `customElements.define` reports the error
+ * to the page via `window.onerror` instead of re-throwing). This helper lets
+ * the SSR fail-fast tests observe that the constructor did throw without
+ * relying on `expect.toThrow`, which only sees thrown values that propagate
+ * up the JS call stack.
+ *
+ * The default-action of the error event is suppressed so the test reporter
+ * does not also flag it as an unhandled error.
+ */
+export async function captureUpgradeError(fn: () => void): Promise<Error | undefined> {
+  let captured: Error | undefined;
+  const handler = (event: ErrorEvent) => {
+    captured = event.error instanceof Error ? event.error : new Error(event.message);
+    event.preventDefault();
+  };
+  window.addEventListener("error", handler);
+  try {
+    fn();
+    // The error event is dispatched synchronously during the upgrade in
+    // current Chromium/WebKit/Gecko, but flush a microtask + macrotask just
+    // in case some future browser defers it.
+    await flushMicroAndMacroTasks();
+  } finally {
+    window.removeEventListener("error", handler);
+  }
+  return captured;
+}
+
 /** Removes every host tracked by `trackHost` / `setupHost` during the test. */
 export function cleanupHosts(): void {
   for (const host of createdHosts) {

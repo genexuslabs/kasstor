@@ -163,37 +163,42 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
       if (styles) {
         target.styles = unsafeCSS(styles);
       }
+    }
 
-      // Don't try to fetch the shared design system stylesheets in the server side,
-      // because the stylesheets are not available and we render them as a html
-      // link tag in the component template.
-      if (!IS_SERVER && sharedDesignSystemStyles) {
-        const { successfulThemes, promises } =
-          getStylesheetsAndPromisesForSharedStyles(sharedDesignSystemStyles);
+    // Don't try to fetch the shared design system stylesheets in the server side,
+    // because the stylesheets are not available and we render them as a html
+    // link tag in the component template.
+    //
+    // The CSR processing must run regardless of `shadow`: for shadow DOM
+    // components the sheets are pushed onto `renderRoot.adoptedStyleSheets`,
+    // for light DOM components they are routed through `addGlobalStyleSheet`
+    // onto the host's root node — both paths are driven from
+    // `#waitAndAdoptSharedStyleSheets`, which reads these prototype slots.
+    if (!IS_SERVER && sharedDesignSystemStyles) {
+      const { successfulThemes, promises } =
+        getStylesheetsAndPromisesForSharedStyles(sharedDesignSystemStyles);
 
-        prototype[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEETS_SYMBOL] = successfulThemes;
+      prototype[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEETS_SYMBOL] = successfulThemes;
 
-        if (promises.length > 0) {
-          prototype[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_PROMISES_SYMBOL] = new Promise(
-            resolve =>
-              Promise.all(promises).then(cssStyleSheets => {
-                for (let i = 0; i < cssStyleSheets.length; i++) {
-                  const styleSheet = cssStyleSheets[i];
+      if (promises.length > 0) {
+        prototype[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_PROMISES_SYMBOL] = new Promise(resolve =>
+          Promise.all(promises).then(cssStyleSheets => {
+            for (let i = 0; i < cssStyleSheets.length; i++) {
+              const styleSheet = cssStyleSheets[i];
 
-                  if (styleSheet) {
-                    successfulThemes.push(styleSheet);
-                  }
-                }
+              if (styleSheet) {
+                successfulThemes.push(styleSheet);
+              }
+            }
 
-                // TODO: Add a test to validate this case.
-                // Clear the reference for component that will be rendered in the future, so we
-                // don't delay the rendering by a microtask.
-                prototype[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_PROMISES_SYMBOL] = undefined;
+            // TODO: Add a test to validate this case.
+            // Clear the reference for component that will be rendered in the future, so we
+            // don't delay the rendering by a microtask.
+            prototype[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_PROMISES_SYMBOL] = undefined;
 
-                resolve();
-              })
-          );
-        }
+            resolve();
+          })
+        );
       }
     }
 
@@ -536,4 +541,3 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
     }
   }
 }
-

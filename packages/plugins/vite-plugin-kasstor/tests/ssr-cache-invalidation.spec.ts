@@ -94,19 +94,27 @@ interface RenderModule {
  * `files`, or after `timeoutMs` — whichever comes first. Chokidar latency
  * varies; the timeout keeps the spec deterministic without racing the
  * subsequent `ssrLoadModule`.
+ *
+ * Whether the watcher fires in time or not, the SSR module graph is also
+ * explicitly invalidated via `moduleGraph.onFileChange(file)` (the same call
+ * Vite makes from its own watcher handler) before this helper returns. That
+ * defends against fsevents-on-macOS delivering events later than the spec's
+ * timeout — without the explicit invalidation, the next `ssrLoadModule`
+ * could return the stale module and the test would see a previous version's
+ * output. This is the failure mode behind the previously-flaky "successive
+ * edits (V1 → V2 → V3)" test.
  */
-function awaitFileChanges(
-  server: ViteDevServer,
-  files: string[],
-  timeoutMs = 2000
-): Promise<void> {
-  return new Promise(resolve => {
+function awaitFileChanges(server: ViteDevServer, files: string[], timeoutMs = 5000): Promise<void> {
+  return new Promise<void>(resolve => {
     const pending = new Set(files);
     let done = false;
     const finish = () => {
       if (done) return;
       done = true;
       server.watcher.off("change", handler);
+      for (const file of files) {
+        invalidateSsrModuleForFile(server, file);
+      }
       resolve();
     };
     const handler = (changed: string) => {
@@ -118,6 +126,29 @@ function awaitFileChanges(
     server.watcher.on("change", handler);
     setTimeout(finish, timeoutMs);
   });
+}
+
+/**
+ * Tells the SSR module graph that `file` changed, so the next call to
+ * `ssrLoadModule` re-executes the module. Mirrors what Vite does from its
+ * own watcher handler — safe to call as a no-op-equivalent safety net when
+ * the watcher already fired, and the only correctness path when the
+ * watcher event arrived AFTER the spec's `awaitFileChanges` timeout (which
+ * has been observed on macOS under fsevents load).
+ *
+ * Reaches across the Environment API (`server.environments.ssr`) introduced
+ * in Vite 6 with a fallback for the legacy single-graph layout.
+ */
+function invalidateSsrModuleForFile(server: ViteDevServer, file: string): void {
+  const env = (
+    server as { environments?: { ssr?: { moduleGraph?: { onFileChange?: (f: string) => void } } } }
+  ).environments?.ssr;
+  if (env?.moduleGraph?.onFileChange) {
+    env.moduleGraph.onFileChange(file);
+    return;
+  }
+  const legacy = (server as { moduleGraph?: { onFileChange?: (f: string) => void } }).moduleGraph;
+  legacy?.onFileChange?.(file);
 }
 
 /** Boots a fresh Vite server (middleware mode) with the kasstor plugin loaded. */

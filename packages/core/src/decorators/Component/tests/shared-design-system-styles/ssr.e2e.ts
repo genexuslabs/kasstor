@@ -15,6 +15,7 @@ import { registerDesignSystem, setStyleSheetMapping } from "@genexus/kasstor-des
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { cleanup } from "vitest-browser-lit";
 import {
+  captureUpgradeError,
   cleanupHosts,
   clearDesignSystemState,
   setupHost,
@@ -145,70 +146,84 @@ describe("[Decorator]", () => {
       // behaviour surfaces the misconfiguration immediately so an SSR build
       // that forgot to register a design system breaks loudly instead of
       // silently emitting a degraded page.
+      //
+      // Implementation note: the browser's custom-element upgrade machinery
+      // does NOT propagate constructor exceptions up through
+      // `customElements.define` — instead the error is reported to the
+      // window via the global `error` event and the element is marked as
+      // "failed to upgrade". `setupHost` therefore returns normally even
+      // when the SSR constructor throws; the tests below assert on the
+      // captured error event instead of using `expect.toThrow`.
+      //
+      // For the symmetric Node-side coverage (where `new Ctor()` IS
+      // synchronous and DOES propagate), see `ssr-server-guards.spec.ts`.
       // ===================================================================
-      describe("[SSR fail-fast] unregistered bundles throw during element upgrade", () => {
-        test("an unregistered bundle throws — the error message names both the missing bundle and the host tag, and points the developer at `registerDesignSystem`", () => {
-          expect(() =>
-            setupHost(uniqueTag(), {
+      describe("[SSR fail-fast] unregistered bundles surface as a constructor error during element upgrade", () => {
+        test("an unregistered bundle produces an error event whose message names both the missing bundle and the host tag, and mentions `registerDesignSystem`", async () => {
+          const tag = uniqueTag();
+          const captured = await captureUpgradeError(() => {
+            setupHost(tag, {
               sharedDesignSystemStyles: ["ssr-edge-unregistered"],
               ssrShadowHtml: "<span data-ssr-placeholder></span>"
-            })
-          ).toThrow(/ssr-edge-unregistered/);
-        });
-
-        test("the thrown error mentions `registerDesignSystem` so the fix is obvious", () => {
-          let caught: unknown;
-          try {
-            setupHost(uniqueTag(), {
-              sharedDesignSystemStyles: ["ssr-edge-points-to-fix"],
-              ssrShadowHtml: "<span data-ssr-placeholder></span>"
             });
-          } catch (err) {
-            caught = err;
-          }
-          expect(caught).toBeInstanceOf(Error);
-          expect((caught as Error).message).toMatch(/registerDesignSystem/);
+          });
+
+          expect(captured, "no error event was reported during the SSR upgrade").toBeInstanceOf(
+            Error
+          );
+          expect(captured!.message).toMatch(/ssr-edge-unregistered/);
+          expect(captured!.message).toMatch(/registerDesignSystem/);
+          // The tag name is mentioned (lowercased) so the developer can
+          // grep their codebase to find the offending component.
+          expect(captured!.message).toMatch(new RegExp(tag));
         });
 
-        test("partial registration: any unregistered bundle still throws, even if other bundles in the list ARE registered", () => {
+        test("partial registration: an unregistered bundle still surfaces an error even when other bundles in the list ARE registered", async () => {
           registerDesignSystem("ds-ssr-partial", {
             bundleLoaders: { "ssr-partial-known": "/styles/ssr-partial-known.css" }
           });
 
-          expect(() =>
+          const captured = await captureUpgradeError(() => {
             setupHost(uniqueTag(), {
               sharedDesignSystemStyles: ["ssr-partial-known", "ssr-partial-missing"],
               ssrShadowHtml: "<span data-ssr-placeholder></span>"
-            })
-          ).toThrow(/ssr-partial-missing/);
+            });
+          });
+
+          expect(captured).toBeInstanceOf(Error);
+          expect(captured!.message).toMatch(/ssr-partial-missing/);
         });
 
-        test("CSR (no pre-populated shadow root) does NOT throw on an unregistered bundle — the gate is on the joined Promise.all, which resolves silently with `undefined` after the timeout", async () => {
+        test("CSR (no pre-populated shadow root) does NOT trigger the fail-fast — the gate is on the joined Promise.all, which resolves silently with `undefined` after the timeout", async () => {
           // The SSR throw lives in `applySharedDesignSystemStylesForSSR`,
           // which only runs when `componentWasServerSideRendered(this)`
           // returns true. CSR (no pre-populated shadow root) takes the
           // pending-promise path and the host stays usable while the bundle
           // is unreachable — only the styles end up missing.
-          expect(() =>
+          const captured = await captureUpgradeError(() => {
             setupHost(uniqueTag(), {
               sharedDesignSystemStyles: ["ssr-edge-csr-no-throw"]
-            })
-          ).not.toThrow();
+            });
+          });
+          expect(captured).toBeUndefined();
         });
 
-        test("setStyleSheetMapping called BEFORE registering the bundle in `registerDesignSystem`: SSR still throws because the registry URL is what determines the <link> tag's href", () => {
+        test("`setStyleSheetMapping` called BEFORE registering the bundle in `registerDesignSystem`: SSR still fails because the registry URL is what determines the `<link>` tag's href", async () => {
           // setStyleSheetMapping populates the in-memory style-sheet cache
           // (for CSR cache hits) but does NOT register a URL — so the SSR
           // path, which depends on `getStyleSheetUrl`, still cannot resolve
-          // the bundle and must throw.
+          // the bundle.
           setStyleSheetMapping("ssr-edge-mapping-only", new CSSStyleSheet());
 
-          expect(() =>
+          const captured = await captureUpgradeError(() => {
             setupHost(uniqueTag(), {
               sharedDesignSystemStyles: ["ssr-edge-mapping-only"],
               ssrShadowHtml: "<span data-ssr-placeholder></span>"
-            })
-          ).toThrow(/ssr-edge-mapping-only/);
+            });
+          });
+
+          expect(captured).toBeInstanceOf(Error);
+          expect(captured!.message).toMatch(/ssr-edge-mapping-only/);
         });
       });
     });
