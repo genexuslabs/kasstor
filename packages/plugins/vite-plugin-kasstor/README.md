@@ -18,6 +18,8 @@ Vite plugin that wires **@genexus/kasstor-build** and **@genexus/kasstor-insight
   - [How it works](#how-it-works)
   - [Limitations](#limitations)
 
+- [Server-side rendering](#server-side-rendering)
+
 - [Build integration](#build-integration)
 
 - [Performance insights](#performance-insights)
@@ -32,6 +34,7 @@ Vite plugin that wires **@genexus/kasstor-build** and **@genexus/kasstor-insight
 |---------|-------------|
 | [Plugin options](#configuration) | `KasstorPluginOptions`, `includedPaths`, `excludedPaths`, `hmr`, `insights`, `fileGeneration`. |
 | [HMR](#hmr) | How component and style hot reload works; limitations. |
+| [Server-side rendering](#server-side-rendering) | How this plugin coexists with `@lit-labs/ssr` and the dev-SSR re-registration in `@genexus/kasstor-core`. |
 | [Build integration](#build-integration) | Per-component types, readmes, exported types, library summary. |
 | [Performance insights](#performance-insights) | Visual overlay for re-render counts; inject via `insights: true`. |
 | [Compatibility](#compatibility) | Vite, kasstor-core, kasstor-build, kasstor-insights, Node.js versions. |
@@ -53,6 +56,8 @@ npm i -D @genexus/vite-plugin-kasstor
 - **Build-time automation** — Runs library analysis at build start; can generate per-component types, readmes, and exported types for the library (driven by `fileGeneration` and path options).
 
 - **Optional performance insights** — In development, can inject the performance-scan component from `@genexus/kasstor-insights` so you can measure and inspect metrics.
+
+- **Seamless dev SSR** — works hand-in-hand with `@genexus/kasstor-core`'s `@Component` decorator (in `DEV_MODE && IS_SERVER` mode) so that editing a component file during `vite dev` is reflected on the next SSR render without restarting the server and without triggering `@lit-labs/ssr-client`'s `Hydration value mismatch` error. See [Server-side rendering](#server-side-rendering) below.
 
 ## Quick start
 
@@ -216,6 +221,19 @@ For the shape of **`fileGeneration`** and other **KasstorBuildOptions** fields, 
 - Changing a **transitive** SCSS file (e.g. file B imported by file A, where the component imports A) does not trigger a style refresh for that component.
 
 - Only **direct** SCSS imports from the component module are tracked for style HMR.
+
+## Server-side rendering
+
+When you pair this plugin with `@lit-labs/ssr` (directly via a Vite middleware, or transitively through Astro / any other framework that runs Vite under the hood), edits to `@Component`-decorated files are reflected on the next SSR render without restarting the dev server.
+
+**How it fits together:**
+
+- **Vite (any version 6+)** already invalidates its SSR module graph internally on every file change, so the offending module re-executes on the next `ssrLoadModule` call. **This plugin doesn't add anything on top of that** — Vite handles the module-cache side of the problem natively.
+- **`@genexus/kasstor-core`** handles the part that's specific to Lit: `@lit-labs/ssr` installs `globalThis.customElements` as a process-wide singleton, so a re-executed module would otherwise hit the `@Component` decorator's "tag already defined" early-return and the SSR renderer would keep emitting the previous version's HTML — triggering `@lit-labs/ssr-client`'s `Hydration value mismatch: Unexpected TemplateResult rendered to part` on the freshly-loaded client. The decorator's `DEV_MODE && IS_SERVER` branch evicts the previous shim registration so the new class wins. See [`docs/decorators.md` → Dev-time SSR re-registration](https://github.com/genexuslabs/kasstor/blob/main/packages/core/docs/decorators.md#dev-time-ssr-re-registration) on the core package.
+
+In other words: install this plugin, add `@lit-labs/ssr` to your dev pipeline, and dev SSR + hydration just works — no extra config on the plugin side, and the only thing carrying the fix is the core decorator itself.
+
+> A working reference setup is available under `packages/ssr-playground` in this repo: a tiny Vite + `@lit-labs/ssr` + `@lit-labs/ssr-client` playground with one Kasstor component, the `?hydrate=true` gate, and `bun run dev` / `bun run preview` scripts.
 
 ## Build integration
 

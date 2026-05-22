@@ -1,0 +1,107 @@
+{
+  "name": "@genexus/kasstor-design-system",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/genexuslabs/kasstor",
+  "description": "Design-system foundation for Kasstor: global registry of design systems and a theme-loader that fetches, caches, and shares CSSStyleSheet bundles across components.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/genexuslabs/kasstor.git"
+  },
+  "keywords": [
+    "design system",
+    "lit",
+    "web components"
+  ],
+  "main": "./dist/browser/production/index.js",
+  "module": "./dist/browser/production/index.js",
+  "jsnext:main": "./dist/browser/production/index.js",
+  "types": "./dist/browser/development/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "dev": "bun dev.types && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun dev.types'",
+    "dev.types": "tsc --project tsconfig-types.json",
+    "build": "tsc --noEmit && bun run clear.dist && concurrently 'bun build:dev:browser' 'bun build:dev:node' 'bun build:prod:browser' 'bun build:prod:node' 'bun build.types'",
+    "build:dev:browser": "vite build --mode browser-development",
+    "build:dev:node": "vite build --mode node-development",
+    "build:prod:browser": "vite build --mode browser-production",
+    "build:prod:node": "vite build --mode node-production",
+    "build.types": "tsc --project tsconfig-types.json",
+    "watch": "bun run clear.dist && concurrently 'bun build:dev:browser --watch' 'bun build:dev:node --watch' 'bun build:prod:browser --watch' 'bun build:prod:node --watch' 'bun dev.types --watch'",
+    "clear.dist": "bun run ./scripts/remove-dist.ts",
+    "test": "vitest",
+    "test.ci": "vitest run"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
+  },
+  "exports": {
+    ".": {
+      "node": {
+        "development": "./dist/node/development/index.js",
+        "default": "./dist/node/production/index.js"
+      },
+      "types": "./dist/browser/development/index.d.ts",
+      "development": "./dist/browser/development/index.js",
+      "default": "./dist/browser/production/index.js"
+    },
+    "./fetch-style-sheet.js": {
+      "node": {
+        "development": "./dist/node/development/fetch-style-sheet.js",
+        "default": "./dist/node/production/fetch-style-sheet.js"
+      },
+      "types": "./dist/browser/development/fetch-style-sheet.d.ts",
+      "development": "./dist/browser/development/fetch-style-sheet.js",
+      "default": "./dist/browser/production/fetch-style-sheet.js"
+    },
+    "./get-loaded-style-sheet.js": {
+      "node": {
+        "development": "./dist/node/development/get-loaded-style-sheet.js",
+        "default": "./dist/node/production/get-loaded-style-sheet.js"
+      },
+      "types": "./dist/browser/development/get-loaded-style-sheet.d.ts",
+      "development": "./dist/browser/development/get-loaded-style-sheet.js",
+      "default": "./dist/browser/production/get-loaded-style-sheet.js"
+    },
+    "./get-style-sheet-promise-info.js": {
+      "node": {
+        "development": "./dist/node/development/get-style-sheet-promise-info.js",
+        "default": "./dist/node/production/get-style-sheet-promise-info.js"
+      },
+      "types": "./dist/browser/development/get-style-sheet-promise-info.d.ts",
+      "development": "./dist/browser/development/get-style-sheet-promise-info.js",
+      "default": "./dist/browser/production/get-style-sheet-promise-info.js"
+    },
+    "./get-style-sheet-url.js": {
+      "node": {
+        "development": "./dist/node/development/get-style-sheet-url.js",
+        "default": "./dist/node/production/get-style-sheet-url.js"
+      },
+      "types": "./dist/browser/development/get-style-sheet-url.d.ts",
+      "development": "./dist/browser/development/get-style-sheet-url.js",
+      "default": "./dist/browser/production/get-style-sheet-url.js"
+    },
+    "./register-design-system.js": {
+      "node": {
+        "development": "./dist/node/development/register-design-system.js",
+        "default": "./dist/node/production/register-design-system.js"
+      },
+      "types": "./dist/browser/development/register-design-system.d.ts",
+      "development": "./dist/browser/development/register-design-system.js",
+      "default": "./dist/browser/production/register-design-system.js"
+    },
+    "./set-style-sheet-mapping.js": {
+      "node": {
+        "development": "./dist/node/development/set-style-sheet-mapping.js",
+        "default": "./dist/node/production/set-style-sheet-mapping.js"
+      },
+      "types": "./dist/browser/development/set-style-sheet-mapping.d.ts",
+      "development": "./dist/browser/development/set-style-sheet-mapping.js",
+      "default": "./dist/browser/production/set-style-sheet-mapping.js"
+    },
+    "./package.json": "./package.json"
+  }
+}

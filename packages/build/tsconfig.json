@@ -31,10 +31,32 @@
     "verbatimModuleSyntax": true
   },
   "include": ["src/**/*.ts"],
-  // "exclude": ["node_modules", "vite.config.ts", "**/**.e2e.ts"]
-  // "exclude": ["node_modules", "vite.config.ts"]
 
-  // TODO: Exclude test files expect when running tests
-  "exclude": ["node_modules", "vite.config.ts"]
+  // Tests and their fixtures live under `src/**/tests/**`. Exclude them
+  // from the package's `tsc` build because:
+  //
+  //   - The fixtures (e.g. `library-summary/tests/test-component.ts`)
+  //     import `@genexus/kasstor-core/decorators/*`, which only resolves
+  //     when `kasstor-core` has been built. In CI, `kasstor-build` is in
+  //     Tier 0 of the pre-build order (it's a build-time dependency of
+  //     `vite-plugin-kasstor`, which is itself a dependency of
+  //     `kasstor-core`), so `kasstor-core` is NOT built yet when
+  //     `Pre-build build` runs — `tsc` cannot resolve the import and the
+  //     job fails.
+  //   - Even when running locally with everything already built, including
+  //     the fixtures in the package's `tsc` build emits stray `.js`/`.d.ts`
+  //     files under `dist/` that are NOT part of the published surface.
+  //
+  // Vitest picks the test files up via its own `include` glob (see the
+  // root `vitest.config.ts`), so removing them here does not affect the
+  // test run.
+  "exclude": [
+    "node_modules",
+    "vite.config.ts",
+    "src/**/tests/**",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.e2e.ts"
+  ]
 }
 

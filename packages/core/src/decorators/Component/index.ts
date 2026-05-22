@@ -6,7 +6,9 @@ import {
 import { LitElement, unsafeCSS, type PropertyValues } from "lit";
 
 import { DEV_MODE, IS_SERVER } from "../../development-flags.js";
+import { applySharedDesignSystemStylesForSSR } from "./apply-shared-design-system-styles-for-ssr.js";
 import { componentWasServerSideRendered } from "./component-was-server-side-rendered.js";
+import { getStylesheetsAndPromisesForSharedStyles } from "./get-styles-sheets-and-promises-for-shared-styles.js";
 import { register, replaceConstructorWithProxy } from "./hmr-for-component.js";
 import type { ComponentOptions } from "./types";
 import { getDelayForUpdate } from "./update-scheduler.js";
@@ -29,6 +31,27 @@ const DEFAULT_SHADOW_ROOT_DELEGATE_FOCUS = false satisfies ShadowRootInit["deleg
 const KASSTOR_METADATA_SYMBOL = Symbol("kasstor-component-metadata");
 
 /**
+ * Symbol used to store the global stylesheet attached to the Kasstor component defined in the `@Component`
+ * decorator.
+ *
+ * Not exported so it's not part of the public API.
+ *
+ * **Note**: It's still discoverable via
+ * `Object.getOwnPropertySymbols(proto).find(s => s.description === "kasstor-global-stylesheet")`.
+ */
+const KASSTOR_GLOBAL_STYLESHEET_SYMBOL = Symbol("kasstor-global-stylesheet");
+
+const KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_NAMES_SYMBOL = Symbol(
+  "kasstor-shared-design-system-stylesheet-names"
+);
+const KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEETS_SYMBOL = Symbol(
+  "kasstor-shared-design-system-stylesheets"
+);
+const KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_PROMISES_SYMBOL = Symbol(
+  "kasstor-shared-design-system-stylesheet-promises"
+);
+
+/**
  * Class decorator factory that defines the decorated class as a custom element.
  *
  * @category Decorator
@@ -37,7 +60,14 @@ const KASSTOR_METADATA_SYMBOL = Symbol("kasstor-component-metadata");
  * @remarks
  * - The decorated class must extend {@link KasstorElement} (not `LitElement` directly).
  * - If `tag` is already defined by another constructor, the decorator does not
- *   redefine it and a console warning is emitted (except when HMR has replaced the component).
+ *   redefine it and a console warning is emitted, except in two cases:
+ *   - Under client-side HMR (the new class replaces the previous one via the
+ *     HMR machinery wired up by `@genexus/vite-plugin-kasstor`).
+ *   - During dev-time SSR (`DEV_MODE && IS_SERVER`), where the `@lit-labs/ssr`
+ *     `CustomElementRegistry` is a process-wide singleton: the previous
+ *     registration is evicted and the freshly-edited class is registered
+ *     so subsequent SSR renders use the new template. See
+ *     `docs/decorators.md → Dev-time SSR re-registration`.
  *
  * @example
  * ```ts
@@ -63,7 +93,7 @@ export const Component = <
   options: ComponentOptions<LibraryPrefix, Metadata>
 ) =>
   function (target: T): T | void {
-    const { globalStyles, tag, styles, shadow } = options;
+    const { globalStyles, tag, styles, shadow, sharedDesignSystemStyles } = options;
     const { prototype } = target;
 
     // Check if the element is already defined
@@ -85,12 +115,29 @@ export const Component = <
         return existing as any;
       }
 
-      console.warn(
-        `The tag name "${tag}" is already defined by the class "${existing.name}". The current tag won't be redefined by the class "${target.name}" and the "Component" decorator implementation will be ignored.
-In some cases, this error can happen due to HMR (Hot Module Replacement) issues.`
-      );
+      // Dev SSR fall-through: when Vite/Astro re-execute a component module
+      // after a file edit, `@lit-labs/ssr`'s singleton `customElements`
+      // registry still holds the OLD class. Evict the previous entry from
+      // the dom-shim's internal map so the `customElements.define` call
+      // below registers the freshly-edited class — otherwise the next SSR
+      // render would emit stale HTML and the client would throw a
+      // "Hydration value mismatch" from `@lit-labs/ssr-client`.
+      const shimDefinitions =
+        DEV_MODE && IS_SERVER
+          ? (customElements as unknown as { __definitions?: Map<string, unknown> }).__definitions
+          : undefined;
 
-      return existing as any;
+      if (shimDefinitions instanceof Map) {
+        shimDefinitions.delete(tag);
+        // Fall through to `customElements.define(tag, target)` below.
+      } else {
+        console.warn(
+          `[@genexus/kasstor-core | Decorator Component] The tag name "${tag}" is already defined by the class "${existing.name}". The current tag won't be redefined by the class "${target.name}" and the "Component" decorator implementation will be ignored.
+In some cases, this error can happen due to HMR (Hot Module Replacement) issues.`
+        );
+
+        return existing as any;
+      }
     }
 
     // Modify the class without creating a new one
@@ -118,12 +165,49 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
       }
     }
 
+    // Don't try to fetch the shared design system stylesheets in the server side,
+    // because the stylesheets are not available and we render them as a html
+    // link tag in the component template.
+    //
+    // The CSR processing must run regardless of `shadow`: for shadow DOM
+    // components the sheets are pushed onto `renderRoot.adoptedStyleSheets`,
+    // for light DOM components they are routed through `addGlobalStyleSheet`
+    // onto the host's root node — both paths are driven from
+    // `#waitAndAdoptSharedStyleSheets`, which reads these prototype slots.
+    if (!IS_SERVER && sharedDesignSystemStyles) {
+      const { successfulThemes, promises } =
+        getStylesheetsAndPromisesForSharedStyles(sharedDesignSystemStyles);
+
+      prototype[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEETS_SYMBOL] = successfulThemes;
+
+      if (promises.length > 0) {
+        prototype[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_PROMISES_SYMBOL] = new Promise(resolve =>
+          Promise.all(promises).then(cssStyleSheets => {
+            for (let i = 0; i < cssStyleSheets.length; i++) {
+              const styleSheet = cssStyleSheets[i];
+
+              if (styleSheet) {
+                successfulThemes.push(styleSheet);
+              }
+            }
+
+            // TODO: Add a test to validate this case.
+            // Clear the reference for component that will be rendered in the future, so we
+            // don't delay the rendering by a microtask.
+            prototype[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_PROMISES_SYMBOL] = undefined;
+
+            resolve();
+          })
+        );
+      }
+    }
+
     if (DEV_MODE) {
       const hasGlobalStylesWhenNotUsingShadow = shadow === false && !!globalStyles;
 
       if (hasGlobalStylesWhenNotUsingShadow) {
         console.warn(
-          `You can safely use normal styles instead of globalStyles in the @Component decorator for the "${tag}" element, because the element doesn't have Shadow DOM.`
+          `[@genexus/kasstor-core | Decorator Component] You can safely use normal styles instead of globalStyles in the @Component decorator for the "${tag}" element, because the element doesn't have Shadow DOM.`
         );
       }
     }
@@ -139,10 +223,11 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
     if (!IS_SERVER && stylesToAttach) {
       const stylesheet = new CSSStyleSheet();
       stylesheet.replaceSync(stylesToAttach);
-      (prototype as any).globalStyles = stylesheet;
+      prototype[KASSTOR_GLOBAL_STYLESHEET_SYMBOL] = stylesheet;
     }
 
     prototype[KASSTOR_METADATA_SYMBOL] = options.metadata;
+    prototype[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_NAMES_SYMBOL] = sharedDesignSystemStyles;
 
     // We won't implement the define method of the custom elements protocol,
     // since at the time of creating the Component decorator, there are not
@@ -193,9 +278,24 @@ In some cases, this error can happen due to HMR (Hot Module Replacement) issues.
  */
 export abstract class KasstorElement<Metadata = unknown> extends LitElement {
   #serverSideRendered: boolean;
+  #sharedStylesWereAdopted: boolean = false;
 
-  protected globalStyles: CSSStyleSheet | undefined;
-  [KASSTOR_METADATA_SYMBOL]: Metadata | undefined;
+  protected [KASSTOR_GLOBAL_STYLESHEET_SYMBOL]: CSSStyleSheet | undefined;
+  protected [KASSTOR_METADATA_SYMBOL]: Metadata | undefined;
+
+  /**
+   * Shared asynchronous styles that are loaded from the design system registry
+   * and adopted into the component's shadow root or the root node of the
+   * component if it doesn't have a shadow root.
+   */
+  protected [KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_NAMES_SYMBOL]: string[] | undefined;
+
+  protected [KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEETS_SYMBOL]: CSSStyleSheet[] | undefined;
+
+  /**
+   * Promises for the shared design system stylesheets.
+   */
+  protected [KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_PROMISES_SYMBOL]: Promise<void> | undefined;
 
   constructor() {
     super();
@@ -233,6 +333,14 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
       willUpdateOriginalImplementation.call(this, changedProperties);
     };
 
+    // If there are shared design system styles, we inline them as a link when the component is SSRed
+    if (this.#serverSideRendered) {
+      applySharedDesignSystemStylesForSSR(
+        this,
+        this[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_NAMES_SYMBOL]
+      );
+    }
+
     // TODO: Add an additional flag for checking when the vite server is on
     // HMR support for dev mode only
     if (DEV_MODE && !IS_SERVER && globalThis.kasstorCoreHmrEnabled) {
@@ -241,7 +349,57 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
   }
 
   /**
-   * `true` is the component was rendered in the server
+   * Waits for the shared style sheets to be loaded and adopts them into the
+   * component's shadow root or the root node of the component if it doesn't
+   * have a shadow root.
+   */
+  #waitAndAdoptSharedStyleSheets = (): Promise<void> | undefined => {
+    if (this.#sharedStylesWereAdopted || this.#serverSideRendered) {
+      return;
+    }
+    const promiseToLoadStyleSheets = this[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEET_PROMISES_SYMBOL];
+
+    if (promiseToLoadStyleSheets === undefined) {
+      this.#adoptSharedStyleSheets();
+      return;
+    }
+    return promiseToLoadStyleSheets.then(this.#adoptSharedStyleSheets);
+  };
+
+  #adoptSharedStyleSheets = () => {
+    const stylesheets = this[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEETS_SYMBOL];
+
+    if (stylesheets === undefined) {
+      return undefined;
+    }
+
+    if (this.renderRoot instanceof ShadowRoot) {
+      this.renderRoot.adoptedStyleSheets.push(...stylesheets);
+      this.#sharedStylesWereAdopted = true;
+      return;
+    }
+
+    // If the component is not connected to the DOM, we can't adopt the global,
+    // stylesheets, as the root node is not available. We do this early return
+    // to avoid marking the stylesheets as adopted prematurely.
+    if (!this.isConnected) {
+      return;
+    }
+    stylesheets.forEach(stylesheet => addGlobalStyleSheet(this, stylesheet));
+    this.#sharedStylesWereAdopted = true;
+  };
+
+  #removeSharedStyleSheets = () => {
+    if (this.#sharedStylesWereAdopted && !(this.renderRoot instanceof ShadowRoot)) {
+      this[KASSTOR_SHARED_DESIGN_SYSTEM_STYLESHEETS_SYMBOL]?.forEach(stylesheet =>
+        removeGlobalStyleSheet(this, stylesheet)
+      );
+      this.#sharedStylesWereAdopted = false;
+    }
+  };
+
+  /**
+   * `true` if the component was server side rendered.
    */
   protected get wasServerSideRendered(): boolean {
     return this.#serverSideRendered;
@@ -261,8 +419,15 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
   override connectedCallback(): void {
     super.connectedCallback();
 
-    if (this.globalStyles) {
-      addGlobalStyleSheet(this, this.globalStyles);
+    if (this[KASSTOR_GLOBAL_STYLESHEET_SYMBOL]) {
+      addGlobalStyleSheet(this, this[KASSTOR_GLOBAL_STYLESHEET_SYMBOL]);
+    }
+
+    // If the component has been moved and it doesn't have a shadow root, we
+    // need to re-attach the shared style sheets in the new root node, as the
+    // disconnectedCallback method was previously called and the stylesheets were removed.
+    if (this.hasUpdated) {
+      this.#waitAndAdoptSharedStyleSheets();
     }
 
     // Register instance globally for dev-time tooling (HMR, style replacement)
@@ -310,6 +475,16 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
       await delayForUpdate;
     }
 
+    // At this point, since the connectedCallback method has been called, we can
+    // assume that the component has been rendered and is attached to the DOM.
+    if (!this.hasUpdated) {
+      const mustWaitForPromiseResolution = this.#waitAndAdoptSharedStyleSheets();
+
+      if (mustWaitForPromiseResolution !== undefined) {
+        await mustWaitForPromiseResolution;
+      }
+    }
+
     // Render the element, as super.update ends up calling render()
     super.scheduleUpdate();
   }
@@ -351,9 +526,11 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
   override disconnectedCallback(): void {
     super.disconnectedCallback();
 
-    if (this.globalStyles) {
-      removeGlobalStyleSheet(this, this.globalStyles);
+    if (this[KASSTOR_GLOBAL_STYLESHEET_SYMBOL]) {
+      removeGlobalStyleSheet(this, this[KASSTOR_GLOBAL_STYLESHEET_SYMBOL]);
     }
+
+    this.#removeSharedStyleSheets();
 
     // Unregister instance globally for dev-time tooling (HMR, style replacement)
     // Only in dev mode
@@ -364,4 +541,3 @@ export abstract class KasstorElement<Metadata = unknown> extends LitElement {
     }
   }
 }
-

@@ -62,29 +62,59 @@ jobs:
         run: bun i --linker hoisted
         working-directory: ${{ inputs.package }}
 
-      # We need to pre-build webkit, because the kasstor-core package needs it.
-      # TODO: We should only build it when the package is kasstor-core or kasstor-signals
+      # Pre-build order follows the workspace's INTERNAL dependency graph so
+      # that whichever package the CI job is testing can resolve every
+      # `@genexus/*` import through built `dist/` artifacts (workspace
+      # packages are symlinked, but only their published `files` — i.e.
+      # `dist/` — are actually resolvable).
+      #
+      # Tier 0 (no internal deps):
+      #   - kasstor-webkit
+      #   - kasstor-design-system
+      #   - kasstor-build
+      #
+      # Tier 1 (depends on Tier 0):
+      #   - vite-plugin-kasstor    (imports from kasstor-build)
+      #
+      # Tier 2 (depends on Tier 0 + 1):
+      #   - kasstor-core           (imports from kasstor-webkit + kasstor-
+      #                             design-system at runtime, AND from
+      #                             vite-plugin-kasstor in its vite.config.ts
+      #                             — the latter is what makes the
+      #                             vite-plugin-kasstor pre-build necessary
+      #                             here, the bug that took the CI green
+      #                             before this PR's `kasstor()` plugin was
+      #                             wired into `packages/core/vite.config.ts`)
+      #
+      # Tier 3 (depends on Tier 2):
+      #   - kasstor-insights       (imports from kasstor-core)
+      #
+      # TODO: each step is gated on the actual job in flight — we should
+      # skip pre-builds whose output is not transitively needed by the
+      # `${{ inputs.package }}` being tested.
       - name: Pre-build webkit
         run: bun dev
         working-directory: "packages/webkit"
 
-      # We need to pre-build core, because the kasstor-signals package needs it.
-      # TODO: We should only build it when the package is kasstor-signals
+      - name: Pre-build design-system
+        run: bun dev
+        working-directory: "packages/design-system"
+
+      - name: Pre-build build
+        run: bun dev
+        working-directory: "packages/build"
+
+      - name: Pre-build vite-plugin-kasstor
+        run: bun dev
+        working-directory: "packages/plugins/vite-plugin-kasstor"
+
       - name: Pre-build core
         run: bun dev
         working-directory: "packages/core"
 
-      # We need to pre-build insights, because the vite-plugin-kasstor package needs it.
-      # TODO: We should only build it when the package is vite-plugin-kasstor
       - name: Pre-build insights
         run: bun dev
         working-directory: "packages/insights"
-
-      # We need to pre-build build, because the vite-plugin-kasstor package needs it.
-      # TODO: We should only build it when the package is vite-plugin-kasstor
-      - name: Pre-build build
-        run: bun dev
-        working-directory: "packages/build"
 
       # This is a faster check than trying to build the whole package
       - name: Build types

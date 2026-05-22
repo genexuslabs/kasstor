@@ -31,7 +31,20 @@ The `@Component` decorator is used to define a Kasstor custom element with suppo
 ### Restrictions
 
 - The decorated class **must** extend `KasstorElement` (not `LitElement` directly).
-- The `tag` must be a valid custom element name with a hyphen (e.g. `my-button`). If the tag is already defined by another class, the decorator will not redefine it and a console warning is emitted (except under HMR).
+- The `tag` must be a valid custom element name with a hyphen (e.g. `my-button`). If the tag is already defined by another class, the decorator will not redefine it and a console warning is emitted (except under HMR, and except for dev-time SSR re-registration — see below).
+
+### Dev-time SSR re-registration
+
+`@lit-labs/ssr` installs `globalThis.customElements` once per process. When a dev server (Vite, Astro, etc.) re-executes a Kasstor component module after a file edit, that singleton registry still holds the **previous** class. Without intervention the decorator would short-circuit on the duplicate tag and the next SSR render would emit stale HTML — which then crashes on the client with `@lit-labs/ssr-client`'s `Hydration value mismatch: Unexpected TemplateResult rendered to part` once it tries to hydrate.
+
+In `DEV_MODE && IS_SERVER` the `@Component` decorator evicts the previous entry from the dom-shim's internal registry map and falls through to `customElements.define(tag, target)` with the freshly-edited class. The next call to `customElements.get(tag)` (which is what `@lit-labs/ssr` uses to look up the renderer at template-walk time) returns the new class, the SSR HTML matches the freshly-loaded client bundle, and hydration succeeds.
+
+The behavior is gated entirely on the build-time `IS_SERVER` and `DEV_MODE` flags:
+- **Production SSR (`IS_SERVER && !DEV_MODE`)**: unchanged — duplicate tags still warn and return the previous class.
+- **Browser (`!IS_SERVER`)**: unchanged — HMR uses the existing flow via `@genexus/vite-plugin-kasstor`.
+- **Dev SSR (`DEV_MODE && IS_SERVER`)**: re-registration kicks in.
+
+This means once you wire up `@genexus/vite-plugin-kasstor` (or any other Vite/Astro setup) plus a `@lit-labs/ssr` middleware, **editing a `@Component`-decorated file and reloading the page just works** — no dev-server restart, no hydration error.
 
 ### Example
 
