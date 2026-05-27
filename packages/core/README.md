@@ -10,7 +10,7 @@ Consult this table to choose which document to load. Details and examples are in
 
 | API | Description |
 |-----|-------------|
-| [Component](docs/decorators.md#component) | Defines a Kasstor custom element. Auto-registers; Shadow Root config (mode, formAssociated, delegatesFocus); SSR, SCSS, no-Shadow; firstWillUpdate; HMR; improved TBT. Must extend KasstorElement; tag must have hyphen. |
+| [Component](docs/decorators.md#component) | Defines a Kasstor custom element. Auto-registers; Shadow Root config (mode, formAssociated, delegatesFocus); SSR, SCSS, no-Shadow; firstWillUpdate; HMR; improved TBT. Also supports `sharedDesignSystemStyles` (lazy CSS bundles loaded from `@genexus/kasstor-design-system`, adopted into the component's root and emitted as `<link>` tags during SSR). Must extend KasstorElement; tag must have hyphen. |
 | [Event](docs/decorators.md#event) | Type-safe custom events. `Event(defaultOptions?)`; `EventEmitter<T>.emit(detail?, options?)`. Applied to properties only. Returns event with `defaultPrevented`. |
 | [Observe](docs/decorators.md#observe) | Runs callback when `@property`/`@state` change. `Observe(propertyOrProperties: string | string[])`. Applied to methods only. SSR-safe; provides new/old values. |
 
@@ -26,6 +26,13 @@ Consult this table to choose which document to load. Details and examples are in
 |-----|-------------|
 | [lazyLoad](docs/directives.md#lazyload) | Loads component when element is attached. Use on element tag only (e.g. `<my-panel ${lazyLoad()}></my-panel>`). Requires `registerCustomElementLoaders`. |
 | [renderByPlatform](docs/directives.md#renderbyplatform) | Different content server vs browser. `renderByPlatform(browserValue, serverValue?)`. Single arg = browser-only. Needs KasstorElement host for hydration. |
+
+### Components ([docs/components.md](docs/components.md))
+
+| API | Description |
+|-----|-------------|
+| [kst-theme](docs/components.md#kst-theme) | Custom element that loads named CSS bundles from the design-system registry and adopts them into the nearest `Document` or `ShadowRoot` via `adoptedStyleSheets`. Side-effect import: `@genexus/kasstor-core/components/theme.js`. Pairs with `registerDesignSystem` from [`@genexus/kasstor-design-system`](../design-system/README.md). Emits `themeLoaded` with `{ success, failed }`. Has built-in FOUC prevention. |
+| [getBundles](docs/components.md#getbundles) | Normalizes a list of bundle names (or `{ name, attachStyleSheet? }` items) into a `ThemeItemModel[]` for `kst-theme`'s `model` property. |
 
 ### Best Practices ([docs/best-practices.md](docs/best-practices.md))
 

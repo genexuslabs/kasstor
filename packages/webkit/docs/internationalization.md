@@ -245,6 +245,58 @@ console.log(currentTranslations?.greeting); // e.g. 'Hello'
 
 For **Lit** components, see [Using i18n with Lit](#using-i18n-with-lit) below.
 
+### setAvailableLanguages
+
+Updates `availableLanguages` and/or `defaultLanguage` **at runtime** (after `setInitialApplicationLanguage`). Use for dynamic locale gating: premium tiers, feature flags, late discovery of bundled languages.
+
+```ts
+import { setAvailableLanguages } from "@genexus/kasstor-webkit/internationalization.js";
+
+setAvailableLanguages({
+  availableLanguages: ["english", "spanish"],
+  defaultLanguage: "english"
+});
+```
+
+```ts
+setAvailableLanguages(options: {
+  availableLanguages?: ReadonlyArray<KasstorLanguage | KasstorLanguageSubtag>;
+  defaultLanguage?: KasstorLanguage | KasstorLanguageSubtag;
+}): void
+```
+
+**Behavior**
+
+- At least one option must be provided; otherwise throws.
+- `availableLanguages: []` coerces to `["en"]`; lists missing `"en"` get it added — both warn in dev mode.
+- `defaultLanguage` not in `availableLanguages` coerces to `"en"` with a dev-mode warning.
+- Before initialization (no prior `setInitialApplicationLanguage`): config is stored; initialization picks up the new values.
+- If the current language is still available: no further action.
+- If the current language is **no longer available**, resolves a replacement (in order): (1) first match from `navigator.languages`, then (2) the new `defaultLanguage`. Then calls `setLanguage(newSubtag, true)` — translations, subscribers, localStorage, URL all update normally.
+- `registerTranslations` is unaffected; you can keep registering for languages not currently exposed.
+
+### languageChangeComplete
+
+Returns a `Promise<void>` that resolves when the **in-flight** language change finishes (translations loaded for every feature, subscribers notified).
+
+```ts
+import {
+  setLanguage,
+  languageChangeComplete
+} from "@genexus/kasstor-webkit/internationalization.js";
+
+setLanguage("es");
+await languageChangeComplete();
+// Spanish loaded; safe to re-render, navigate, etc.
+```
+
+**Behavior**
+
+- Concurrent callers share the same promise.
+- If no change is in flight, the returned promise is **already resolved**.
+- When `setLanguage` is called multiple times in rapid succession, the promise resolves only after the **latest** language is fully loaded — intermediate languages do not produce a separate resolution, so callers always observe the final language.
+- No artificial delay; cached translations resolve immediately.
+
 ### Using i18n with Lit
 
 The following examples use `@genexus/kasstor-core` and Lit decorators. **Prefer a base component with automatic translations:** it simplifies every concrete component (subscribe/unsubscribe and `translations` updates are handled once in the base), and translations stay in sync when the language changes.
