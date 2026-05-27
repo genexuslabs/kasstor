@@ -1,6 +1,6 @@
 # @genexus/kasstor-webkit
 
-Utilities for web applications: array helpers, internationalization (i18n), type-ahead search, frame synchronization, and shared local storage keys.
+Utilities for web applications: array helpers, internationalization (i18n), type-ahead search, frame synchronization, per-root `adoptedStyleSheets` adoption with shared reference counting, and shared local storage keys.
 
 ## API Reference
 
@@ -20,6 +20,8 @@ Consult this table to choose which document to load. Details and examples are in
 | [registerTranslations](internationalization.md) | Registers async loaders per language for a feature. Replaces existing loader for the same ID (e.g. HMR). |
 | [setInitialApplicationLanguage](internationalization.md) | Sets initial language from URL or client; requires `locationChangeCallback`, optional `pathname` (required on server), optional `languageChangeCallback`. Returns `{ initialLanguage, locationToReplace }`. Throws on server without `pathname`. |
 | [setLanguage](internationalization.md) | Sets active language, loads translations, updates document/URL, notifies subscribers. Returns new pathname or `undefined`. |
+| [setAvailableLanguages](internationalization.md#setavailablelanguages) | Updates `availableLanguages` and/or `defaultLanguage` at runtime. If the current language is no longer available, resolves a new one from `navigator.languages` then the default and triggers a standard language change. Requires at least one option; coerces invalid lists with dev-mode warnings. |
+| [languageChangeComplete](internationalization.md#languagechangecomplete) | Returns a Promise that resolves when the in-flight `setLanguage` finishes loading translations and notifying subscribers. Burst-safe: only the latest change's promise resolves. Already-resolved when no change is in flight. |
 | [getCurrentLanguage](internationalization.md) | Returns `{ fullLanguageName, subtag }` or `undefined`. |
 | [getCurrentTranslations](internationalization.md) | Returns translations for current language and feature, or `undefined`. |
 | [getClientLanguage](internationalization.md) | Returns preferred subtag (local storage or navigator); never `null`. |
@@ -30,6 +32,17 @@ Consult this table to choose which document to load. Details and examples are in
 | [fromLanguageFullnameToSubtag](internationalization.md) | Returns subtag for a full language name. |
 | [fromLanguageToFullnameAndSubtag](internationalization.md) | Returns `{ fullLanguageName, subtag }`. |
 | [ALL_SUPPORTED_LANGUAGE_SUBTAGS](internationalization.md) | `Set` of supported subtags. |
+
+### Stylesheets ([stylesheets.md](stylesheets.md))
+
+Import from `@genexus/kasstor-webkit/stylesheets.js` (or the package root).
+
+| API | Description |
+|-----|-------------|
+| [addStyleSheet](stylesheets.md#addstylesheet) | Adopts a `CSSStyleSheet` into a `Document` or `ShadowRoot` with shared reference counting. Pushed into `node.adoptedStyleSheets` only on the first reference. |
+| [removeStyleSheet](stylesheets.md#removestylesheet) | Releases one reference; physically removes the sheet on the last reference. Safe to call defensively. |
+| [addGlobalStyleSheet](stylesheets.md#addglobalstylesheet) | Adopts a sheet into whichever root (`Document` or `ShadowRoot`) currently contains the element. Idempotent per `(element, sheet)` pair; shares the per-root reference count with `addStyleSheet`. Snapshots the root for cleanup in `disconnectedCallback`. |
+| [removeGlobalStyleSheet](stylesheets.md#removeglobalstylesheet) | Releases the reference held by an element on a sheet; no-op if it was never registered. Typically called from `disconnectedCallback`. |
 
 ### TypeAhead, Frame sync, Local storage ([typeahead-sync-storage.md](typeahead-sync-storage.md))
 

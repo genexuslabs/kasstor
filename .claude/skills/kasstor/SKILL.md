@@ -1,6 +1,6 @@
 ---
 name: kasstor
-description: Build web components with Kasstor or create a library/application of web components using Lit. Use when working with Kasstor, Lit-based components, or when the user mentions Kasstor, kasstor-build, kasstor-core, kasstor-insights, kasstor-signals, vite-plugin-kasstor, or kasstor-webkit.
+description: Build web components with Kasstor or create a library/application of web components using Lit. Use when working with Kasstor, Lit-based components, or when the user mentions Kasstor, kasstor-build, kasstor-core, kasstor-design-system, kasstor-insights, kasstor-signals, vite-plugin-kasstor, or kasstor-webkit.
 ---
 
 # Kasstor — The natural builder for the web platform
@@ -11,7 +11,7 @@ An ecosystem for building Lit-based web components with first-class DX: decorato
 
 - Use **this document** as the entry point: what Kasstor is, why use it, installation, requirements, and the packages table below.
 
-- **Kasstor is split into packages.** Each package (core, signals, webkit, vite-plugin, build, insights) has its own npm package and documentation. The table in [Packages](#packages) lists them and links to each package’s README in this skill folder.
+- **Kasstor is split into packages.** Each package (core, signals, webkit, design-system, vite-plugin, build, insights) has its own npm package and documentation. The table in [Packages](#packages) lists them and links to each package’s README in this skill folder.
 
 - **When you need details for a specific package**, open that package’s README (e.g. [core/README.md](core/README.md), [signals/README.md](signals/README.md)). At the top of each package README you’ll find an **API Reference table** that lists the APIs and links to sub-readmes with the full content. Use that table to choose which sub-readme to load instead of loading the whole package.
 
@@ -37,6 +37,7 @@ An ecosystem for building Lit-based web components with first-class DX: decorato
 | Lit has **`willUpdate`** but no "first update" hook; SSR-safe init before first paint is verbose            | **`firstWillUpdate`** — runs once before the first update; supports SSR-friendly initialization (e.g. data needed before first render) without extra boilerplate                                                                                                                                                              |
 | Using the component without Shadow DOM requires custom setup                                                | **No-Shadow** — `shadow: false` in `@Component`; you can style the component the same way as with Shadow (use the component tag name instead of the `:host` selector in your styles)                                                                                                                                          |
 | SSR and hydration need extra wiring (guards, lifecycle, directives)                                         | **SSR** — `firstWillUpdate`, `@Observe` lifecycle, and a **`renderByPlatform`** directive to conditionally render content on the server that may differ on the client or be client-only; initialization and reactive side effects are easier to make SSR-safe (global styles are client-only and not supported on the server) |
+| Sharing themed CSS across components requires hand-rolled `adoptedStyleSheets` plumbing                     | **Shared design-system styles** — register CSS bundles once with **`registerDesignSystem`** (from `@genexus/kasstor-design-system`); components opt in by name through the **`sharedDesignSystemStyles`** option on `@Component`, or load themes at runtime with the **`kst-theme`** element from core. Sheets are fetched once, cached, and adopted into the Document or Shadow Root via `adoptedStyleSheets`; SSR-safe via injected `<link>` tags                          |
 
 Your components still follow the Lit model: **`KasstorElement`** extends **`LitElement`**, and you use **`html`**, **`@property`**, **`@state`**, etc., as usual. Kasstor adds structure (e.g. **`@Component`**), styling (SCSS), events (**`@Event`**), directives (**`lazyLoad`**, **`renderByPlatform`**), tooling (HMR), etc., on top.
 
@@ -48,7 +49,7 @@ Setup for a **Vite** project (recommended): install dependencies, configure Vite
 
 ```bash
 npm i @genexus/kasstor-core
-npm i -D @genexus/vite-plugin-kasstor vite typescript sass
+npm i -D @genexus/vite-plugin-kasstor vite typescript sass-embedded
 ```
 
 You do **not** need to install `@genexus/kasstor-build` or `@genexus/kasstor-insights` when using the Vite plugin: the plugin integrates build tooling and optional performance insights for you.
@@ -285,7 +286,8 @@ Vite will start the dev server with HMR enabled and open your browser automatica
 | [**@genexus/kasstor-core**](./core/README.md)               | Core runtime: decorators (`@Component`, `@Event`, `@Observe`), directives (`lazyLoad`, `renderByPlatform`), and `KasstorElement` base class for Lit components.                                                                           |
 | [**@genexus/vite-plugin-kasstor**](./vite-plugin/README.md) | Vite plugin: HMR for `.lit.ts` components and SCSS, build integration, and optional performance insights. **No need to install** `kasstor-build` or `kasstor-insights` when using this plugin.                                            |
 | [**@genexus/kasstor-signals**](./signals/README.md)         | Reactive signals and computed values; optional state layer for Lit. Use the **`watch`** directive in templates for pin-point updates—only the bound parts re-render when a signal changes, without triggering a full component re-render. |
-| [**@genexus/kasstor-webkit**](./webkit/README.md)           | Shared utilities: internationalization (i18n), array helpers, typeahead, and frame-sync helpers for apps and component libraries.                                                                                                         |
+| [**@genexus/kasstor-webkit**](./webkit/README.md)           | Shared utilities: internationalization (i18n), array helpers, typeahead, frame-sync helpers, and per-root `adoptedStyleSheets` adoption (`addGlobalStyleSheet`, `addStyleSheet`) for apps and component libraries.                                                                                                          |
+| [**@genexus/kasstor-design-system**](./design-system/README.md) | Design-system foundation: global registry (`registerDesignSystem`) and lazy CSS bundle loader (`fetchStyleSheet`) that produces shared `CSSStyleSheet` instances. Consumed by the `@Component` `sharedDesignSystemStyles` option and by the `kst-theme` element from core.                                                  |
 | [**@genexus/kasstor-insights**](./insights/README.md)       | Performance monitoring and benchmarking for Lit apps. Included via the Vite plugin when `insights` option is enabled; no need to install separately when using Vite.                                                                      |
 | [**@genexus/kasstor-build**](./build/README.md)             | Library analysis and optional file generation (types, readmes). Used by the Vite plugin under the hood; no need to install separately when using Vite.                                                                                    |
 

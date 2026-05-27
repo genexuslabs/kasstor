@@ -24,6 +24,8 @@ The `@Component` decorator is used to define a Kasstor custom element with suppo
 
 - Support to define global styles outside of the component that work with and without Shadow DOM.
 
+- Support to declaratively adopt **shared design-system stylesheets** by name (`sharedDesignSystemStyles`) from the global registry created with `registerDesignSystem` ([`@genexus/kasstor-design-system`](../../design-system/README.md)). See [Shared design-system styles](#shared-design-system-styles) below.
+
 - Support for HMR by using the `@genexus/vite-plugin-kasstor` package.
 
 - Improved initial rendering performance (compared by only extending the `LitElement`) by reducing the Total Blocking Time (TBT) in scenarios where many components are initially rendered.
@@ -144,6 +146,16 @@ export type ComponentOptions<LibraryPrefix extends `${string}-`, Metadata> = {
    */
   shadow?: ComponentShadowRootOptions | false;
 
+  /**
+   * Names of CSS bundles registered with `registerDesignSystem` (from
+   * `@genexus/kasstor-design-system`). The bundles are loaded asynchronously
+   * and adopted into the component's shadow root (or the host's nearest
+   * Document/ShadowRoot when `shadow: false`). On the server, each name is
+   * rendered as a `<link rel="stylesheet" crossorigin>` element prepended
+   * to the component's template.
+   */
+  sharedDesignSystemStyles?: string[];
+
   styles?: string;
 };
 
@@ -173,6 +185,91 @@ export class MyElement extends KasstorElement {
 ```
 
 Forgetting to call `await super.scheduleUpdate()` will prevent the component from rendering.
+
+### Shared design-system styles
+
+`sharedDesignSystemStyles: string[]` adopts CSS bundles previously registered with [`registerDesignSystem`](../../design-system/README.md) (from `@genexus/kasstor-design-system`). Each entry is a bundle name (the same key used in `bundleLoaders`).
+
+#### Examples
+
+Single bundle, Shadow DOM:
+
+```ts
+// my-button.lit.ts
+import { Component, KasstorElement } from "@genexus/kasstor-core/decorators/component.js";
+import { html } from "lit";
+import styles from "./my-button.scss?inline";
+
+@Component({
+  tag: "my-button",
+  styles,
+  sharedDesignSystemStyles: ["components/button"]
+})
+export class MyButton extends KasstorElement {
+  override render() { return html`<button><slot></slot></button>`; }
+}
+```
+
+The shadow root ends up with both the local `styles` and the shared bundle. A second `<my-button>` reuses the cached `CSSStyleSheet` (no extra fetch).
+
+Multiple bundles — adopted in array order; `scheduleUpdate` awaits **all** before first paint:
+
+```ts
+@Component({
+  tag: "my-form-field",
+  sharedDesignSystemStyles: ["utils/tokens", "utils/layout", "components/edit"]
+})
+```
+
+Light DOM (`shadow: false`) — sheets are adopted into the host's nearest `Document`/`ShadowRoot` via [`addGlobalStyleSheet`](../../webkit/docs/stylesheets.md#addglobalstylesheet) (reference-counted) and released on `disconnectedCallback`:
+
+```ts
+@Component({
+  tag: "my-layout",
+  shadow: false,
+  sharedDesignSystemStyles: ["utils/layout"]
+})
+```
+
+#### Recommended: registration in a side-effect module
+
+Keep `registerDesignSystem` out of component files and import the registration module **first**:
+
+```ts
+// design-system/register.ts
+import { registerDesignSystem } from "@genexus/kasstor-design-system";
+
+registerDesignSystem("my-ds", {
+  bundleLoaders: {
+    "utils/tokens":      "/themes/tokens.css",
+    "utils/layout":      "/themes/layout.css",
+    "components/button": "/themes/button.css",
+    "components/edit":   "/themes/edit.css"
+  }
+});
+```
+
+```ts
+// main.ts — register BEFORE any component import
+import "./design-system/register.js";
+import "./components/my-button.lit.js";
+import "./components/my-form-field.lit.js";
+```
+
+The same module covers SSR: import it before the server walks the template.
+
+#### Behavior
+
+- **CSR**: decorator pre-fetches each bundle (deduplicated; one `CSSStyleSheet` shared across all consumers). Cached sheets are adopted before first render; pending ones are awaited by `scheduleUpdate`. Re-adopted on `connectedCallback` after a move.
+- **Shadow DOM**: pushed onto `renderRoot.adoptedStyleSheets`.
+- **Light DOM**: routed through `addGlobalStyleSheet` from `@genexus/kasstor-webkit/stylesheets.js`; released in `disconnectedCallback`.
+- **SSR**: per instance, each bundle URL is looked up in the registry and rendered as `<link rel="stylesheet" crossorigin href="...">` prepended to the template. If a bundle name is missing at construction time, the `KasstorElement` constructor throws (fail-fast).
+- **Ordering**: every bundle name must be registered before the component module that references it evaluates.
+
+#### `sharedDesignSystemStyles` vs. `<kst-theme>`
+
+- `sharedDesignSystemStyles`: co-located with the component; adopts into the component's own root.
+- [`<kst-theme>`](./components.md#kst-theme): adopts at the page level or a specific `ShadowRoot` without wiring each component — useful for global themes, runtime switching, preloading.
 
 ## Event
 
