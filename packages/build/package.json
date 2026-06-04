@@ -26,7 +26,8 @@
     "dev.types": "tsc",
     "build": "tsc",
     "test": "vitest",
-    "test.ci": "bun run test --watch=false"
+    "test.types": "tsc -p tsconfig.type-tests.json",
+    "test.ci": "bun run test --watch=false && bun run test.types"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
@@ -37,8 +38,12 @@
     "typescript": "~5.9.3"
   },
   "devDependencies": {
+    "@genexus/kasstor-core": "^0.5.0",
+    "@stencil/core": "^4",
+    "@types/react": "^19",
     "lit": "^3.3.2",
-    "@genexus/kasstor-core": "^0.5.0"
+    "react": "^19",
+    "solid-js": "^1"
   },
   "exports": {
     ".": {
@@ -47,4 +52,3 @@
     }
   }
 }
-

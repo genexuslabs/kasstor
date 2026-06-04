@@ -6,14 +6,20 @@ import {
   getComponentPropertiesSolidJS
 } from "./get-component-properties-union-type.js";
 import { getImportPaths } from "./get-import-paths.js";
-import {
-  getLocalJSXTypes,
-  getReactModuleTypes,
-  getSolidJsModuleTypes,
-  getSolidJsTypes,
-  getStencilJsModuleTypes
-} from "./get-local-jsx-types.js";
 
+/**
+ * Builds the content of the core (framework-agnostic) types file (e.g.
+ * `components.ts`).
+ *
+ * This file contains everything that does NOT depend on a specific framework:
+ * the imports/re-exports of the types used by properties, events and methods,
+ * the `ComponentBaseClasses` interface, the `ComponentProperties` /
+ * `ComponentPropertiesSolidJS` namespaces, and the `ComponentEvents` namespace.
+ *
+ * The per-framework JSX types (React/SolidJS/StencilJS) live in their own opt-in
+ * files (see `get-framework-types.ts`) so that consumers only pull in a given
+ * framework's typings when they actually use it.
+ */
 export const getComponentDeclaration = (components: LibraryComponents) =>
   components.length === 0
     ? `//
@@ -39,10 +45,10 @@ ${getComponentProperties(components)}
 
 ${getComponentPropertiesSolidJS(components)}
 
-${getComponentEvents(components, "nothing")}
-${getLocalJSXTypes(components)}
-${getSolidJsTypes(components)}
-${getReactModuleTypes()}
-${getSolidJsModuleTypes()}
-${getStencilJsModuleTypes()}`;
+${getComponentEvents(components, "nothing")}`;
 
+export {
+  getReactDeclaration,
+  getSolidDeclaration,
+  getStencilDeclaration
+} from "./get-framework-types.js";

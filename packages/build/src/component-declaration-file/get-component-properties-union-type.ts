@@ -1,21 +1,14 @@
 import { getFormattedPropertyOrEventDescription } from "../get-formatted-property-or-event-description.js";
-import type {
-  ComponentDefinition,
-  LibraryComponents
-} from "../typings/library-components";
+import type { ComponentDefinition, LibraryComponents } from "../typings/library-components";
 import { COMPONENT_PROPERTIES_NAMESPACE_NAMES } from "./constants.js";
 import { getImportClassName } from "./get-import-class-name.js";
 
-export const getComponentPropertiesUnionType = (
-  component: ComponentDefinition
-) =>
+export const getComponentPropertiesUnionType = (component: ComponentDefinition) =>
   !component.properties || component.properties.length === 0
     ? "{}"
     : `Pick<${getImportClassName(component.className)}, ${component.properties.map(({ name }) => `"${name}"`).join(" | ")}>`;
 
-export const getComponentPropertiesUnionTypeSolidJS = ({
-  properties
-}: ComponentDefinition) =>
+export const getComponentPropertiesUnionTypeSolidJS = ({ properties }: ComponentDefinition) =>
   !properties || properties.length === 0
     ? "{}"
     : `{
@@ -54,4 +47,3 @@ export const getComponentPropertiesSolidJS = (components: LibraryComponents) =>
 export namespace ${COMPONENT_PROPERTIES_NAMESPACE_NAMES.solidJs} {
   ${components.map(component => `export type ${component.className} = ${getComponentPropertiesUnionTypeSolidJS(component)};`).join("\n\n  ")}
 }`;
-

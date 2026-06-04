@@ -1,0 +1,208 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`[component-declaration-file] getComponentFrameworkType > intersects React HTMLAttributes, omits component props, and names the custom event verbatim 1`] = `
+"export type KstField = Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstFieldElement>, HTMLKstFieldElement>, keyof ComponentProperties.KstField> & Partial<ComponentProperties.KstField> & {
+    /**
+     * Selection changed.
+     */
+    onselectedItemsChange?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getComponentFrameworkType > terminates the alias without an event block when there are no framework events 1`] = `"export type KstIcon = Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstIconElement>, HTMLKstIconElement>, keyof ComponentProperties.KstIcon> & Partial<ComponentProperties.KstIcon>;"`;
+
+exports[`[component-declaration-file] getComponentFrameworkType > uses JSXBase.HTMLAttributes and a capitalized custom event name for StencilJS 1`] = `
+"export type KstField = Omit<JSXBase.HTMLAttributes<HTMLKstFieldElement>, keyof ComponentProperties.KstField> & Partial<ComponentProperties.KstField> & {
+    /**
+     * Selection changed.
+     */
+    onSelectedItemsChange?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getComponentFrameworkType > uses Solid JSX.HTMLAttributes and the "on:" prefix for every event 1`] = `
+"export type KstField = Omit<JSX.HTMLAttributes<HTMLKstFieldElement>, keyof ComponentPropertiesSolidJS.KstField> & ComponentPropertiesSolidJS.KstField & {
+    /**
+     * Native input event.
+     */
+    "on:input"?: (event: HTMLKstFieldElementInputEvent) => void;
+
+    /**
+     * Selection changed.
+     */
+    "on:selectedItemsChange"?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getIntrinsicElementsInterface > maps tag names to JSX types with class JSDoc and @fires tags 1`] = `
+"
+  interface IntrinsicElements {
+    /**
+     * A form field.
+     *
+     * @fires \`selectedItemsChange\` Changed.
+     */
+    
+    "kst-field": KstField;
+    
+    /**
+     * An icon.
+     */
+    "kst-icon": KstIcon;
+  }"
+`;
+
+exports[`[component-declaration-file] getReactDeclaration > imports react + the core ComponentProperties and augments react's IntrinsicElements 1`] = `
+"import type {
+  DetailedHTMLProps as ReactDetailedHTMLProps,
+  HTMLAttributes as ReactHTMLAttributes
+} from "react";
+import type { ComponentProperties } from "./components.js";
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Types for React JSX templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace ReactJSX {
+  export type KstField = Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstFieldElement>, HTMLKstFieldElement>, keyof ComponentProperties.KstField> & Partial<ComponentProperties.KstField> & {
+    /**
+     * Selection changed.
+     */
+    onselectedItemsChange?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
+  };
+
+  export type KstIcon = Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstIconElement>, HTMLKstIconElement>, keyof ComponentProperties.KstIcon> & Partial<ComponentProperties.KstIcon>;
+  
+  interface IntrinsicElements {
+    /**
+     * A form field.
+     *
+     * @fires \`input\` Native input event.
+     * @fires \`selectedItemsChange\` Selection changed.
+     */
+    
+    "kst-field": KstField;
+    
+    /**
+     * An icon.
+     */
+    "kst-icon": KstIcon;
+  }
+}
+
+export type { ReactJSX };
+
+declare module "react" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends ReactJSX.IntrinsicElements {}
+  }
+}"
+`;
+
+exports[`[component-declaration-file] getReactDeclaration > returns a placeholder comment when there are no components 1`] = `
+"//
+// No "public" components were found. The React JSX types are only generated for "public" components.
+//"
+`;
+
+exports[`[component-declaration-file] getSolidDeclaration > imports solid-js + the core ComponentPropertiesSolidJS and augments solid-js JSX 1`] = `
+"import type { JSX } from "solid-js";
+import type { ComponentPropertiesSolidJS } from "./components.js";
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Types for SolidJS JSX templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace SolidJsJSX {
+  export type KstField = Omit<JSX.HTMLAttributes<HTMLKstFieldElement>, keyof ComponentPropertiesSolidJS.KstField> & ComponentPropertiesSolidJS.KstField & {
+    /**
+     * Native input event.
+     */
+    "on:input"?: (event: HTMLKstFieldElementInputEvent) => void;
+
+    /**
+     * Selection changed.
+     */
+    "on:selectedItemsChange"?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
+  };
+
+  export type KstIcon = Omit<JSX.HTMLAttributes<HTMLKstIconElement>, keyof ComponentPropertiesSolidJS.KstIcon> & ComponentPropertiesSolidJS.KstIcon;
+  
+  interface IntrinsicElements {
+    /**
+     * A form field.
+     *
+     * @fires \`input\` Native input event.
+     * @fires \`selectedItemsChange\` Selection changed.
+     */
+    
+    "kst-field": KstField;
+    
+    /**
+     * An icon.
+     */
+    "kst-icon": KstIcon;
+  }
+}
+
+export type { SolidJsJSX };
+
+declare module "solid-js" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends SolidJsJSX.IntrinsicElements {}
+  }
+}"
+`;
+
+exports[`[component-declaration-file] getStencilDeclaration > imports @stencil/core + the core ComponentProperties and augments Stencil JSX 1`] = `
+"import type { JSXBase } from "@stencil/core/internal";
+// Empty import so the bare "@stencil/core" module is known to the augmentation
+// below (augmenting a module requires it to be resolvable in the program).
+import type {} from "@stencil/core";
+import type { ComponentProperties } from "./components.js";
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Types for StencilJS JSX templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace StencilJSX {
+  export type KstField = Omit<JSXBase.HTMLAttributes<HTMLKstFieldElement>, keyof ComponentProperties.KstField> & Partial<ComponentProperties.KstField> & {
+    /**
+     * Selection changed.
+     */
+    onSelectedItemsChange?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
+  };
+
+  export type KstIcon = Omit<JSXBase.HTMLAttributes<HTMLKstIconElement>, keyof ComponentProperties.KstIcon> & Partial<ComponentProperties.KstIcon>;
+  
+  interface IntrinsicElements {
+    /**
+     * A form field.
+     *
+     * @fires \`input\` Native input event.
+     * @fires \`selectedItemsChange\` Selection changed.
+     */
+    
+    "kst-field": KstField;
+    
+    /**
+     * An icon.
+     */
+    "kst-icon": KstIcon;
+  }
+}
+
+export type { StencilJSX };
+
+declare module "@stencil/core" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  export namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends StencilJSX.IntrinsicElements {}
+  }
+}"
+`;

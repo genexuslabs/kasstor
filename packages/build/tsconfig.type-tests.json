@@ -1,0 +1,14 @@
+{
+  // Type-checks the per-framework JSX type "contracts" (representative
+  // generated output) against the real `react`, `solid-js` and `@stencil/core`
+  // typings. These files are excluded from the package build (they live under
+  // `tests/` and import dev-only framework deps); this config type-checks them
+  // in isolation via `bun run test.types`.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": []
+  },
+  "include": ["src/component-declaration-file/tests/framework-types/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
