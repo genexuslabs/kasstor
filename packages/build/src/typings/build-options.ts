@@ -102,18 +102,30 @@ export type KasstorBuildOptions = {
         typeDeclarationsFolder?: string | false;
 
         /**
-         * If `true`, each component file will have auto-generated types at the end
-         * of the file.
+         * @deprecated No longer used. The auto-generated custom-element types
+         * (event maps, typed listeners, `HTMLElementTagNameMap`, etc.) are no
+         * longer appended at the end of each component file; they are now emitted
+         * inside the `exportTypesForTheLibrary` file (e.g. `components.ts`), which
+         * makes it self-contained. This option is kept for backwards
+         * compatibility and has no effect.
          *
-         * These types are automatically generated based on the component's
-         * definition to provide enhanced type safety and developer experience.
-         *
-         * This types are necessary for:
-         *   - Auto complete properties, events, and methods in IDEs (specially in Lit templates).
-         *   - Properly define the events of each custom element with type assertions for their event details.
-         *   - Properly type the querySelectors used to find a custom element.
+         * To remove the previously-appended content from existing component
+         * files, see {@link cleanupLegacyComponentTypes}.
          */
         typesForComponents?: boolean;
+
+        /**
+         * If `true` (the default), removes the legacy auto-generated content
+         * (the `// ######### Auto generated below #########` marker and the
+         * `declare global { … }` block) from the end of the processed component
+         * files and saves them. This is a transitional cleanup for projects that
+         * used the previous `typesForComponents` generation; that content now
+         * lives in the `exportTypesForTheLibrary` file instead.
+         *
+         * Idempotent: files without the marker are left untouched. Set to
+         * `false` to disable the cleanup.
+         */
+        cleanupLegacyComponentTypes?: boolean;
 
         /**
          * If `true`, each component file will have auto-generated readme file

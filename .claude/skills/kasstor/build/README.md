@@ -26,7 +26,7 @@ Typically installed as a dev dependency. Most apps use it indirectly via **@gene
 
 - **Library analysis** — Discovers components from your source (by file pattern and decorator names), parses `@Component`, `@property`, `@Event`, etc., and builds a structured definition per component.
 
-- **Per-component types** — Appends auto-generated TypeScript at the end of each component file so IDEs get autocomplete for properties, events, and methods in Lit templates, and so `querySelector` / event details are typed.
+- **Custom-element global types** — Emits a `declare global` block (typed `querySelector`/`querySelectorAll`, event detail types, typed listeners, `HTMLElementTagNameMap`) into the **exported types file** (e.g. `components.ts`). This used to be appended to each component file; that legacy content is now removed by a transitional cleanup (see `cleanupLegacyComponentTypes`).
 
 - **Per-component README** — Writes a `readme.md` next to each component with properties, events, slots, CSS parts, and usage extracted from the definition. Docs stay in sync with code.
 
@@ -64,7 +64,6 @@ const options: KasstorBuildOptions = {
   excludedPaths: [/node_modules/],
   relativeComponentsSrcPath: "src/",
   fileGeneration: {
-    typesForComponents: true,
     readmesForComponents: true,
     exportTypesForTheLibrary: "components.ts",
     librarySummary: "library-summary.ts"
@@ -101,11 +100,17 @@ function buildLibrary(
     analysis: number;
     librarySummary: number;
     exportTypesForTheLibrary: number;
+    typeDeclarationsFolder: number;
+    /** @deprecated Always 0; per-component type files are no longer generated. */
     typesForComponents: number;
+    cleanup: number;
     readmesForComponents: number;
   };
   updatedReadmesForComponents: string[];
+  /** @deprecated Always empty; global types now live in the exported types file. */
   updatedTypesForComponents: string[];
+  /** Component files whose legacy auto-generated content was removed. */
+  cleanedComponentTypeFiles: string[];
 }>;
 ```
 
@@ -152,7 +157,12 @@ export type KasstorBuildOptions = {
         // StencilJS JSX types (imports `@stencil/core`). Opt-in: default `false`.
         exportTypesForStencil?: string | false;
         librarySummary?: string | false;
+        // @deprecated No effect; the custom-element global types now live in the
+        // exportTypesForTheLibrary file (no longer appended to each component file).
         typesForComponents?: boolean;
+        // Removes the legacy auto-generated `declare global` block from the
+        // processed component files. Transitional, idempotent. Default `true`.
+        cleanupLegacyComponentTypes?: boolean;
         readmesForComponents?: boolean;
       };
 
@@ -179,21 +189,23 @@ export type KasstorBuildComponentData = {
 
 - **componentsBuilded** — `Map<tagName, KasstorBuildComponentData>`. Each value has the parsed **ComponentDefinition**, the file content, and the file path.
 
-- **elapsedTimes** — Milliseconds for analysis, librarySummary, exportTypesForTheLibrary, typesForComponents, readmesForComponents.
+- **elapsedTimes** — Milliseconds for analysis, librarySummary, exportTypesForTheLibrary, typeDeclarationsFolder, cleanup, readmesForComponents (`typesForComponents` is kept for compatibility and is always 0).
 
 - **updatedReadmesForComponents** — Tag names of components whose readme was written.
 
-- **updatedTypesForComponents** — Tag names of components whose in-file types were written.
+- **updatedTypesForComponents** — _Deprecated; always empty._ Per-component type files are no longer generated.
+
+- **cleanedComponentTypeFiles** — Absolute paths of component files whose legacy auto-generated content was removed.
 
 ## What gets generated
 
 - **Library summary** — Written to `{relativeComponentsSrcPath}/{fileGeneration.librarySummary}` (default `src/library-summary.ts`). Exports a const array of component definitions plus type declarations.
 
-- **Exported types** — Written to `{relativeComponentsSrcPath}/{fileGeneration.exportTypesForTheLibrary}` (default `src/components.ts`). Framework-agnostic core file re-exporting types used by properties, events, and methods, plus the `ComponentBaseClasses`, `ComponentProperties`, `ComponentPropertiesSolidJS` and `ComponentEvents` declarations.
+- **Exported types** — Written to `{relativeComponentsSrcPath}/{fileGeneration.exportTypesForTheLibrary}` (default `src/components.ts`). Framework-agnostic core file re-exporting types used by properties, events, and methods, plus the `ComponentBaseClasses`, `ComponentProperties`, `ComponentPropertiesSolidJS` and `ComponentEvents` declarations, and a `declare global` block with the custom-element element types (typed `querySelector`, event details, listeners, `HTMLElementTagNameMap`). Self-contained.
 
 - **Per-framework JSX types** — Opt-in files (React `exportTypesForReact`, default `components.react.ts`, on; SolidJS `exportTypesForSolidJs` and StencilJS `exportTypesForStencil`, off by default) that augment each framework's `IntrinsicElements`. Each imports its framework and re-uses the core `ComponentProperties` namespace, so the core file must be generated too.
 
-- **Per-component types** — Appended after an auto-generated marker in each component source file. Updated only when the component or its events/description change (when using incremental build).
+- **Legacy per-component types cleanup** — Component files that used the previous generation had a `declare global` block appended after a `// ######### Auto generated below #########` marker. That content now lives in the exported types file, so the build removes it from those files (transitional, idempotent; `fileGeneration.cleanupLegacyComponentTypes`, on by default).
 
 - **Per-component readme** — `readme.md` in the same directory as the component file. Contains tables for properties, events, slots, CSS parts, and usage derived from the definition.
 

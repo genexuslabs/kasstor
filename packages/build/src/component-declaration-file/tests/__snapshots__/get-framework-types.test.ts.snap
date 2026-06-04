@@ -39,10 +39,7 @@ exports[`[component-declaration-file] getIntrinsicElementsInterface > maps tag n
   interface IntrinsicElements {
     /**
      * A form field.
-     *
-     * @fires \`selectedItemsChange\` Changed.
      */
-    
     "kst-field": KstField;
     
     /**
@@ -76,11 +73,7 @@ declare namespace ReactJSX {
   interface IntrinsicElements {
     /**
      * A form field.
-     *
-     * @fires \`input\` Native input event.
-     * @fires \`selectedItemsChange\` Selection changed.
      */
-    
     "kst-field": KstField;
     
     /**
@@ -133,11 +126,7 @@ declare namespace SolidJsJSX {
   interface IntrinsicElements {
     /**
      * A form field.
-     *
-     * @fires \`input\` Native input event.
-     * @fires \`selectedItemsChange\` Selection changed.
      */
-    
     "kst-field": KstField;
     
     /**
@@ -182,11 +171,7 @@ declare namespace StencilJSX {
   interface IntrinsicElements {
     /**
      * A form field.
-     *
-     * @fires \`input\` Native input event.
-     * @fires \`selectedItemsChange\` Selection changed.
      */
-    
     "kst-field": KstField;
     
     /**

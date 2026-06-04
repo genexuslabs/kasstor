@@ -5,6 +5,7 @@ import {
   getComponentProperties,
   getComponentPropertiesSolidJS
 } from "./get-component-properties-union-type.js";
+import { getGlobalTypeDeclarations } from "./get-global-types.js";
 import { getImportPaths } from "./get-import-paths.js";
 
 /**
@@ -14,7 +15,10 @@ import { getImportPaths } from "./get-import-paths.js";
  * This file contains everything that does NOT depend on a specific framework:
  * the imports/re-exports of the types used by properties, events and methods,
  * the `ComponentBaseClasses` interface, the `ComponentProperties` /
- * `ComponentPropertiesSolidJS` namespaces, and the `ComponentEvents` namespace.
+ * `ComponentPropertiesSolidJS` namespaces, the `ComponentEvents` namespace, and
+ * the `declare global` block with the custom-element element types (event maps,
+ * typed listeners, `HTMLElementTagNameMap`, etc.). The latter used to be
+ * appended at the end of each `*.lit.ts` file and now lives here.
  *
  * The per-framework JSX types (React/SolidJS/StencilJS) live in their own opt-in
  * files (see `get-framework-types.ts`) so that consumers only pull in a given
@@ -45,7 +49,9 @@ ${getComponentProperties(components)}
 
 ${getComponentPropertiesSolidJS(components)}
 
-${getComponentEvents(components, "nothing")}`;
+${getComponentEvents(components, "nothing")}
+
+${getGlobalTypeDeclarations(components)}`;
 
 export {
   getReactDeclaration,

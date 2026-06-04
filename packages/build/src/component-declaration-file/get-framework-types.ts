@@ -1,6 +1,6 @@
 import {
-  getComponentHTMLInterfaceName,
-  getFullJSDocWithFiresTags
+  getAlignedClassJSDoc,
+  getComponentHTMLInterfaceName
 } from "../global-type-declarations/get-global-type-declaration.js";
 import type { ComponentDefinition, LibraryComponents } from "../typings/library-components";
 import {
@@ -167,10 +167,9 @@ export const getIntrinsicElementsInterface = (components: LibraryComponents) => 
     .map(
       ({
         className,
-        events,
         fullClassJSDoc,
         tagName
-      }) => `${getFullJSDocWithFiresTags(fullClassJSDoc, events, true).split("\n").join("\n  ")}
+      }) => `${getAlignedClassJSDoc(fullClassJSDoc).split("\n").join("\n  ")}
     "${tagName}": ${className};`
     )
     .join("\n    ")}

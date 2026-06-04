@@ -239,7 +239,7 @@ In other words: install this plugin, add `@lit-labs/ssr` to your dev pipeline, a
 
 At **build start** (dev and production), the plugin runs **@genexus/kasstor-build** library analysis. It discovers components matching `includedPaths.component` (minus `excludedPaths`) and, unless `fileGeneration: false`, can auto-generate:
 
-- **Per-component types** — Appended at the end of each component file. Expose properties, events, and methods so the IDE can autocomplete them in Lit templates, type event details, and type `querySelector` / `querySelectorAll` for your custom elements.
+- **Custom-element global types** — A `declare global` block (typed `querySelector` / `querySelectorAll`, event detail types, typed event listeners) emitted into the exported types file (e.g. `components.ts`). This used to be appended at the end of each component file; that legacy content is now removed by a transitional cleanup (`fileGeneration.cleanupLegacyComponentTypes`, on by default).
 
 - **Per-component README** — A README next to each component with properties, events, slots, CSS parts, and usage extracted from the definition. Keeps docs in sync with the code without writing them by hand.
 
