@@ -1,0 +1,67 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`[component-declaration-file] getAllPropertiesEventAndMethodsExports > imports and re-exports event types 1`] = `
+"import type { MyEventDetail } from "./events.js";
+
+export type { MyEventDetail };"
+`;
+
+exports[`[component-declaration-file] getAllPropertiesEventAndMethodsExports > imports and re-exports method types 1`] = `
+"import type { MyMethodArg } from "./methods.js";
+
+export type { MyMethodArg };"
+`;
+
+exports[`[component-declaration-file] getAllPropertiesEventAndMethodsExports > imports and re-exports property types 1`] = `
+"import type { MyType } from "./types.js";
+
+export type { MyType };"
+`;
+
+exports[`[component-declaration-file] getAllPropertiesEventAndMethodsExports > merges and de-duplicates the same module across components 1`] = `
+"import type { Shared, OnlyA, OnlyB } from "./shared.js";
+
+export type { Shared, OnlyA, OnlyB };"
+`;
+
+exports[`[component-declaration-file] getAllPropertiesEventAndMethodsExports > merges property, event and method types of a single component 1`] = `
+"import type { PropType, EventType, MethodType } from "./types.js";
+
+export type { PropType, EventType, MethodType };"
+`;
+
+exports[`[component-declaration-file] getAllPropertiesEventAndMethodsExports > returns empty import and export blocks when no type imports exist 1`] = `
+"
+
+"
+`;
+
+exports[`[component-declaration-file] getAllPropertiesEventAndMethodsExports > sorts relative and external module specifiers 1`] = `
+"import type { ExternalType } from "@scope/pkg";
+import type { LocalType } from "./local.js";
+
+export type { ExternalType };
+export type { LocalType };"
+`;
+
+exports[`[component-declaration-file] getComponentImports > renders one import line per component 1`] = `
+"import type { A as AElement } from "a.ts";
+import type { B as BElement } from "b.ts";"
+`;
+
+exports[`[component-declaration-file] getComponentImports > sorts the components array in place by source path 1`] = `
+[
+  "A",
+  "B",
+]
+`;
+
+exports[`[component-declaration-file] getImportPaths > composes the type-imports and component-imports sections 1`] = `
+"// Types used by properties, events and methods
+import type { FieldVariant, FocusOptions } from "./types.js";
+
+export type { FieldVariant, FocusOptions };
+
+// Component class types
+import type { KstField as KstFieldElement } from "./kst-field.lit.ts";"
+`;

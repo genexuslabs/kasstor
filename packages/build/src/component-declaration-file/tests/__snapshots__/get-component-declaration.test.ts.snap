@@ -1,0 +1,443 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`[component-declaration-file] getComponentDeclaration > renders a bare component with only the required fields 1`] = `
+"// Types used by properties, events and methods
+
+
+
+
+// Component class types
+import type { KstDivider as KstDividerElement } from "./kst-divider.lit.ts";
+
+/**
+ * Each interface contains the base class of the custom elements of the
+ * library.
+ */
+export interface ComponentBaseClasses {
+  "kst-divider": KstDividerElement;
+}
+
+/**
+ * Each interface contains the properties of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentProperties {
+  export type KstDivider = {};
+}
+
+/**
+ * Each interface contains the properties of the custom elements of the library.
+ * This format is used for SolidJS applications.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentPropertiesSolidJS {
+  export type KstDivider = {};
+}
+
+/**
+ * Each interface contains the events of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentEvents {
+  
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//                  Types for JSX templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace LocalJSX {
+  export type KstDivider = ComponentProperties.KstDivider & { children?: unknown; className?: string; };
+  
+  interface IntrinsicElements {
+    /**
+     * A divider.
+     */
+    "kst-divider": KstDivider;
+  }
+}
+  
+export type { LocalJSX as JSX };
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//                Types for SolidJS templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace SolidJsJSX {
+  export type KstDivider = ComponentPropertiesSolidJS.KstDivider & { children?: unknown; class?: string; };
+  
+  interface IntrinsicElements {
+    /**
+     * A divider.
+     */
+    "kst-divider": KstDivider;
+  }
+}
+
+export type { SolidJsJSX };
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//          Apply module types for React templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// @ts-expect-error This module exists in React applications
+declare module "react" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends LocalJSX.IntrinsicElements {}
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//         Apply module types for SolidJS templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// @ts-expect-error This module exists in SolidJS applications
+declare module "solid-js" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends SolidJsJSX.IntrinsicElements {}
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//        Apply module types for StencilJS templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// @ts-expect-error This module exists in StencilJS applications
+declare module "@stencil/core" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  export namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends LocalJSX.IntrinsicElements {}
+  }
+}"
+`;
+
+exports[`[component-declaration-file] getComponentDeclaration > renders a fully-featured component (properties, events, imported types and JSDoc) 1`] = `
+"// Types used by properties, events and methods
+import type { FieldVariant, FocusFieldOptions } from "./types.js";
+
+export type { FieldVariant, FocusFieldOptions };
+
+// Component class types
+import type { KstField as KstFieldElement } from "./kst-field.lit.ts";
+
+/**
+ * Each interface contains the base class of the custom elements of the
+ * library.
+ */
+export interface ComponentBaseClasses {
+  "kst-field": KstFieldElement;
+}
+
+/**
+ * Each interface contains the properties of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentProperties {
+  export type KstField = Pick<KstFieldElement, "value" | "variant">;
+}
+
+/**
+ * Each interface contains the properties of the custom elements of the library.
+ * This format is used for SolidJS applications.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentPropertiesSolidJS {
+  export type KstField = {
+    /**
+     * The current value.
+     */
+    "prop:value"?: string;
+
+    /**
+     * Visual variant.
+     */
+    "prop:variant": FieldVariant;
+  };
+}
+
+/**
+ * Each interface contains the events of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentEvents {
+  export type KstField = {
+    /**
+     * Fires when the value changes.
+     */
+    change?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//                  Types for JSX templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace LocalJSX {
+  export type KstField = ComponentProperties.KstField & { children?: unknown; className?: string; } & {
+    /**
+     * Fires when the value changes.
+     */
+    onChange?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };
+  
+  interface IntrinsicElements {
+    /**
+     * A form field with validation.
+     *
+     * @part input - The input element.
+     *
+     * @fires \`change\` Fires when the value changes.
+     */
+    
+    "kst-field": KstField;
+  }
+}
+  
+export type { LocalJSX as JSX };
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//                Types for SolidJS templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace SolidJsJSX {
+  export type KstField = ComponentPropertiesSolidJS.KstField & { children?: unknown; class?: string; } & {
+    /**
+     * Fires when the value changes.
+     */
+    "on:change"?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };
+  
+  interface IntrinsicElements {
+    /**
+     * A form field with validation.
+     *
+     * @part input - The input element.
+     *
+     * @fires \`change\` Fires when the value changes.
+     */
+    
+    "kst-field": KstField;
+  }
+}
+
+export type { SolidJsJSX };
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//          Apply module types for React templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// @ts-expect-error This module exists in React applications
+declare module "react" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends LocalJSX.IntrinsicElements {}
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//         Apply module types for SolidJS templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// @ts-expect-error This module exists in SolidJS applications
+declare module "solid-js" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends SolidJsJSX.IntrinsicElements {}
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//        Apply module types for StencilJS templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// @ts-expect-error This module exists in StencilJS applications
+declare module "@stencil/core" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  export namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends LocalJSX.IntrinsicElements {}
+  }
+}"
+`;
+
+exports[`[component-declaration-file] getComponentDeclaration > renders a multi-component library (locking section ordering and the in-place import sort) 1`] = `
+"// Types used by properties, events and methods
+
+
+
+
+// Component class types
+import type { KstField as KstFieldElement } from "./kst-field.lit.ts";
+import type { KstIcon as KstIconElement } from "./kst-icon.lit.ts";
+
+/**
+ * Each interface contains the base class of the custom elements of the
+ * library.
+ */
+export interface ComponentBaseClasses {
+  "kst-field": KstFieldElement;
+  "kst-icon": KstIconElement;
+}
+
+/**
+ * Each interface contains the properties of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentProperties {
+  export type KstField = Pick<KstFieldElement, "value">;
+  export type KstIcon = Pick<KstIconElement, "name">;
+}
+
+/**
+ * Each interface contains the properties of the custom elements of the library.
+ * This format is used for SolidJS applications.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentPropertiesSolidJS {
+  export type KstField = {
+    /**
+     * 
+     */
+    "prop:value"?: string;
+  };
+
+  export type KstIcon = {
+    /**
+     * 
+     */
+    "prop:name"?: string;
+  };
+}
+
+/**
+ * Each interface contains the events of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentEvents {
+  export type KstField = {
+    /**
+     * Value changed.
+     */
+    change?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//                  Types for JSX templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace LocalJSX {
+  export type KstField = ComponentProperties.KstField & { children?: unknown; className?: string; } & {
+    /**
+     * Value changed.
+     */
+    onChange?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };
+
+  export type KstIcon = ComponentProperties.KstIcon & { children?: unknown; className?: string; };
+  
+  interface IntrinsicElements {
+    /**
+     * A form field.
+     *
+     * @fires \`change\` Value changed.
+     */
+    
+    "kst-field": KstField;
+    
+    /**
+     * An icon.
+     */
+    "kst-icon": KstIcon;
+  }
+}
+  
+export type { LocalJSX as JSX };
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//                Types for SolidJS templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace SolidJsJSX {
+  export type KstField = ComponentPropertiesSolidJS.KstField & { children?: unknown; class?: string; } & {
+    /**
+     * Value changed.
+     */
+    "on:change"?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };
+
+  export type KstIcon = ComponentPropertiesSolidJS.KstIcon & { children?: unknown; class?: string; };
+  
+  interface IntrinsicElements {
+    /**
+     * A form field.
+     *
+     * @fires \`change\` Value changed.
+     */
+    
+    "kst-field": KstField;
+    
+    /**
+     * An icon.
+     */
+    "kst-icon": KstIcon;
+  }
+}
+
+export type { SolidJsJSX };
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//          Apply module types for React templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// @ts-expect-error This module exists in React applications
+declare module "react" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends LocalJSX.IntrinsicElements {}
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//         Apply module types for SolidJS templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// @ts-expect-error This module exists in SolidJS applications
+declare module "solid-js" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends SolidJsJSX.IntrinsicElements {}
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//        Apply module types for StencilJS templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// @ts-expect-error This module exists in StencilJS applications
+declare module "@stencil/core" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  export namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends LocalJSX.IntrinsicElements {}
+  }
+}"
+`;
+
+exports[`[component-declaration-file] getComponentDeclaration > returns the placeholder comment when there are no components 1`] = `
+"//
+// No "public" components were found. Only "public" components are exported.
+// To mark a component as "public", add the "@public" (or "@access public") tag in the JSDoc of the component class.
+//
+// Example:
+//   /**
+//    * Component description...
+//    * @public
+//    */
+//   @Component({
+//     styles,
+//     tag: "my-element"
+//   })
+//   export class MyElement extends KasstorElement {}
+//"
+`;

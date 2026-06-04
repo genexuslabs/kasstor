@@ -1,0 +1,160 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`[component-declaration-file] getComponentLocalJSXType > appends \`"on:xxx"\` event props for SolidJS with events 1`] = `
+"export type KstField = ComponentPropertiesSolidJS.KstField & { children?: unknown; class?: string; } & {
+    /**
+     * Value changed.
+     */
+    "on:change"?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getComponentLocalJSXType > appends \`onXxx\` event props for JSX with events 1`] = `
+"export type KstField = ComponentProperties.KstField & { children?: unknown; className?: string; } & {
+    /**
+     * Value changed.
+     */
+    onChange?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getComponentLocalJSXType > references \`ComponentProperties\` and \`className\` for JSX without events 1`] = `"export type KstIcon = ComponentProperties.KstIcon & { children?: unknown; className?: string; };"`;
+
+exports[`[component-declaration-file] getComponentLocalJSXType > references \`ComponentPropertiesSolidJS\` and \`class\` for SolidJS without events 1`] = `"export type KstIcon = ComponentPropertiesSolidJS.KstIcon & { children?: unknown; class?: string; };"`;
+
+exports[`[component-declaration-file] getIntrinsicElementsInterface (class JSDoc) > aligns a multi-line class JSDoc without events 1`] = `
+"
+  interface IntrinsicElements {
+    /**
+     * A card surface.
+     *
+     * @part container - The wrapper.
+     */
+    "kst-card": KstCard;
+  }"
+`;
+
+exports[`[component-declaration-file] getIntrinsicElementsInterface (class JSDoc) > appends \`@fires\` tags to a single-line empty JSDoc with events 1`] = `
+"
+  interface IntrinsicElements {
+    /**
+     * @fires \`change\` Value changed.
+     */
+    
+    "kst-field": KstField;
+  }"
+`;
+
+exports[`[component-declaration-file] getIntrinsicElementsInterface (class JSDoc) > appends backticked \`@fires\` tags to a multi-line JSDoc with events 1`] = `
+"
+  interface IntrinsicElements {
+    /**
+     * A form field.
+     *
+     * @fires \`change\` Fires on value change.
+     * @fires \`focus\` Fires on focus.
+     */
+    
+    "kst-field": KstField;
+  }"
+`;
+
+exports[`[component-declaration-file] getIntrinsicElementsInterface (class JSDoc) > appends multi-line \`@fires\` descriptions with events 1`] = `
+"
+  interface IntrinsicElements {
+    /**
+     * A form field.
+     *
+     * @fires \`change\` First line.
+     *   Second line.
+     */
+    
+    "kst-field": KstField;
+  }"
+`;
+
+exports[`[component-declaration-file] getIntrinsicElementsInterface (class JSDoc) > handles a single-line empty JSDoc (\`/***/\`) without events 1`] = `
+"
+  interface IntrinsicElements {
+    /***/
+    "kst-card": KstCard;
+  }"
+`;
+
+exports[`[component-declaration-file] getIntrinsicElementsInterface (class JSDoc) > handles an empty class JSDoc string without events 1`] = `
+"
+  interface IntrinsicElements {
+    
+    "kst-card": KstCard;
+  }"
+`;
+
+exports[`[component-declaration-file] getLocalJSXTypes (React/JSX namespace) > renders the LocalJSX namespace and exports it as JSX 1`] = `
+"
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//                  Types for JSX templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace LocalJSX {
+  export type KstField = ComponentProperties.KstField & { children?: unknown; className?: string; } & {
+    /**
+     * Value changed.
+     */
+    onChange?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };
+
+  export type KstIcon = ComponentProperties.KstIcon & { children?: unknown; className?: string; };
+  
+  interface IntrinsicElements {
+    /**
+     * A form field.
+     *
+     * @fires \`change\` Value changed.
+     */
+    
+    "kst-field": KstField;
+    
+    /**
+     * An icon.
+     */
+    "kst-icon": KstIcon;
+  }
+}
+  
+export type { LocalJSX as JSX };"
+`;
+
+exports[`[component-declaration-file] getSolidJsTypes (SolidJS namespace) > renders the SolidJsJSX namespace and exports it 1`] = `
+"
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//                Types for SolidJS templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace SolidJsJSX {
+  export type KstField = ComponentPropertiesSolidJS.KstField & { children?: unknown; class?: string; } & {
+    /**
+     * Value changed.
+     */
+    "on:change"?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };
+
+  export type KstIcon = ComponentPropertiesSolidJS.KstIcon & { children?: unknown; class?: string; };
+  
+  interface IntrinsicElements {
+    /**
+     * A form field.
+     *
+     * @fires \`change\` Value changed.
+     */
+    
+    "kst-field": KstField;
+    
+    /**
+     * An icon.
+     */
+    "kst-icon": KstIcon;
+  }
+}
+
+export type { SolidJsJSX };"
+`;

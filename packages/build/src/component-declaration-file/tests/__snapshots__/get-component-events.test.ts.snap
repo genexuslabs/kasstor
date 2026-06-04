@@ -1,0 +1,76 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`[component-declaration-file] getComponentEvents namespace > only includes components that declare events 1`] = `
+"/**
+ * Each interface contains the events of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentEvents {
+  export type KstField = {
+    /**
+     * Value changed.
+     */
+    change?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };
+}"
+`;
+
+exports[`[component-declaration-file] getComponentEventsUnionType > renders a single event for the \`nothing\` framework 1`] = `
+"{
+    /**
+     * Value changed.
+     */
+    change?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getComponentEventsUnionType > renders an event without a description as an empty JSDoc 1`] = `
+"{
+    /**
+     * 
+     */
+    change?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getComponentEventsUnionType > renders multi-line event descriptions 1`] = `
+"{
+    /**
+     * First line.
+     * Second line.
+     */
+    change?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getComponentEventsUnionType > renders multiple events 1`] = `
+"{
+    /**
+     * Value changed.
+     */
+    change?: (event: HTMLKstFieldElementChangeEvent) => void;
+
+    /**
+     * Value is being typed.
+     */
+    input?: (event: HTMLKstFieldElementInputEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getComponentEventsUnionType > renders the same event for JSX (React) 1`] = `
+"{
+    /**
+     * Value changed.
+     */
+    onChange?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getComponentEventsUnionType > renders the same event for SolidJS 1`] = `
+"{
+    /**
+     * Value changed.
+     */
+    "on:change"?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };"
+`;

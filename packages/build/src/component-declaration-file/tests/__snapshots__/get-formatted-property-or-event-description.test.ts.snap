@@ -1,0 +1,26 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`[component-declaration-file] getFormattedPropertyOrEventDescription > prefixes every line of a multi-line description 1`] = `
+"/**
+     * First line.
+     * Second line.
+     */"
+`;
+
+exports[`[component-declaration-file] getFormattedPropertyOrEventDescription > renders a single-line description 1`] = `
+"/**
+     * The current value.
+     */"
+`;
+
+exports[`[component-declaration-file] getFormattedPropertyOrEventDescription > renders an empty JSDoc body for an empty-string description 1`] = `
+"/**
+     * 
+     */"
+`;
+
+exports[`[component-declaration-file] getFormattedPropertyOrEventDescription > renders an empty JSDoc body when the description is undefined 1`] = `
+"/**
+     * 
+     */"
+`;
