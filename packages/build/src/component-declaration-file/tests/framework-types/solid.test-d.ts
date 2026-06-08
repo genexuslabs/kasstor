@@ -1,10 +1,19 @@
 // Type contract for the generated SolidJS JSX types (see `react.test-d.ts` for
 // the rationale). SolidJS uses `class` (not `className`) and the namespaced
 // `on:` directive (verbatim event name) for every event.
+//
+// The generated SolidJS file declares its own `ComponentPropertiesSolidJS`
+// namespace (it is NOT part of the core `components.ts` file), so this contract
+// declares it locally too.
 
 import type { JSX } from "solid-js";
 
-import type { ComponentPropertiesSolidJS } from "./sample-generated.js";
+// eslint-disable-next-line @typescript-eslint/no-namespace
+namespace ComponentPropertiesSolidJS {
+  export type KstField = {
+    "prop:value"?: string;
+  };
+}
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace SolidJsJSX {

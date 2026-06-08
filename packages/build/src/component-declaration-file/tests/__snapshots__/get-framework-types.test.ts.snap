@@ -100,13 +100,33 @@ exports[`[component-declaration-file] getReactDeclaration > returns a placeholde
 //"
 `;
 
-exports[`[component-declaration-file] getSolidDeclaration > imports solid-js + the core ComponentPropertiesSolidJS and augments solid-js JSX 1`] = `
+exports[`[component-declaration-file] getSolidDeclaration > declares ComponentPropertiesSolidJS locally (no dangling core import) and augments solid-js JSX 1`] = `
 "import type { JSX } from "solid-js";
-import type { ComponentPropertiesSolidJS } from "./components.js";
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Types for SolidJS JSX templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+/**
+ * Each interface contains the properties of the custom elements of the library.
+ * This format is used for SolidJS applications.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentPropertiesSolidJS {
+  export type KstField = {
+    /**
+     * 
+     */
+    "prop:value"?: string;
+  };
+
+  export type KstIcon = {
+    /**
+     * 
+     */
+    "prop:name"?: string;
+  };
+}
+
 // eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace SolidJsJSX {
   export type KstField = Omit<JSX.HTMLAttributes<HTMLKstFieldElement>, keyof ComponentPropertiesSolidJS.KstField> & ComponentPropertiesSolidJS.KstField & {
@@ -133,6 +153,50 @@ declare namespace SolidJsJSX {
      * An icon.
      */
     "kst-icon": KstIcon;
+  }
+}
+
+export type { SolidJsJSX };
+
+declare module "solid-js" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends SolidJsJSX.IntrinsicElements {}
+  }
+}"
+`;
+
+exports[`[component-declaration-file] getSolidDeclaration > imports the property types from the core file when properties use imported types 1`] = `
+"import type { JSX } from "solid-js";
+import type { FieldVariant } from "./components.js";
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Types for SolidJS JSX templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+/**
+ * Each interface contains the properties of the custom elements of the library.
+ * This format is used for SolidJS applications.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentPropertiesSolidJS {
+  export type KstField = {
+    /**
+     * 
+     */
+    "prop:variant"?: FieldVariant;
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace SolidJsJSX {
+  export type KstField = Omit<JSX.HTMLAttributes<HTMLKstFieldElement>, keyof ComponentPropertiesSolidJS.KstField> & ComponentPropertiesSolidJS.KstField;
+  
+  interface IntrinsicElements {
+    /**
+     * A form field.
+     */
+    "kst-field": KstField;
   }
 }
 

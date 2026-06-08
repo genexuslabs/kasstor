@@ -146,8 +146,36 @@ describe("[component-declaration-file] getReactDeclaration", () => {
 });
 
 describe("[component-declaration-file] getSolidDeclaration", () => {
-  it("imports solid-js + the core ComponentPropertiesSolidJS and augments solid-js JSX", () => {
-    expect(getSolidDeclaration(library(), "components.ts")).toMatchSnapshot();
+  it("declares ComponentPropertiesSolidJS locally (no dangling core import) and augments solid-js JSX", () => {
+    const result = getSolidDeclaration(library(), "components.ts");
+
+    // The namespace is declared in this file, not imported from the core file.
+    expect(result).toContain("export namespace ComponentPropertiesSolidJS {");
+    expect(result).not.toContain(
+      'import type { ComponentPropertiesSolidJS } from "./components.js"'
+    );
+    // No property import types in this library -> no import from the core file.
+    expect(result).not.toContain('from "./components.js"');
+    expect(result).toMatchSnapshot();
+  });
+
+  it("imports the property types from the core file when properties use imported types", () => {
+    const components = [
+      makeComponent({
+        tagName: "kst-field",
+        className: "KstField",
+        fullClassJSDoc: "/**\n * A form field.\n */",
+        properties: [makeProperty({ name: "variant", type: "FieldVariant" })],
+        propertyImportTypes: { "./types.js": ["FieldVariant"] }
+      })
+    ];
+
+    const result = getSolidDeclaration(components, "components.ts");
+
+    expect(result).toContain('import type { FieldVariant } from "./components.js";');
+    expect(result).toContain("export namespace ComponentPropertiesSolidJS {");
+    expect(result).toContain('"prop:variant"?: FieldVariant;');
+    expect(result).toMatchSnapshot();
   });
 });
 

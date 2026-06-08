@@ -26,15 +26,6 @@ export namespace ComponentProperties {
 }
 
 /**
- * Each interface contains the properties of the custom elements of the library.
- * This format is used for SolidJS applications.
- */
-// eslint-disable-next-line @typescript-eslint/no-namespace
-export namespace ComponentPropertiesSolidJS {
-  export type KstDivider = {};
-}
-
-/**
  * Each interface contains the events of the custom elements of the library.
  */
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -81,25 +72,6 @@ export interface ComponentBaseClasses {
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ComponentProperties {
   export type KstField = Pick<KstFieldElement, "value" | "variant">;
-}
-
-/**
- * Each interface contains the properties of the custom elements of the library.
- * This format is used for SolidJS applications.
- */
-// eslint-disable-next-line @typescript-eslint/no-namespace
-export namespace ComponentPropertiesSolidJS {
-  export type KstField = {
-    /**
-     * The current value.
-     */
-    "prop:value"?: string;
-
-    /**
-     * Visual variant.
-     */
-    "prop:variant": FieldVariant;
-  };
 }
 
 /**
@@ -187,27 +159,6 @@ export interface ComponentBaseClasses {
 export namespace ComponentProperties {
   export type KstField = Pick<KstFieldElement, "value">;
   export type KstIcon = Pick<KstIconElement, "name">;
-}
-
-/**
- * Each interface contains the properties of the custom elements of the library.
- * This format is used for SolidJS applications.
- */
-// eslint-disable-next-line @typescript-eslint/no-namespace
-export namespace ComponentPropertiesSolidJS {
-  export type KstField = {
-    /**
-     * 
-     */
-    "prop:value"?: string;
-  };
-
-  export type KstIcon = {
-    /**
-     * 
-     */
-    "prop:name"?: string;
-  };
 }
 
 /**

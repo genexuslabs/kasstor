@@ -11,6 +11,27 @@ import {
   getComponentEventsUnionType,
   getFrameworkEvents
 } from "./get-component-events-union-type.js";
+import { getComponentPropertiesSolidJS } from "./get-component-properties-union-type.js";
+
+/**
+ * Collects the de-duplicated, sorted type names imported by the components'
+ * properties (`propertyImportTypes`). The SolidJS JSX file references these
+ * types in its `ComponentPropertiesSolidJS` namespace, so it imports them from
+ * the core file (which re-exports them).
+ */
+const getSolidPropertyTypeNames = (components: LibraryComponents): string[] => {
+  const typeNames = new Set<string>();
+
+  components.forEach(({ propertyImportTypes }) => {
+    if (propertyImportTypes) {
+      Object.values(propertyImportTypes).forEach(names =>
+        names.forEach(name => typeNames.add(name))
+      );
+    }
+  });
+
+  return [...typeNames].sort();
+};
 
 /**
  * Frameworks for which a dedicated, opt-in JSX types file is generated.
@@ -48,7 +69,14 @@ type FrameworkConfig = {
   baseAttributes: (hostType: string) => string;
 
   /** `import type` statements required at the top of the file. */
-  imports: (coreModuleSpecifier: string) => string;
+  imports: (coreModuleSpecifier: string, components: LibraryComponents) => string;
+
+  /**
+   * Extra declarations emitted before the JSX namespace. Used by SolidJS to
+   * declare its `ComponentPropertiesSolidJS` namespace locally (it is not part
+   * of the core file because it does not depend on the core's class imports).
+   */
+  extraDeclarations?: (components: LibraryComponents) => string;
 
   /** Module augmentation that wires the namespace into the framework's JSX. */
   moduleAugmentation: (namespaceName: string) => string;
@@ -80,8 +108,19 @@ import type { ${COMPONENT_PROPERTIES_NAMESPACE_NAMES.jsx} } from "${coreModuleSp
     // `ComponentPropertiesSolidJS` already declares each prop's optionality.
     wrapProperties: propertiesRef => propertiesRef,
     baseAttributes: hostType => `JSX.HTMLAttributes<${hostType}>`,
-    imports: coreModuleSpecifier => `import type { JSX } from "solid-js";
-import type { ${COMPONENT_PROPERTIES_NAMESPACE_NAMES.solidJs} } from "${coreModuleSpecifier}";`,
+    // The `ComponentPropertiesSolidJS` namespace is declared locally (see
+    // `extraDeclarations`) and references the components' property types, which
+    // are imported from the core file (it re-exports them).
+    imports: (coreModuleSpecifier, components) => {
+      const propertyTypeNames = getSolidPropertyTypeNames(components);
+      const propertyTypesImport =
+        propertyTypeNames.length === 0
+          ? ""
+          : `\nimport type { ${propertyTypeNames.join(", ")} } from "${coreModuleSpecifier}";`;
+
+      return `import type { JSX } from "solid-js";${propertyTypesImport}`;
+    },
+    extraDeclarations: getComponentPropertiesSolidJS,
     moduleAugmentation: namespaceName => `declare module "solid-js" {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
@@ -197,12 +236,15 @@ export const getFrameworkDeclaration = (
     return noPublicComponentsComment(framework);
   }
 
-  const { imports, moduleAugmentation, namespaceName } = FRAMEWORK_CONFIG[framework];
+  const { imports, extraDeclarations, moduleAugmentation, namespaceName }: FrameworkConfig =
+    FRAMEWORK_CONFIG[framework];
 
-  return `${imports(getCoreModuleSpecifier(coreFileName))}
+  const extra = extraDeclarations ? `${extraDeclarations(components)}\n\n` : "";
+
+  return `${imports(getCoreModuleSpecifier(coreFileName), components)}
 
 ${banner(framework)}
-// eslint-disable-next-line @typescript-eslint/no-namespace
+${extra}// eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace ${namespaceName} {
   ${components.map(component => getComponentFrameworkType(component, framework)).join("\n\n  ")}
   ${getIntrinsicElementsInterface(components)}
