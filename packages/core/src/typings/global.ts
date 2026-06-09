@@ -8,12 +8,38 @@ import type {
 import type { KasstorElement } from "../decorators/Component/index";
 
 declare global {
+  /**
+   * Registry of the valid bundle names accepted by the `@Component` option
+   * `sharedDesignSystemStyles`. It is empty by default, so the option falls back
+   * to `string[]` (no enforcement).
+   *
+   * Augment this interface ONCE in the consuming application (any `.ts`/`.d.ts`
+   * with a top-level `export {}`) to turn `sharedDesignSystemStyles` into a typed
+   * allow-list: only the registered keys will be accepted and a typo will fail
+   * type-checking. The values are irrelevant — only the keys form the union.
+   *
+   * Keep it in sync with the `bundleLoaders` passed to `registerDesignSystem`
+   * (from `@genexus/kasstor-design-system`); e.g. derive it without repeating
+   * yourself:
+   *
+   * ```ts
+   * const bundleLoaders = {
+   *   "components/button": "/themes/button.css"
+   * } as const;
+   *
+   * declare global {
+   *   interface KasstorSharedDesignSystemStyles
+   *     extends Record<keyof typeof bundleLoaders, true> {}
+   * }
+   * ```
+   */
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  interface KasstorSharedDesignSystemStyles {}
+
   // TODO: Add support to this
   var kasstorCoreVersions: string[] | undefined;
 
-  var kasstorCoreAttachedCustomElementsWithoutLoader:
-    | Set<CustomElementTagNames>
-    | undefined;
+  var kasstorCoreAttachedCustomElementsWithoutLoader: Set<CustomElementTagNames> | undefined;
 
   // We use the window to initialize these variables, since multiple libraries
   // can use this utility but we don't want to set multiple MutationObservers
@@ -43,10 +69,7 @@ declare global {
          * Map between custom element tag names and their loader functions.
          * This is used to register the custom elements that are not defined yet.
          */
-        readonly registeredLoaders: Map<
-          CustomElementTagNames,
-          RegisteredLoaderInfo
-        >;
+        readonly registeredLoaders: Map<CustomElementTagNames, RegisteredLoaderInfo>;
 
         /**
          * MutationObserver that is used to observe mutations in the DOM.
@@ -108,9 +131,7 @@ declare global {
    *
    * Only available in dev mode.
    */
-  var kasstorCoreRegisteredInstances:
-    | Map<string, Set<KasstorElement>>
-    | undefined;
+  var kasstorCoreRegisteredInstances: Map<string, Set<KasstorElement>> | undefined;
 }
 
 // Necessary to auto-detect this module in the project

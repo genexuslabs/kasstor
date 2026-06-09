@@ -1,4 +1,18 @@
 /**
+ * Valid bundle names accepted by {@link ComponentOptions.sharedDesignSystemStyles}.
+ *
+ * Derived from the global {@link KasstorSharedDesignSystemStyles} registry: while
+ * that interface is empty (the default), this falls back to `string` so the
+ * option keeps its lenient `string[]` shape and nothing breaks. As soon as the
+ * consuming application augments the registry (see its JSDoc in
+ * `typings/global.ts`), this becomes the union of the registered keys, so every
+ * `@Component` is type-checked against the allow-list and a typo fails.
+ */
+export type SharedDesignSystemStyleName = keyof KasstorSharedDesignSystemStyles extends never
+  ? string
+  : keyof KasstorSharedDesignSystemStyles;
+
+/**
  * Options for the Component decorator.
  */
 export type ComponentOptions<LibraryPrefix extends `${string}-`, Metadata> = {
@@ -44,8 +58,14 @@ export type ComponentOptions<LibraryPrefix extends `${string}-`, Metadata> = {
    * Shared asynchronous styles that are loaded from the design system registry
    * and adopted into the component's shadow root or the root node of the
    * component if it doesn't have a shadow root.
+   *
+   * Each entry is a bundle name previously registered with `registerDesignSystem`
+   * (from `@genexus/kasstor-design-system`). The accepted names default to any
+   * `string`, but can be globally constrained to a typed allow-list by augmenting
+   * the {@link KasstorSharedDesignSystemStyles} registry — see
+   * {@link SharedDesignSystemStyleName}.
    */
-  sharedDesignSystemStyles?: string[];
+  sharedDesignSystemStyles?: SharedDesignSystemStyleName[];
 
   styles?: string;
 };
@@ -80,4 +100,3 @@ export type ComponentShadowRootOptions = {
    */
   mode?: ShadowRootMode;
 };
-
