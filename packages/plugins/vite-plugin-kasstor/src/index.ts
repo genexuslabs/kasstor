@@ -163,7 +163,12 @@ export async function kasstor(options?: KasstorPluginOptions): Promise<Plugin> {
         elapsedTimes,
         updatedReadmesForComponents,
         updatedTypesForComponents
-      } = await buildLibrary(kasstorBuildOptions, true);
+        // `buildStart` analyzes every component file (no per-file restriction),
+        // so the scan is complete: mark it so `buildLibrary` prunes from its
+        // cache any component whose source file was deleted since the last
+        // build. In `vite build --watch` this hook re-runs on every rebuild, so
+        // without this a deleted component would linger in the generated files.
+      } = await buildLibrary(kasstorBuildOptions, { scanIsComplete: true });
 
       this.info(
         getNormalCommandForLogger(

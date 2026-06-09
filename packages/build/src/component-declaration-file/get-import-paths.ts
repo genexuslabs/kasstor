@@ -43,9 +43,7 @@ export const mergeTypeImports = (
     }
   });
 
-export const getAllPropertiesEventAndMethodsExports = (
-  components: LibraryComponents
-) => {
+export const getAllPropertiesEventAndMethodsExports = (components: LibraryComponents) => {
   const typesImportsOnEachModule = new Map<string, Set<string>>();
 
   components.forEach(component => {
@@ -72,10 +70,7 @@ export const getAllPropertiesEventAndMethodsExports = (
     .join("\n")}
 
 ${sortedImports
-  .map(
-    moduleImport =>
-      `export type { ${[...moduleImport[1].values()].join(", ")} };`
-  )
+  .map(moduleImport => `export type { ${[...moduleImport[1].values()].join(", ")} };`)
   .join("\n")}`;
 };
 
@@ -86,4 +81,3 @@ ${getAllPropertiesEventAndMethodsExports(components)}
 
 // Component class types
 ${getComponentImports(components)}`;
-

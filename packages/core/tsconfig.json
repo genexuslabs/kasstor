@@ -37,6 +37,8 @@
   // "exclude": ["node_modules", "vite.config.ts"]
 
   // TODO: Exclude test files expect when running tests
-  "exclude": ["node_modules", "vite.config.ts"]
+  // `*.test-d.ts` files are type-level tests checked in isolation by
+  // `tsconfig.type-tests.json`; they may augment global interfaces, so they are
+  // kept out of the regular build to avoid leaking those augmentations.
+  "exclude": ["node_modules", "vite.config.ts", "src/**/*.test-d.ts"]
 }
-

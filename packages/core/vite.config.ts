@@ -66,7 +66,10 @@ export default defineConfig(({ mode }) => {
     isProductionAndBrowser &&
       kasstor({
         fileGeneration: {
-          exportTypesForTheLibrary: false,
+          exportTypesForTheLibrary: true,
+          exportTypesForReact: true,
+          exportTypesForSolidJs: true,
+          exportTypesForStencil: true,
           librarySummary: false,
           typeDeclarationsFolder: false
         }
@@ -76,3 +79,4 @@ export default defineConfig(({ mode }) => {
 
   return config;
 });
+

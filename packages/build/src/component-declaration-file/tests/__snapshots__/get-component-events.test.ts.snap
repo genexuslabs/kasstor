@@ -1,0 +1,86 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`[component-declaration-file] getComponentEvents namespace > only includes components that declare events (raw event names) 1`] = `
+"/**
+ * Each interface contains the events of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentEvents {
+  export type KstField = {
+    /**
+     * Changed.
+     */
+    selectedItemsChange?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
+  };
+}"
+`;
+
+exports[`[component-declaration-file] getComponentEventsUnionType > renders an event without a description as an empty JSDoc 1`] = `
+"{
+    /**
+     * 
+     */
+    onselectedItemsChange?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getComponentEventsUnionType > renders both the native (mapped to React's prop name) and custom events for React 1`] = `
+"{
+    /**
+     * Native input.
+     */
+    onInput?: (event: HTMLKstFieldElementInputEvent) => void;
+
+    /**
+     * Selection changed.
+     */
+    onselectedItemsChange?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getComponentEventsUnionType > renders every event for SolidJS with the "on:" prefix 1`] = `
+"{
+    /**
+     * Native input.
+     */
+    "on:input"?: (event: HTMLKstFieldElementInputEvent) => void;
+
+    /**
+     * Selection changed.
+     */
+    "on:selectedItemsChange"?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getComponentEventsUnionType > renders every event with the raw name for the agnostic namespace 1`] = `
+"{
+    /**
+     * Native input.
+     */
+    input?: (event: HTMLKstFieldElementInputEvent) => void;
+
+    /**
+     * Selection changed.
+     */
+    selectedItemsChange?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getComponentEventsUnionType > renders multi-line event descriptions 1`] = `
+"{
+    /**
+     * First line.
+     * Second line.
+     */
+    onselectedItemsChange?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
+  };"
+`;
+
+exports[`[component-declaration-file] getComponentEventsUnionType > renders only the custom event for StencilJS (capitalized prop name) 1`] = `
+"{
+    /**
+     * Selection changed.
+     */
+    onSelectedItemsChange?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
+  };"
+`;

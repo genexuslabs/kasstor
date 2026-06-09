@@ -110,11 +110,11 @@ Key options: `hmr`, `insights`, `includedPaths`, `excludedPaths`, `fileGeneratio
 
 At **build start** (dev and production), the plugin runs **@genexus/kasstor-build** library analysis. It discovers components matching `includedPaths.component` (minus `excludedPaths`) and, unless `fileGeneration: false`, can auto-generate:
 
-- **Per-component types** — Appended at the end of each component file. Expose properties, events, and methods so the IDE can autocomplete them in Lit templates, type event details, and type `querySelector` / `querySelectorAll` for your custom elements.
+- **Custom-element global types** — A `declare global` block (typed `querySelector` / `querySelectorAll`, event detail types, typed event listeners) emitted into the exported types file (e.g. `components.ts`). This used to be appended at the end of each component file; that legacy content is now removed by a transitional cleanup (`fileGeneration.cleanupLegacyComponentTypes`, on by default).
 
 - **Per-component README** — A README next to each component with properties, events, slots, CSS parts, and usage extracted from the definition. Keeps docs in sync with the code without writing them by hand.
 
-- **Exported types for the library** — A single file (e.g. `components.ts`) that re-exports all types used by the components (props, event details, etc.). Simplifies consuming the library from TypeScript and other frameworks.
+- **Exported types for the library** — A framework-agnostic core file (e.g. `components.ts`) that re-exports all types used by the components (props, event details, etc.), plus opt-in per-framework JSX type files that augment each framework's `IntrinsicElements` so the components type-check in JSX templates (component properties, `className`/`class`, `style`, `ref`, `aria-*`, `role`, native and custom events). All three are opt-in (React `components.react.ts`, SolidJS, StencilJS). Configure via `fileGeneration.exportTypesForReact` / `exportTypesForSolidJs` / `exportTypesForStencil`.
 
 - **Library summary** — A summary of all components and their metadata (tag, props, events). Useful for tooling, showcases, or feeding LLMs.
 

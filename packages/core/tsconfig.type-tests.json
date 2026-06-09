@@ -1,0 +1,13 @@
+{
+  // Type-checks the `*.test-d.ts` type-level tests in isolation (via
+  // `bun run test.types`). These files are excluded from the regular build
+  // (see `tsconfig.json` / `tsconfig-types.json`) because they may augment
+  // global interfaces (e.g. `KasstorSharedDesignSystemStyles`), which must not
+  // leak into the real compilation.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["src/**/*.test-d.ts"],
+  "exclude": ["node_modules", "dist"]
+}

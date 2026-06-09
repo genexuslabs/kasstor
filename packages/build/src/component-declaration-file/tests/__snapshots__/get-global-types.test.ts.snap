@@ -1,0 +1,115 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`[component-declaration-file] getGlobalTypeDeclarations > emits only a bare host interface for an eventless component 1`] = `
+"declare global {
+  /**
+   * An icon.
+   */
+  interface HTMLKstIconElement extends KstIconElement {}
+
+  interface IntrinsicElements {
+    "kst-icon": HTMLKstIconElement;
+  }
+
+  interface HTMLElementTagNameMap {
+    "kst-icon": HTMLKstIconElement;
+  }
+}"
+`;
+
+exports[`[component-declaration-file] getGlobalTypeDeclarations > emits the full event machinery + host interface for a component with events 1`] = `
+"declare global {
+  interface HTMLKstFieldElementCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLKstFieldElement;
+  }
+
+  /** Type of the \`kst-field\`'s \`selectedItemsChange\` event. */
+  type HTMLKstFieldElementSelectedItemsChangeEvent = HTMLKstFieldElementCustomEvent<
+    HTMLKstFieldElementEventMap["selectedItemsChange"]
+  >;
+
+  interface HTMLKstFieldElementEventMap {
+    selectedItemsChange: SelectedItemsChangeDetail;
+  }
+
+  interface HTMLKstFieldElementEventTypes {
+    selectedItemsChange: HTMLKstFieldElementSelectedItemsChangeEvent;
+  }
+
+  /**
+   * A form field.
+   */
+  interface HTMLKstFieldElement extends KstFieldElement {
+    // Extend the KstField class redefining the event listener methods to improve type safety when using them
+    addEventListener<K extends keyof HTMLKstFieldElementEventTypes>(type: K, listener: (this: HTMLKstFieldElement, ev: HTMLKstFieldElementEventTypes[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
+    addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
+    addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
+    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+    removeEventListener<K extends keyof HTMLKstFieldElementEventTypes>(type: K, listener: (this: HTMLKstFieldElement, ev: HTMLKstFieldElementEventTypes[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+  }
+
+  interface IntrinsicElements {
+    "kst-field": HTMLKstFieldElement;
+  }
+
+  interface HTMLElementTagNameMap {
+    "kst-field": HTMLKstFieldElement;
+  }
+}"
+`;
+
+exports[`[component-declaration-file] getGlobalTypeDeclarations > wraps every component in a single declare global with merged maps 1`] = `
+"declare global {
+  interface HTMLKstFieldElementCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLKstFieldElement;
+  }
+
+  /** Type of the \`kst-field\`'s \`change\` event. */
+  type HTMLKstFieldElementChangeEvent = HTMLKstFieldElementCustomEvent<
+    HTMLKstFieldElementEventMap["change"]
+  >;
+
+  interface HTMLKstFieldElementEventMap {
+    change: string;
+  }
+
+  interface HTMLKstFieldElementEventTypes {
+    change: HTMLKstFieldElementChangeEvent;
+  }
+
+  /**
+   * A form field.
+   */
+  interface HTMLKstFieldElement extends KstFieldElement {
+    // Extend the KstField class redefining the event listener methods to improve type safety when using them
+    addEventListener<K extends keyof HTMLKstFieldElementEventTypes>(type: K, listener: (this: HTMLKstFieldElement, ev: HTMLKstFieldElementEventTypes[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
+    addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
+    addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
+    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+    removeEventListener<K extends keyof HTMLKstFieldElementEventTypes>(type: K, listener: (this: HTMLKstFieldElement, ev: HTMLKstFieldElementEventTypes[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+  }
+
+  /**
+   * An icon.
+   */
+  interface HTMLKstIconElement extends KstIconElement {}
+
+  interface IntrinsicElements {
+    "kst-field": HTMLKstFieldElement;
+    "kst-icon": HTMLKstIconElement;
+  }
+
+  interface HTMLElementTagNameMap {
+    "kst-field": HTMLKstFieldElement;
+    "kst-icon": HTMLKstIconElement;
+  }
+}"
+`;

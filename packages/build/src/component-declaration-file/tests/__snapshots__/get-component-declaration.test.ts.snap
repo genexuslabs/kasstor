@@ -1,0 +1,244 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`[component-declaration-file] getComponentDeclaration > renders a bare component with only the required fields 1`] = `
+"// Types used by properties, events and methods
+
+
+
+
+// Component class types
+import type { KstDivider as KstDividerElement } from "./kst-divider.lit.ts";
+
+/**
+ * Each interface contains the base class of the custom elements of the
+ * library.
+ */
+export interface ComponentBaseClasses {
+  "kst-divider": KstDividerElement;
+}
+
+/**
+ * Each interface contains the properties of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentProperties {
+  export type KstDivider = {};
+}
+
+/**
+ * Each interface contains the events of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentEvents {
+  
+}
+
+declare global {
+  /**
+   * A divider.
+   */
+  interface HTMLKstDividerElement extends KstDividerElement {}
+
+  interface IntrinsicElements {
+    "kst-divider": HTMLKstDividerElement;
+  }
+
+  interface HTMLElementTagNameMap {
+    "kst-divider": HTMLKstDividerElement;
+  }
+}"
+`;
+
+exports[`[component-declaration-file] getComponentDeclaration > renders a fully-featured component (properties, events, imported types and JSDoc) 1`] = `
+"// Types used by properties, events and methods
+import type { FieldVariant, FocusFieldOptions } from "./types.js";
+
+export type { FieldVariant, FocusFieldOptions };
+
+// Component class types
+import type { KstField as KstFieldElement } from "./kst-field.lit.ts";
+
+/**
+ * Each interface contains the base class of the custom elements of the
+ * library.
+ */
+export interface ComponentBaseClasses {
+  "kst-field": KstFieldElement;
+}
+
+/**
+ * Each interface contains the properties of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentProperties {
+  export type KstField = Pick<KstFieldElement, "value" | "variant">;
+}
+
+/**
+ * Each interface contains the events of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentEvents {
+  export type KstField = {
+    /**
+     * Fires when the value changes.
+     */
+    change?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };
+}
+
+declare global {
+  interface HTMLKstFieldElementCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLKstFieldElement;
+  }
+
+  /** Type of the \`kst-field\`'s \`change\` event. */
+  type HTMLKstFieldElementChangeEvent = HTMLKstFieldElementCustomEvent<
+    HTMLKstFieldElementEventMap["change"]
+  >;
+
+  interface HTMLKstFieldElementEventMap {
+    change: string;
+  }
+
+  interface HTMLKstFieldElementEventTypes {
+    change: HTMLKstFieldElementChangeEvent;
+  }
+
+  /**
+   * A form field with validation.
+   *
+   * @part input - The input element.
+   */
+  interface HTMLKstFieldElement extends KstFieldElement {
+    // Extend the KstField class redefining the event listener methods to improve type safety when using them
+    addEventListener<K extends keyof HTMLKstFieldElementEventTypes>(type: K, listener: (this: HTMLKstFieldElement, ev: HTMLKstFieldElementEventTypes[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
+    addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
+    addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
+    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+    removeEventListener<K extends keyof HTMLKstFieldElementEventTypes>(type: K, listener: (this: HTMLKstFieldElement, ev: HTMLKstFieldElementEventTypes[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+  }
+
+  interface IntrinsicElements {
+    "kst-field": HTMLKstFieldElement;
+  }
+
+  interface HTMLElementTagNameMap {
+    "kst-field": HTMLKstFieldElement;
+  }
+}"
+`;
+
+exports[`[component-declaration-file] getComponentDeclaration > renders a multi-component library (locking section ordering and the in-place import sort) 1`] = `
+"// Types used by properties, events and methods
+
+
+
+
+// Component class types
+import type { KstField as KstFieldElement } from "./kst-field.lit.ts";
+import type { KstIcon as KstIconElement } from "./kst-icon.lit.ts";
+
+/**
+ * Each interface contains the base class of the custom elements of the
+ * library.
+ */
+export interface ComponentBaseClasses {
+  "kst-field": KstFieldElement;
+  "kst-icon": KstIconElement;
+}
+
+/**
+ * Each interface contains the properties of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentProperties {
+  export type KstField = Pick<KstFieldElement, "value">;
+  export type KstIcon = Pick<KstIconElement, "name">;
+}
+
+/**
+ * Each interface contains the events of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentEvents {
+  export type KstField = {
+    /**
+     * Value changed.
+     */
+    change?: (event: HTMLKstFieldElementChangeEvent) => void;
+  };
+}
+
+declare global {
+  interface HTMLKstFieldElementCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLKstFieldElement;
+  }
+
+  /** Type of the \`kst-field\`'s \`change\` event. */
+  type HTMLKstFieldElementChangeEvent = HTMLKstFieldElementCustomEvent<
+    HTMLKstFieldElementEventMap["change"]
+  >;
+
+  interface HTMLKstFieldElementEventMap {
+    change: string;
+  }
+
+  interface HTMLKstFieldElementEventTypes {
+    change: HTMLKstFieldElementChangeEvent;
+  }
+
+  /**
+   * A form field.
+   */
+  interface HTMLKstFieldElement extends KstFieldElement {
+    // Extend the KstField class redefining the event listener methods to improve type safety when using them
+    addEventListener<K extends keyof HTMLKstFieldElementEventTypes>(type: K, listener: (this: HTMLKstFieldElement, ev: HTMLKstFieldElementEventTypes[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
+    addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
+    addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown, options?: boolean | AddEventListenerOptions): void;
+    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+    removeEventListener<K extends keyof HTMLKstFieldElementEventTypes>(type: K, listener: (this: HTMLKstFieldElement, ev: HTMLKstFieldElementEventTypes[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown, options?: boolean | EventListenerOptions): void;
+    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+  }
+
+  /**
+   * An icon.
+   */
+  interface HTMLKstIconElement extends KstIconElement {}
+
+  interface IntrinsicElements {
+    "kst-field": HTMLKstFieldElement;
+    "kst-icon": HTMLKstIconElement;
+  }
+
+  interface HTMLElementTagNameMap {
+    "kst-field": HTMLKstFieldElement;
+    "kst-icon": HTMLKstIconElement;
+  }
+}"
+`;
+
+exports[`[component-declaration-file] getComponentDeclaration > returns the placeholder comment when there are no components 1`] = `
+"//
+// No "public" components were found. Only "public" components are exported.
+// To mark a component as "public", add the "@public" (or "@access public") tag in the JSDoc of the component class.
+//
+// Example:
+//   /**
+//    * Component description...
+//    * @public
+//    */
+//   @Component({
+//     styles,
+//     tag: "my-element"
+//   })
+//   export class MyElement extends KasstorElement {}
+//"
+`;

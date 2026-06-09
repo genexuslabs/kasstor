@@ -1,0 +1,175 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`[component-declaration-file] getComponentBaseClass > maps each tag name to its \`Element\`-suffixed class 1`] = `
+"/**
+ * Each interface contains the base class of the custom elements of the
+ * library.
+ */
+export interface ComponentBaseClasses {
+  "kst-a": KstAElement;
+  "kst-b": KstBElement;
+}"
+`;
+
+exports[`[component-declaration-file] getComponentProperties namespace (React/JSX) > wraps every component in the \`ComponentProperties\` namespace 1`] = `
+"/**
+ * Each interface contains the properties of the custom elements of the library.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentProperties {
+  export type KstField = Pick<KstFieldElement, "value">;
+  export type KstIcon = {};
+}"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesReact namespace > wraps every component in the \`ComponentPropertiesReact\` namespace 1`] = `
+"/**
+ * Each interface contains the properties of the custom elements of the library.
+ * This format is used for React applications.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentPropertiesReact {
+  export type KstField = {
+    /**
+     * The current value.
+     */
+    value?: string;
+  };
+
+  export type KstIcon = {};
+}"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesSolidJS namespace > wraps every component in the \`ComponentPropertiesSolidJS\` namespace 1`] = `
+"/**
+ * Each interface contains the properties of the custom elements of the library.
+ * This format is used for SolidJS applications.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentPropertiesSolidJS {
+  export type KstField = {
+    /**
+     * The current value.
+     */
+    "prop:value"?: string;
+  };
+
+  export type KstIcon = {};
+}"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeReact > indents multi-line property types 1`] = `
+"{
+    /**
+     * 
+     */
+    config?: {
+    a: string;
+    b: number;
+  };
+  }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeReact > omits the \`?\` for required properties 1`] = `
+"{
+    /**
+     * 
+     */
+    value: string;
+  }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeReact > renders a property without a description as an empty JSDoc 1`] = `
+"{
+    /**
+     * 
+     */
+    value?: string;
+  }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeReact > renders a single optional property with its description 1`] = `
+"{
+    /**
+     * The current value.
+     */
+    value?: string;
+  }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeReact > renders multiple properties 1`] = `
+"{
+    /**
+     * 
+     */
+    value?: string;
+
+    /**
+     * 
+     */
+    count: number;
+  }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeSolidJS > indents multi-line property types 1`] = `
+"{
+    /**
+     * 
+     */
+    "prop:config"?: {
+    a: string;
+    b: number;
+  };
+  }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeSolidJS > omits the \`?\` for required properties 1`] = `
+"{
+    /**
+     * 
+     */
+    "prop:value": string;
+  }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeSolidJS > renders a property without a description as an empty JSDoc 1`] = `
+"{
+    /**
+     * 
+     */
+    "prop:value"?: string;
+  }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeSolidJS > renders a single optional property with its description 1`] = `
+"{
+    /**
+     * The current value.
+     */
+    "prop:value"?: string;
+  }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeSolidJS > renders multi-line property descriptions 1`] = `
+"{
+    /**
+     * First line.
+     * Second line.
+     */
+    "prop:value"?: string;
+  }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeSolidJS > renders multiple properties 1`] = `
+"{
+    /**
+     * 
+     */
+    "prop:value"?: string;
+
+    /**
+     * 
+     */
+    "prop:count": number;
+  }"
+`;

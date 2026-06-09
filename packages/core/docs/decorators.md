@@ -42,6 +42,7 @@ The `@Component` decorator is used to define a Kasstor custom element with suppo
 In `DEV_MODE && IS_SERVER` the `@Component` decorator evicts the previous entry from the dom-shim's internal registry map and falls through to `customElements.define(tag, target)` with the freshly-edited class. The next call to `customElements.get(tag)` (which is what `@lit-labs/ssr` uses to look up the renderer at template-walk time) returns the new class, the SSR HTML matches the freshly-loaded client bundle, and hydration succeeds.
 
 The behavior is gated entirely on the build-time `IS_SERVER` and `DEV_MODE` flags:
+
 - **Production SSR (`IS_SERVER && !DEV_MODE`)**: unchanged — duplicate tags still warn and return the previous class.
 - **Browser (`!IS_SERVER`)**: unchanged — HMR uses the existing flow via `@genexus/vite-plugin-kasstor`.
 - **Dev SSR (`DEV_MODE && IS_SERVER`)**: re-registration kicks in.
@@ -188,7 +189,7 @@ Forgetting to call `await super.scheduleUpdate()` will prevent the component fro
 
 ### Shared design-system styles
 
-`sharedDesignSystemStyles: string[]` adopts CSS bundles previously registered with [`registerDesignSystem`](../../design-system/README.md) (from `@genexus/kasstor-design-system`). Each entry is a bundle name (the same key used in `bundleLoaders`).
+`sharedDesignSystemStyles` adopts CSS bundles previously registered with [`registerDesignSystem`](../../design-system/README.md) (from `@genexus/kasstor-design-system`). Each entry is a bundle name (the same key used in `bundleLoaders`). The accepted names default to any `string`, but can be constrained to a typed allow-list — see [Typing the bundle names globally](#typing-the-bundle-names-globally).
 
 #### Examples
 
@@ -206,7 +207,9 @@ import styles from "./my-button.scss?inline";
   sharedDesignSystemStyles: ["components/button"]
 })
 export class MyButton extends KasstorElement {
-  override render() { return html`<button><slot></slot></button>`; }
+  override render() {
+    return html`<button><slot></slot></button>`;
+  }
 }
 ```
 
@@ -241,10 +244,10 @@ import { registerDesignSystem } from "@genexus/kasstor-design-system";
 
 registerDesignSystem("my-ds", {
   bundleLoaders: {
-    "utils/tokens":      "/themes/tokens.css",
-    "utils/layout":      "/themes/layout.css",
+    "utils/tokens": "/themes/tokens.css",
+    "utils/layout": "/themes/layout.css",
     "components/button": "/themes/button.css",
-    "components/edit":   "/themes/edit.css"
+    "components/edit": "/themes/edit.css"
   }
 });
 ```
@@ -257,6 +260,55 @@ import "./components/my-form-field.lit.js";
 ```
 
 The same module covers SSR: import it before the server walks the template.
+
+#### Typing the bundle names globally
+
+By default `sharedDesignSystemStyles` accepts any `string[]`, so each component would otherwise have to police its own bundle names. You can instead define the allowed names **once**, globally, and have the type checker enforce them across every `@Component` — a typo then fails to compile.
+
+`@genexus/kasstor-core` exposes an (initially empty) global interface, `KasstorSharedDesignSystemStyles`. While it is empty, the option keeps its lenient `string[]` shape (non-breaking). Augment it once in the consuming application — the **keys** become the only accepted names (the values are irrelevant):
+
+```ts
+// design-system/shared-styles.d.ts (or any .ts with a top-level `export {}`)
+declare global {
+  interface KasstorSharedDesignSystemStyles {
+    "utils/tokens": true;
+    "utils/layout": true;
+    "components/button": true;
+    "components/edit": true;
+  }
+}
+
+export {};
+```
+
+From then on:
+
+```ts
+@Component({
+  tag: "my-button",
+  sharedDesignSystemStyles: ["components/button"] // ✅ autocompleted
+  // sharedDesignSystemStyles: ["compoonents/button"] // ❌ fails type-checking
+})
+```
+
+To avoid repeating the names, derive the registry from the `bundleLoaders` object you already pass to `registerDesignSystem`:
+
+```ts
+const bundleLoaders = {
+  "utils/tokens": "/themes/tokens.css",
+  "utils/layout": "/themes/layout.css",
+  "components/button": "/themes/button.css",
+  "components/edit": "/themes/edit.css"
+} as const;
+
+registerDesignSystem("my-ds", { bundleLoaders });
+
+declare global {
+  interface KasstorSharedDesignSystemStyles extends Record<keyof typeof bundleLoaders, true> {}
+}
+```
+
+> This is a **type-level** allow-list only; it does not replace the runtime check that the bundle is actually registered (the constructor still fails fast on an unregistered name at SSR — see [Behavior](#behavior)). Keep the interface in sync with your `bundleLoaders` (deriving it as above does this automatically).
 
 #### Behavior
 
@@ -402,4 +454,3 @@ export class MyObserveExample extends KasstorElement {
   }
 }
 ```
-
