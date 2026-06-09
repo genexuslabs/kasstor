@@ -1,7 +1,12 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`[component-declaration-file] getComponentFrameworkType > intersects React HTMLAttributes, omits component props, and names the custom event verbatim 1`] = `
-"export type KstField = Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstFieldElement>, HTMLKstFieldElement>, keyof ComponentProperties.KstField> & Partial<ComponentProperties.KstField> & {
+exports[`[component-declaration-file] getComponentFrameworkType > omits component props + the re-typed native handler from React HTMLAttributes and names every event 1`] = `
+"export type KstField = Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstFieldElement>, HTMLKstFieldElement>, keyof ComponentPropertiesReact.KstField | "onInput"> & ComponentPropertiesReact.KstField & {
+    /**
+     * Native input event.
+     */
+    onInput?: (event: HTMLKstFieldElementInputEvent) => void;
+
     /**
      * Selection changed.
      */
@@ -9,7 +14,7 @@ exports[`[component-declaration-file] getComponentFrameworkType > intersects Rea
   };"
 `;
 
-exports[`[component-declaration-file] getComponentFrameworkType > terminates the alias without an event block when there are no framework events 1`] = `"export type KstIcon = Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstIconElement>, HTMLKstIconElement>, keyof ComponentProperties.KstIcon> & Partial<ComponentProperties.KstIcon>;"`;
+exports[`[component-declaration-file] getComponentFrameworkType > terminates the alias without an event block when the component has no events 1`] = `"export type KstIcon = Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstIconElement>, HTMLKstIconElement>, keyof ComponentPropertiesReact.KstIcon> & ComponentPropertiesReact.KstIcon;"`;
 
 exports[`[component-declaration-file] getComponentFrameworkType > uses JSXBase.HTMLAttributes and a capitalized custom event name for StencilJS 1`] = `
 "export type KstField = Omit<JSXBase.HTMLAttributes<HTMLKstFieldElement>, keyof ComponentProperties.KstField> & Partial<ComponentProperties.KstField> & {
@@ -49,26 +54,51 @@ exports[`[component-declaration-file] getIntrinsicElementsInterface > maps tag n
   }"
 `;
 
-exports[`[component-declaration-file] getReactDeclaration > imports react + the core ComponentProperties and augments react's IntrinsicElements 1`] = `
+exports[`[component-declaration-file] getReactDeclaration > declares ComponentPropertiesReact locally (no core ComponentProperties import) and augments react's IntrinsicElements 1`] = `
 "import type {
   DetailedHTMLProps as ReactDetailedHTMLProps,
   HTMLAttributes as ReactHTMLAttributes
 } from "react";
-import type { ComponentProperties } from "./components.js";
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Types for React JSX templates
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+/**
+ * Each interface contains the properties of the custom elements of the library.
+ * This format is used for React applications.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentPropertiesReact {
+  export type KstField = {
+    /**
+     * 
+     */
+    value?: string;
+  };
+
+  export type KstIcon = {
+    /**
+     * 
+     */
+    name?: string;
+  };
+}
+
 // eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace ReactJSX {
-  export type KstField = Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstFieldElement>, HTMLKstFieldElement>, keyof ComponentProperties.KstField> & Partial<ComponentProperties.KstField> & {
+  export type KstField = Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstFieldElement>, HTMLKstFieldElement>, keyof ComponentPropertiesReact.KstField | "onInput"> & ComponentPropertiesReact.KstField & {
+    /**
+     * Native input event.
+     */
+    onInput?: (event: HTMLKstFieldElementInputEvent) => void;
+
     /**
      * Selection changed.
      */
     onselectedItemsChange?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
   };
 
-  export type KstIcon = Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstIconElement>, HTMLKstIconElement>, keyof ComponentProperties.KstIcon> & Partial<ComponentProperties.KstIcon>;
+  export type KstIcon = Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstIconElement>, HTMLKstIconElement>, keyof ComponentPropertiesReact.KstIcon> & ComponentPropertiesReact.KstIcon;
   
   interface IntrinsicElements {
     /**
@@ -80,6 +110,53 @@ declare namespace ReactJSX {
      * An icon.
      */
     "kst-icon": KstIcon;
+  }
+}
+
+export type { ReactJSX };
+
+declare module "react" {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface IntrinsicElements extends ReactJSX.IntrinsicElements {}
+  }
+}"
+`;
+
+exports[`[component-declaration-file] getReactDeclaration > imports the property types from the core file when properties use imported types 1`] = `
+"import type {
+  DetailedHTMLProps as ReactDetailedHTMLProps,
+  HTMLAttributes as ReactHTMLAttributes
+} from "react";
+import type { FieldVariant } from "./components.js";
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Types for React JSX templates
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+/**
+ * Each interface contains the properties of the custom elements of the library.
+ * This format is used for React applications.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentPropertiesReact {
+  export type KstField = {
+    /**
+     * 
+     */
+    variant?: FieldVariant;
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace ReactJSX {
+  export type KstField = Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstFieldElement>, HTMLKstFieldElement>, keyof ComponentPropertiesReact.KstField> & ComponentPropertiesReact.KstField;
+  
+  interface IntrinsicElements {
+    /**
+     * A form field.
+     */
+    "kst-field": KstField;
   }
 }
 

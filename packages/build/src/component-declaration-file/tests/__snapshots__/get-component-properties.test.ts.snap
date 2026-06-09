@@ -22,6 +22,24 @@ export namespace ComponentProperties {
 }"
 `;
 
+exports[`[component-declaration-file] getComponentPropertiesReact namespace > wraps every component in the \`ComponentPropertiesReact\` namespace 1`] = `
+"/**
+ * Each interface contains the properties of the custom elements of the library.
+ * This format is used for React applications.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ComponentPropertiesReact {
+  export type KstField = {
+    /**
+     * The current value.
+     */
+    value?: string;
+  };
+
+  export type KstIcon = {};
+}"
+`;
+
 exports[`[component-declaration-file] getComponentPropertiesSolidJS namespace > wraps every component in the \`ComponentPropertiesSolidJS\` namespace 1`] = `
 "/**
  * Each interface contains the properties of the custom elements of the library.
@@ -38,6 +56,59 @@ export namespace ComponentPropertiesSolidJS {
 
   export type KstIcon = {};
 }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeReact > indents multi-line property types 1`] = `
+"{
+    /**
+     * 
+     */
+    config?: {
+    a: string;
+    b: number;
+  };
+  }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeReact > omits the \`?\` for required properties 1`] = `
+"{
+    /**
+     * 
+     */
+    value: string;
+  }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeReact > renders a property without a description as an empty JSDoc 1`] = `
+"{
+    /**
+     * 
+     */
+    value?: string;
+  }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeReact > renders a single optional property with its description 1`] = `
+"{
+    /**
+     * The current value.
+     */
+    value?: string;
+  }"
+`;
+
+exports[`[component-declaration-file] getComponentPropertiesUnionTypeReact > renders multiple properties 1`] = `
+"{
+    /**
+     * 
+     */
+    value?: string;
+
+    /**
+     * 
+     */
+    count: number;
+  }"
 `;
 
 exports[`[component-declaration-file] getComponentPropertiesUnionTypeSolidJS > indents multi-line property types 1`] = `

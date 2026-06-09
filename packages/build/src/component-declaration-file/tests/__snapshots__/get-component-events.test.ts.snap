@@ -24,6 +24,20 @@ exports[`[component-declaration-file] getComponentEventsUnionType > renders an e
   };"
 `;
 
+exports[`[component-declaration-file] getComponentEventsUnionType > renders both the native (mapped to React's prop name) and custom events for React 1`] = `
+"{
+    /**
+     * Native input.
+     */
+    onInput?: (event: HTMLKstFieldElementInputEvent) => void;
+
+    /**
+     * Selection changed.
+     */
+    onselectedItemsChange?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
+  };"
+`;
+
 exports[`[component-declaration-file] getComponentEventsUnionType > renders every event for SolidJS with the "on:" prefix 1`] = `
 "{
     /**
@@ -57,15 +71,6 @@ exports[`[component-declaration-file] getComponentEventsUnionType > renders mult
     /**
      * First line.
      * Second line.
-     */
-    onselectedItemsChange?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
-  };"
-`;
-
-exports[`[component-declaration-file] getComponentEventsUnionType > renders only the custom event for React (native delegated to HTMLAttributes) 1`] = `
-"{
-    /**
-     * Selection changed.
      */
     onselectedItemsChange?: (event: HTMLKstFieldElementSelectedItemsChangeEvent) => void;
   };"

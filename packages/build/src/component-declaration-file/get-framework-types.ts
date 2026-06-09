@@ -9,17 +9,22 @@ import {
 } from "./constants.js";
 import {
   getComponentEventsUnionType,
-  getFrameworkEvents
+  getFrameworkEvents,
+  getReactOverriddenEventHandlerNames
 } from "./get-component-events-union-type.js";
-import { getComponentPropertiesSolidJS } from "./get-component-properties-union-type.js";
+import {
+  getComponentPropertiesReact,
+  getComponentPropertiesSolidJS
+} from "./get-component-properties-union-type.js";
 
 /**
  * Collects the de-duplicated, sorted type names imported by the components'
- * properties (`propertyImportTypes`). The SolidJS JSX file references these
- * types in its `ComponentPropertiesSolidJS` namespace, so it imports them from
- * the core file (which re-exports them).
+ * properties (`propertyImportTypes`). The React and SolidJS JSX files reference
+ * these types in their `ComponentPropertiesReact` / `ComponentPropertiesSolidJS`
+ * namespaces (both re-declare each prop with its real type), so they import the
+ * type names from the core file (which re-exports them).
  */
-const getSolidPropertyTypeNames = (components: LibraryComponents): string[] => {
+const getImportedPropertyTypeNames = (components: LibraryComponents): string[] => {
   const typeNames = new Set<string>();
 
   components.forEach(({ propertyImportTypes }) => {
@@ -53,13 +58,27 @@ type FrameworkConfig = {
   /**
    * Wraps the component properties reference for this framework.
    *
-   * React and StencilJS reuse `ComponentProperties` (a `Pick<>` of the class),
-   * whose members inherit the class fields' optionality. In JSX every prop must
-   * be optional, so they are wrapped in `Partial<>`. SolidJS uses
-   * `ComponentPropertiesSolidJS`, which already declares each prop's optionality
-   * (honoring the `required` flag), so it is used as-is.
+   * StencilJS reuses `ComponentProperties` (a `Pick<>` of the class), whose
+   * members inherit the class fields' optionality. In JSX every prop must be
+   * optional, so it is wrapped in `Partial<>`. React and SolidJS use their own
+   * `ComponentPropertiesReact` / `ComponentPropertiesSolidJS` namespaces, which
+   * re-declare each prop and already encode its optionality (honoring the
+   * `required` flag), so they are used as-is.
    */
   wrapProperties: (propertiesRef: string) => string;
+
+  /**
+   * Event handler prop names that must additionally be omitted from the base
+   * attributes for a given component, on top of the component's properties.
+   *
+   * Used by React: it re-types native events the component re-declares (e.g.
+   * `onInput`) with the component's own event interface, so React's synthetic
+   * handler of the same name must be removed from `HTMLAttributes` to avoid an
+   * incompatible intersection. SolidJS/StencilJS do not collide (their handler
+   * prop names — `on:input`, or the skipped native ones — are not in the base
+   * attributes), so they leave this undefined.
+   */
+  omittedBaseAttributeEventKeys?: (component: ComponentDefinition) => string[];
 
   /**
    * The framework's own attributes type for the host element. Intersecting with
@@ -72,9 +91,11 @@ type FrameworkConfig = {
   imports: (coreModuleSpecifier: string, components: LibraryComponents) => string;
 
   /**
-   * Extra declarations emitted before the JSX namespace. Used by SolidJS to
-   * declare its `ComponentPropertiesSolidJS` namespace locally (it is not part
-   * of the core file because it does not depend on the core's class imports).
+   * Extra declarations emitted before the JSX namespace. Used by React and
+   * SolidJS to declare their `ComponentPropertiesReact` /
+   * `ComponentPropertiesSolidJS` namespaces locally (they are not part of the
+   * core file because they re-declare each prop and so do not depend on the
+   * core's class imports).
    */
   extraDeclarations?: (components: LibraryComponents) => string;
 
@@ -85,15 +106,28 @@ type FrameworkConfig = {
 const FRAMEWORK_CONFIG = {
   react: {
     namespaceName: FRAMEWORK_JSX_NAMESPACE_NAMES.react,
-    propertiesNamespace: COMPONENT_PROPERTIES_NAMESPACE_NAMES.jsx,
-    wrapProperties: propertiesRef => `Partial<${propertiesRef}>`,
+    propertiesNamespace: COMPONENT_PROPERTIES_NAMESPACE_NAMES.react,
+    // `ComponentPropertiesReact` already declares each prop's optionality.
+    wrapProperties: propertiesRef => propertiesRef,
     baseAttributes: hostType =>
       `ReactDetailedHTMLProps<ReactHTMLAttributes<${hostType}>, ${hostType}>`,
-    imports: coreModuleSpecifier => `import type {
+    // The `ComponentPropertiesReact` namespace is declared locally (see
+    // `extraDeclarations`) and references the components' property types, which
+    // are imported from the core file (it re-exports them).
+    imports: (coreModuleSpecifier, components) => {
+      const propertyTypeNames = getImportedPropertyTypeNames(components);
+      const propertyTypesImport =
+        propertyTypeNames.length === 0
+          ? ""
+          : `\nimport type { ${propertyTypeNames.join(", ")} } from "${coreModuleSpecifier}";`;
+
+      return `import type {
   DetailedHTMLProps as ReactDetailedHTMLProps,
   HTMLAttributes as ReactHTMLAttributes
-} from "react";
-import type { ${COMPONENT_PROPERTIES_NAMESPACE_NAMES.jsx} } from "${coreModuleSpecifier}";`,
+} from "react";${propertyTypesImport}`;
+    },
+    extraDeclarations: getComponentPropertiesReact,
+    omittedBaseAttributeEventKeys: getReactOverriddenEventHandlerNames,
     moduleAugmentation: namespaceName => `declare module "react" {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
@@ -112,7 +146,7 @@ import type { ${COMPONENT_PROPERTIES_NAMESPACE_NAMES.jsx} } from "${coreModuleSp
     // `extraDeclarations`) and references the components' property types, which
     // are imported from the core file (it re-exports them).
     imports: (coreModuleSpecifier, components) => {
-      const propertyTypeNames = getSolidPropertyTypeNames(components);
+      const propertyTypeNames = getImportedPropertyTypeNames(components);
       const propertyTypesImport =
         propertyTypeNames.length === 0
           ? ""
@@ -187,9 +221,23 @@ export const getComponentFrameworkType = (
   component: ComponentDefinition,
   framework: JsxFramework
 ) => {
-  const { baseAttributes, propertiesNamespace, wrapProperties } = FRAMEWORK_CONFIG[framework];
+  const {
+    baseAttributes,
+    propertiesNamespace,
+    wrapProperties,
+    omittedBaseAttributeEventKeys
+  }: FrameworkConfig = FRAMEWORK_CONFIG[framework];
   const propertiesRef = `${propertiesNamespace}.${component.className}`;
   const hostType = getComponentHTMLInterfaceName(component.className);
+
+  // Keys removed from the framework's base attributes: always the component's
+  // own properties, plus (for React) the native event handlers it re-types, so
+  // the component's typed/documented handler wins over the framework's synthetic
+  // one instead of clashing in the intersection.
+  const omittedKeys = [
+    `keyof ${propertiesRef}`,
+    ...(omittedBaseAttributeEventKeys?.(component) ?? []).map(key => `"${key}"`)
+  ].join(" | ");
 
   // The events union type already ends with `;`, which terminates the type
   // alias. When there are no framework events, terminate it ourselves.
@@ -198,7 +246,7 @@ export const getComponentFrameworkType = (
       ? ";"
       : ` & ${getComponentEventsUnionType(component, framework)}`;
 
-  return `export type ${component.className} = Omit<${baseAttributes(hostType)}, keyof ${propertiesRef}> & ${wrapProperties(propertiesRef)}${eventsPart}`;
+  return `export type ${component.className} = Omit<${baseAttributes(hostType)}, ${omittedKeys}> & ${wrapProperties(propertiesRef)}${eventsPart}`;
 };
 
 export const getIntrinsicElementsInterface = (components: LibraryComponents) => `

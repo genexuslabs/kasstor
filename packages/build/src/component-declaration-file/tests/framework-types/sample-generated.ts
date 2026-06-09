@@ -6,9 +6,10 @@
 //     global types appended to each component file (the host element type and
 //     the custom-event type).
 //   - `ComponentProperties` mirrors the namespace exported by the core
-//     `components.ts` file, which the React/StencilJS files re-use. (The
-//     SolidJS file declares its own `ComponentPropertiesSolidJS` namespace, so
-//     it is not exported here — see `solid.test-d.ts`.)
+//     `components.ts` file, which the StencilJS file re-uses. (The React and
+//     SolidJS files declare their own `ComponentPropertiesReact` /
+//     `ComponentPropertiesSolidJS` namespaces, so they are not exported here —
+//     see `react.test-d.ts` / `solid.test-d.ts`.)
 
 export declare class KstFieldElement extends HTMLElement {
   value: string;
@@ -22,6 +23,10 @@ declare global {
   type HTMLKstFieldElementSelectedItemsChangeEvent = CustomEvent<{
     ids: string[];
   }>;
+
+  // A native event (`input`) the component re-declares with its own `detail`
+  // type. React re-types `onInput` to this, overriding its synthetic handler.
+  type HTMLKstFieldElementInputEvent = CustomEvent<{ value: string }>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace

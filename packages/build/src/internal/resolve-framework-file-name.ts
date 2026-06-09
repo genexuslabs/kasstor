@@ -15,8 +15,10 @@ export type FrameworkExportTypesKey =
  *   - a string — enabled, using that file name.
  *   - `false` — disabled.
  *
- * The per-framework files re-use the `ComponentProperties` namespace from the
- * core types file, so they cannot be generated unless the core file is too:
+ * The per-framework files depend on the core types file (its global
+ * custom-element types and re-exported property types; StencilJS also re-uses
+ * its `ComponentProperties` namespace), so they cannot be generated unless the
+ * core file is too:
  *   - If the option is explicitly set (`true`/string) while the core file is
  *     disabled, that's a misconfiguration and we throw.
  *   - If only the default requested it, we silently yield to the explicit
@@ -27,7 +29,9 @@ export type FrameworkExportTypesKey =
  * @param defaultFileName - File name used when the option is `true` or when it
  *   is enabled by default without an explicit name.
  * @param enabledByDefault - Whether the framework file is generated when the
- *   option is omitted (React is on by default; SolidJS/StencilJS are opt-in).
+ *   option is omitted. All frameworks (React, SolidJS, StencilJS) are opt-in,
+ *   so this is `false` for them; the parameter is kept generic so a framework
+ *   could be turned on by default in the future.
  * @param coreTypesEnabled - Whether the core types file is being generated.
  */
 export const resolveFrameworkFileName = (

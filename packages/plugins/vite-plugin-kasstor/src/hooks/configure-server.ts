@@ -30,6 +30,16 @@ const LIBRARY_BUILD_DEBOUNCE = 4;
 const pathsToProcess: Set<string> = new Set();
 
 /**
+ * Set when a component file is deleted. A deletion can't be handled by the
+ * usual per-file incremental pass (the file is gone, so re-scanning just it
+ * finds nothing and the component lingers in the cache). Instead it forces the
+ * next build to re-scan every component file with `scanIsComplete`, so
+ * `buildLibrary` prunes the deleted component from its cache and the generated
+ * files.
+ */
+let pendingFullRebuild = false;
+
+/**
  * Global cache for the file contents.
  *
  * This cache is global to avoid running the library build the first time each
@@ -51,22 +61,35 @@ const runLibraryBuild = async (options: {
     getNormalCommandForLogger("start", LIBRARY_ANALYSIS_MESSAGES.START)
   );
 
-  // Only process the changed component files
-  const includedPaths = new RegExp(
-    [...pathsToProcess.values()]
-      .map(filePath => normalizePath(relative(server.config.root, filePath)))
-      .join("|")
-  );
+  // A deletion forces a complete re-scan (see `pendingFullRebuild`); a regular
+  // change only re-scans the touched files for speed.
+  const fullRebuild = pendingFullRebuild;
+  pendingFullRebuild = false;
+
+  // Only process the changed component files (for a full rebuild, fall back to
+  // the plugin's default broad component pattern in `kasstorBuildOptions`).
+  const changedPaths = [...pathsToProcess.values()];
 
   // The current paths to process have been included, so mark them as processed
   // by clearing the Set
   pathsToProcess.clear();
 
+  const buildOptions = fullRebuild
+    ? kasstorBuildOptions
+    : {
+        ...kasstorBuildOptions,
+        includedPaths: new RegExp(
+          changedPaths
+            .map(filePath => normalizePath(relative(server.config.root, filePath)))
+            .join("|")
+        )
+      };
+
   const {
     elapsedTimes,
     updatedReadmesForComponents,
     updatedTypesForComponents
-  } = await buildLibrary({ ...kasstorBuildOptions, includedPaths }, true);
+  } = await buildLibrary(buildOptions, fullRebuild ? { scanIsComplete: true } : true);
 
   server.config.logger.info(
     getNormalCommandForLogger(
@@ -118,9 +141,9 @@ const runLibraryWithDebounceIfNecessary = (options: {
   server: ViteDevServer;
   kasstorBuildOptions: KasstorBuildOptions;
 }) => {
-  // Avoid triggering a build if one is already in progress or if there are no
-  // paths to process
-  if (isBuildingLibrary() || pathsToProcess.size === 0) {
+  // Avoid triggering a build if one is already in progress or if there is no
+  // work to do (no changed files and no pending deletion).
+  if (isBuildingLibrary() || (pathsToProcess.size === 0 && !pendingFullRebuild)) {
     return;
   }
   clearTimeout(libraryBuildTimeoutId);
@@ -183,6 +206,21 @@ export const configureServer = (options: {
           `[kasstor] Error processing file ${filePath}: ${error}`
         );
       }
+    });
+
+    // A deleted component file can't be handled incrementally (re-scanning just
+    // the missing path finds nothing, so the component would linger in the
+    // build cache and keep being written into the generated files). Force a
+    // full re-scan so `buildLibrary` prunes it.
+    server.watcher.on("unlink", (filePath: string) => {
+      if (getFileType(filePath) !== "component") {
+        return;
+      }
+
+      fileContentCache.delete(filePath);
+      pendingFullRebuild = true;
+
+      runLibraryWithDebounceIfNecessary({ server, kasstorBuildOptions });
     });
   };
 };

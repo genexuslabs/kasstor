@@ -5,23 +5,29 @@ import { resolveFrameworkFileName } from "../resolve-framework-file-name.js";
 describe("resolveFrameworkFileName", () => {
   it("returns false when all file generation is disabled", () => {
     expect(
-      resolveFrameworkFileName(false, "exportTypesForReact", "components.react.ts", true, false)
+      resolveFrameworkFileName(false, "exportTypesForReact", "components.react.ts", false, false)
     ).toBe(false);
   });
 
-  it("returns the default file name when the option is omitted (React on by default)", () => {
+  it("returns false when the framework is opt-in and omitted (React/SolidJS/StencilJS off by default)", () => {
     expect(
-      resolveFrameworkFileName({}, "exportTypesForReact", "components.react.ts", true, true)
-    ).toBe("components.react.ts");
-  });
-
-  it("returns false when the framework is opt-in and omitted (SolidJS/StencilJS off by default)", () => {
+      resolveFrameworkFileName({}, "exportTypesForReact", "components.react.ts", false, true)
+    ).toBe(false);
     expect(
       resolveFrameworkFileName({}, "exportTypesForSolidJs", "components.solid.ts", false, true)
     ).toBe(false);
     expect(
       resolveFrameworkFileName({}, "exportTypesForStencil", "components.stencil.ts", false, true)
     ).toBe(false);
+  });
+
+  it("returns the default file name when enabled by default and omitted", () => {
+    // No framework is currently on by default, but the helper still supports it
+    // (the `enabledByDefault` parameter), so a framework could be turned on in
+    // the future without touching this function.
+    expect(
+      resolveFrameworkFileName({}, "exportTypesForReact", "components.react.ts", true, true)
+    ).toBe("components.react.ts");
   });
 
   it("uses the default file name when set to true", () => {
@@ -48,21 +54,21 @@ describe("resolveFrameworkFileName", () => {
     ).toBe("my-solid-types.ts");
   });
 
-  it("honors an explicit false (disables a default-on framework)", () => {
+  it("honors an explicit false", () => {
     expect(
       resolveFrameworkFileName(
         { exportTypesForReact: false },
         "exportTypesForReact",
         "components.react.ts",
-        true,
+        false,
         true
       )
     ).toBe(false);
   });
 
-  it("auto-disables a default-on framework when the core file is disabled", () => {
-    // React defaults on, but the core file is disabled and React was not
-    // explicitly requested -> yield silently to the explicit core=false.
+  it("auto-disables an enabled-by-default framework when the core file is disabled", () => {
+    // enabledByDefault=true, but the core file is disabled and the framework was
+    // not explicitly requested -> yield silently to the explicit core=false.
     expect(
       resolveFrameworkFileName(
         { exportTypesForTheLibrary: false },
@@ -83,7 +89,7 @@ describe("resolveFrameworkFileName", () => {
         },
         "exportTypesForReact",
         "components.react.ts",
-        true,
+        false,
         false
       )
     ).toThrow(/requires "fileGeneration.exportTypesForTheLibrary"/);

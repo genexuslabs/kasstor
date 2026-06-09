@@ -19,10 +19,12 @@ import { getImportPaths } from "./get-import-paths.js";
  * `HTMLElementTagNameMap`, etc.). The latter used to be appended at the end of
  * each `*.lit.ts` file and now lives here.
  *
- * The `ComponentPropertiesSolidJS` namespace is NOT generated here: it is only
- * used by the SolidJS JSX file and does not depend on this file's class imports
- * (unlike `ComponentProperties`, which is a `Pick<>` of the imported class), so
- * it is generated inside the SolidJS file instead.
+ * The `ComponentPropertiesReact` and `ComponentPropertiesSolidJS` namespaces are
+ * NOT generated here: they are only used by the React / SolidJS JSX files and,
+ * unlike `ComponentProperties` (a `Pick<>` of the imported class, still used by
+ * the StencilJS file), they re-declare each prop and so do not depend on this
+ * file's class imports. They are generated inside their respective framework
+ * files instead.
  *
  * The per-framework JSX types (React/SolidJS/StencilJS) live in their own opt-in
  * files (see `get-framework-types.ts`) so that consumers only pull in a given

@@ -47,16 +47,21 @@ const richComponent = () =>
   });
 
 describe("[component-declaration-file] getComponentFrameworkType", () => {
-  it("intersects React HTMLAttributes, omits component props, and names the custom event verbatim", () => {
+  it("omits component props + the re-typed native handler from React HTMLAttributes and names every event", () => {
     const result = getComponentFrameworkType(richComponent(), "react");
 
+    // Props come from the re-declared `ComponentPropertiesReact` namespace (not a
+    // `Pick<>` of the class), and the re-typed native handler (`onInput`) is
+    // omitted from the base attributes so the component's handler wins.
     expect(result).toContain(
-      "Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstFieldElement>, HTMLKstFieldElement>, keyof ComponentProperties.KstField>"
+      'Omit<ReactDetailedHTMLProps<ReactHTMLAttributes<HTMLKstFieldElement>, HTMLKstFieldElement>, keyof ComponentPropertiesReact.KstField | "onInput">'
     );
+    // The props namespace is used as-is (no `Partial<>` wrapper).
+    expect(result).toContain("& ComponentPropertiesReact.KstField &");
+    // Native event re-typed under React's own handler prop name.
+    expect(result).toContain("onInput?:");
     // Custom event: verbatim `on` + name.
     expect(result).toContain("onselectedItemsChange?:");
-    // Native event delegated to React's HTMLAttributes -> not generated.
-    expect(result).not.toContain("oninput");
     expect(result).toMatchSnapshot();
   });
 
@@ -83,12 +88,10 @@ describe("[component-declaration-file] getComponentFrameworkType", () => {
     expect(result).toMatchSnapshot();
   });
 
-  it("terminates the alias without an event block when there are no framework events", () => {
-    // Only a native event -> nothing left to generate for React.
+  it("terminates the alias without an event block when the component has no events", () => {
     const component = makeComponent({
       className: "KstIcon",
-      properties: [makeProperty({ name: "name" })],
-      events: [makeEvent({ name: "input" })]
+      properties: [makeProperty({ name: "name" })]
     });
 
     const result = getComponentFrameworkType(component, "react");
@@ -130,12 +133,46 @@ const library = () => [
 ];
 
 describe("[component-declaration-file] getReactDeclaration", () => {
-  it("imports react + the core ComponentProperties and augments react's IntrinsicElements", () => {
-    expect(getReactDeclaration(library(), "components.ts")).toMatchSnapshot();
+  it("declares ComponentPropertiesReact locally (no core ComponentProperties import) and augments react's IntrinsicElements", () => {
+    const result = getReactDeclaration(library(), "components.ts");
+
+    // The namespace is declared in this file, not imported from the core file.
+    expect(result).toContain("export namespace ComponentPropertiesReact {");
+    expect(result).not.toContain('import type { ComponentProperties } from "./components.js"');
+    // No property import types in this library -> no import from the core file.
+    expect(result).not.toContain('from "./components.js"');
+    expect(result).toMatchSnapshot();
+  });
+
+  it("imports the property types from the core file when properties use imported types", () => {
+    const components = [
+      makeComponent({
+        tagName: "kst-field",
+        className: "KstField",
+        fullClassJSDoc: "/**\n * A form field.\n */",
+        properties: [makeProperty({ name: "variant", type: "FieldVariant" })],
+        propertyImportTypes: { "./types.js": ["FieldVariant"] }
+      })
+    ];
+
+    const result = getReactDeclaration(components, "components.ts");
+
+    expect(result).toContain('import type { FieldVariant } from "./components.js";');
+    expect(result).toContain("export namespace ComponentPropertiesReact {");
+    expect(result).toContain("variant?: FieldVariant;");
+    expect(result).toMatchSnapshot();
   });
 
   it("uses the configured core file name in the import specifier", () => {
-    expect(getReactDeclaration(library(), "kasstor-types.ts")).toContain(
+    const components = [
+      makeComponent({
+        className: "KstField",
+        properties: [makeProperty({ name: "variant", type: "FieldVariant" })],
+        propertyImportTypes: { "./types.js": ["FieldVariant"] }
+      })
+    ];
+
+    expect(getReactDeclaration(components, "kasstor-types.ts")).toContain(
       'from "./kasstor-types.js"'
     );
   });

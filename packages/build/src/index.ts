@@ -1,4 +1,4 @@
-export { buildLibrary } from "./build-library.js";
+export { buildLibrary, resetBuildCache } from "./build-library.js";
 
 export type * from "./typings/build-options.js";
 export type {

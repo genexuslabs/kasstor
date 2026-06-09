@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   getComponentBaseClass,
   getComponentProperties,
+  getComponentPropertiesReact,
   getComponentPropertiesSolidJS,
   getComponentPropertiesUnionType,
+  getComponentPropertiesUnionTypeReact,
   getComponentPropertiesUnionTypeSolidJS
 } from "../get-component-properties-union-type.js";
 import { makeComponent, makeProperty } from "./fixtures.js";
@@ -129,6 +131,68 @@ describe("[component-declaration-file] getComponentPropertiesUnionTypeSolidJS", 
   });
 });
 
+// React representation: an inline object that re-declares each prop with a plain
+// name key (no `prop:` directive), so editors resolve the JSDoc on hover.
+describe("[component-declaration-file] getComponentPropertiesUnionTypeReact", () => {
+  it("returns `{}` when there are no properties", () => {
+    expect(getComponentPropertiesUnionTypeReact(makeComponent())).toBe("{}");
+  });
+
+  it("renders a single optional property with its description", () => {
+    const component = makeComponent({
+      properties: [
+        makeProperty({
+          name: "value",
+          type: "string",
+          description: "The current value."
+        })
+      ]
+    });
+
+    expect(getComponentPropertiesUnionTypeReact(component)).toMatchSnapshot();
+  });
+
+  it("omits the `?` for required properties", () => {
+    const component = makeComponent({
+      properties: [makeProperty({ name: "value", required: true })]
+    });
+
+    expect(getComponentPropertiesUnionTypeReact(component)).toMatchSnapshot();
+  });
+
+  it("renders multiple properties", () => {
+    const component = makeComponent({
+      properties: [
+        makeProperty({ name: "value", type: "string" }),
+        makeProperty({ name: "count", type: "number", required: true })
+      ]
+    });
+
+    expect(getComponentPropertiesUnionTypeReact(component)).toMatchSnapshot();
+  });
+
+  it("indents multi-line property types", () => {
+    const component = makeComponent({
+      properties: [
+        makeProperty({
+          name: "config",
+          type: "{\n  a: string;\n  b: number;\n}"
+        })
+      ]
+    });
+
+    expect(getComponentPropertiesUnionTypeReact(component)).toMatchSnapshot();
+  });
+
+  it("renders a property without a description as an empty JSDoc", () => {
+    const component = makeComponent({
+      properties: [makeProperty({ name: "value", description: undefined })]
+    });
+
+    expect(getComponentPropertiesUnionTypeReact(component)).toMatchSnapshot();
+  });
+});
+
 describe("[component-declaration-file] getComponentProperties namespace (React/JSX)", () => {
   it("wraps every component in the `ComponentProperties` namespace", () => {
     const components = [
@@ -154,5 +218,19 @@ describe("[component-declaration-file] getComponentPropertiesSolidJS namespace",
     ];
 
     expect(getComponentPropertiesSolidJS(components)).toMatchSnapshot();
+  });
+});
+
+describe("[component-declaration-file] getComponentPropertiesReact namespace", () => {
+  it("wraps every component in the `ComponentPropertiesReact` namespace", () => {
+    const components = [
+      makeComponent({
+        className: "KstField",
+        properties: [makeProperty({ name: "value", description: "The current value." })]
+      }),
+      makeComponent({ className: "KstIcon" })
+    ];
+
+    expect(getComponentPropertiesReact(components)).toMatchSnapshot();
   });
 });
